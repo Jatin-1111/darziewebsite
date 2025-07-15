@@ -141,6 +141,7 @@ export const categoryOptionsMap = {
 
 export const filterOptions = {
   category: [
+    { id: "best sellers", label: "Best Sellers"},
     { id: "bridal", label: "Bridal" },
     { id: "formals", label: "Formals" },
     { id: "Partywear", label: "Partywear" },

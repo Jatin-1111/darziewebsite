@@ -15,6 +15,8 @@ import ShoppingCheckout from "./pages/shopping-view/checkout";
 import ShoppingAccount from "./pages/shopping-view/account";
 import CheckAuth from "./components/common/check-auth";
 import UnauthPage from "./pages/unauth-page";
+import PrivacyPolicy from "./pages/shopping-view/privacypolicy"
+import ReturnPolicy from "./pages/shopping-view/returnrefund"
 import { useDispatch, useSelector } from "react-redux";
 import { useEffect } from "react";
 import { checkAuth } from "./store/auth-slice";
@@ -91,6 +93,8 @@ function App() {
         </Route>
         <Route path="/unauth-page" element={<UnauthPage />} />
         <Route path="*" element={<NotFound />} />
+        <Route path="/privacypolicy" element={<PrivacyPolicy/>} />
+        <Route path="/refund-policy" element={<ReturnPolicy/>} />
       </Routes>
       
     </div>

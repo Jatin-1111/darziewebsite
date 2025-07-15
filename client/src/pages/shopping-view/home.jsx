@@ -1,54 +1,23 @@
 import { Button } from "@/components/ui/button";
 import "../../../src/App.css";
+import { Link } from 'react-router-dom';
 import banner from "../../assets/1.png";
 import bannerOne from "../../assets/banner.png";
 import best1 from "../../assets/Best-1.jpeg";
 import best2 from "../../assets/Beat-2.jpeg";
 import best3 from "../../assets/Best-3.jpeg";
 import best4 from "../../assets/Best-4.jpeg";
-import {
-  Airplay,
-  BabyIcon,
-  CloudLightning,
-  Heater,
-  Images,
-  Shirt,
-  ShirtIcon,
-  ShoppingBasket,
-  UmbrellaIcon,
-  WashingMachine,
-  WatchIcon,
-} from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   fetchAllFilteredProducts,
   fetchProductDetails,
 } from "@/store/shop/products-slice";
-import ShoppingProductTile from "@/components/shopping-view/product-tile";
 import { useNavigate } from "react-router-dom";
 import { addToCart, fetchCartItems } from "@/store/shop/cart-slice";
 import { useToast } from "@/components/ui/use-toast";
 import ProductDetailsDialog from "@/components/shopping-view/product-details";
 import { getFeatureImages } from "@/store/common-slice";
-
-const categoriesWithIcon = [
-  { id: "men", label: "Men", icon: ShirtIcon },
-  { id: "women", label: "Women", icon: CloudLightning },
-  { id: "kids", label: "Kids", icon: BabyIcon },
-  { id: "accessories", label: "Accessories", icon: WatchIcon },
-  { id: "footwear", label: "Footwear", icon: UmbrellaIcon },
-];
-
-const brandsWithIcon = [
-  { id: "nike", label: "Nike", icon: Shirt },
-  { id: "adidas", label: "Adidas", icon: WashingMachine },
-  { id: "puma", label: "Puma", icon: ShoppingBasket },
-  { id: "levi", label: "Levi's", icon: Airplay },
-  { id: "zara", label: "Zara", icon: Images },
-  { id: "h&m", label: "H&M", icon: Heater },
-];
 
 const collectionCategories = [
   {
@@ -127,13 +96,36 @@ const bestSellers = [
 ];
 
 const sellerLinks = [
-  "Ipsum lorem",
-  "Ipsum lorem horem",
-  "Ipsum lorem helium",
-  "Ipsum lorem horem magun",
-  "Ipsum lorem horem isium",
-  "Ipsum lorem horem",
-  "Ipsum lorem horem magun haren",
+  "Anarkali Suit (Floor Length)",
+  "Anarkali Suit (Knee Length)",
+  "Straight Cut Suit with Straight Pants",
+  "Palazzo Suit (Short Kurti)",
+  "Palazzo Suit (Long Kurti)",
+  "Sharara Suit (Short Kurti)",
+  "Sharara Suit (Long Kurti)",
+  "Patiala Suit",
+  "Churidar Suit",
+  "A-Line Suit",
+  "Cotton Printed Suits",
+  "Chikankari Suits",
+  "Georgette Suits (Embroidered/Printed)",
+  "Silk Suits (e.g., Banarasi, Chanderi)",
+  "Velvet Suits",
+  "Rayon Suits",
+  "Organza Suits",
+  "Zari Work Suits",
+  "Sequence Work Suits",
+  "Gota Patti Work Suits",
+  "Ethnic Co-ord Sets (Kurta & Pant/Skirt)",
+  "Jacket Style Suits",
+  "Cape Style Suits",
+  "Asymmetric Hemline Suits",
+  "High-Low Kurta Suits",
+  "Dhoti Style Suits",
+  "Kaftan Style Suits",
+  "Pant Style Suits (Cigarette Pants)",
+  "Unstitched Dress Materials",
+  "Readymade Suits (across various sizes)",
 ];
 
 function ShoppingHome() {
@@ -181,6 +173,10 @@ function ShoppingHome() {
   useEffect(() => {
     dispatch(getFeatureImages());
   }, [dispatch]);
+  
+  useEffect(() => {
+  window.scrollTo(0, 0);
+}, []);
 
   const handleNavigateToListingPage = (item, section) => {
     sessionStorage.removeItem("filters");
@@ -204,8 +200,8 @@ function ShoppingHome() {
     );
   };
 
-  const handleNavigate = (id) => {
-    navigate(`/shop/details/${id}`);
+  const handleNavigate = () => {
+      navigate(`/shop/listing?category=best+sellers`);
   };
 
   return (
@@ -213,9 +209,11 @@ function ShoppingHome() {
       <div className="relative w-full h-[700px] overflow-hidden font-josefin">
         <img src={banner} alt="banner" className="w-full h-full object-cover" />
         <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2">
-          <button className="bg-black text-white px-6 py-2 rounded-full text-sm hover:bg-opacity-80 transition">
-            Go to Collection
-          </button>
+          <Link to="/shop/listing">
+            <button className="bg-black text-white px-6 py-2 rounded-full text-sm hover:bg-opacity-80 transition">
+              Go to Collection
+            </button>
+          </Link>
         </div>
       </div>
 
