@@ -143,6 +143,7 @@ function AdminProducts() {
             setImageLoadingState={setImageLoadingState}
             imageLoadingState={imageLoadingState}
             isEditMode={currentEditedId !== null}
+            setFormData={setFormData} 
           />
           <div className="py-6">
             <CommonForm

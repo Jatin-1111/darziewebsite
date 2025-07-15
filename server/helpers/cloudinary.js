@@ -1,4 +1,3 @@
-// utils/cloudinary.js
 const cloudinary = require("cloudinary").v2;
 const multer = require("multer");
 
@@ -8,15 +7,22 @@ cloudinary.config({
   api_secret: "PsA-XYkkiPxUEGiFuiRI7kbm-NI",
 });
 
-const storage = multer.memoryStorage(); // image in memory
+const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
-async function imageUploadUtil(fileBuffer) {
-  const result = await cloudinary.uploader.upload(dataURI, {
-    resource_type: "image",
-    folder: "products", // optional folder in cloudinary
-  });
-  return result.secure_url; // return only URL
+// ✅ Util: Converts buffer + mimetype → dataURI
+function bufferToDataURI(mimetype, buffer) {
+  const base64 = buffer.toString("base64");
+  return `data:${mimetype};base64,${base64}`;
 }
 
-module.exports = { upload, imageUploadUtil };
+// ✅ imageUploadUtil now accepts dataURI as arg
+async function imageUploadUtil(dataURI) {
+  const result = await cloudinary.uploader.upload(dataURI, {
+    resource_type: "auto",
+  });
+  return result.secure_url;
+}
+
+module.exports = { upload, imageUploadUtil, bufferToDataURI };
+

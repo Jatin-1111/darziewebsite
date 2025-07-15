@@ -15,6 +15,7 @@ function ProductImageUpload({
   setImageLoadingState,
   isEditMode,
   isCustomStyling = false,
+  setFormData,
 }) {
   const inputRef = useRef(null);
 
@@ -48,17 +49,24 @@ function ProductImageUpload({
   async function uploadImageToCloudinary() {
     setImageLoadingState(true);
     const data = new FormData();
-    data.append("my_file", imageFile);
+    data.append("image", imageFile);
     const response = await axios.post(
       "http://localhost:5000/api/admin/products/upload-image",
       data
     );
     console.log(response, "response");
 
-    if (response?.data?.success) {
-      setUploadedImageUrl(response.data.result.url);
-      setImageLoadingState(false);
-    }
+ if (response?.data?.success && response.data?.result) {
+  setUploadedImageUrl(response.data.imageUrl); // Cloudinary already returns the URL
+    setFormData(prev => ({
+    ...prev,
+    image: response.data.imageUrl // actually store image URL
+  }));
+  setImageLoadingState(false);
+} else {
+  console.error("Upload failed:", response.data);
+  setImageLoadingState(false);
+}
   }
 
   useEffect(() => {

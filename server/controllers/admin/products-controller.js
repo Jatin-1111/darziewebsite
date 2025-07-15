@@ -1,21 +1,23 @@
 // controllers/admin/products-controller.js
-const { imageUploadUtil } = require("../../helpers/cloudinary");
+const { imageUploadUtil, bufferToDataURI } = require("../../helpers/cloudinary");
 const Product = require("../../models/Product");
 
 // ⬇️ Handle image upload (optional route, not used inside addProduct anymore)
 const handleImageUpload = async (req, res) => {
   try {
-    const b64 = req.file.buffer.toString("base64");
-    const dataURI = `data:${req.file.mimetype};base64,${b64}`;
-    const result = await imageUploadUtil(dataURI);
+    if (!req.file) {
+      return res.status(400).json({ success: false, message: "No file uploaded" });
+    }
 
-    res.json({ success: true, result });
+    const dataURI = bufferToDataURI(req.file.mimetype, req.file.buffer);
+    const imageUrl = await imageUploadUtil(dataURI);
+
+    res.json({ success: true, imageUrl });
   } catch (error) {
-    console.log(error);
-    res.json({ success: false, message: "Error occurred" });
+    console.log("Image upload error:", error);
+    res.status(500).json({ success: false, message: "Image upload failed" });
   }
 };
-
 // ✅ Add new product with image
 const addProduct = async (req, res) => {
   try {
@@ -29,7 +31,7 @@ const addProduct = async (req, res) => {
       averageReview,
     } = req.body;
 
-    let imageUrl = "";
+    let imageUrl = req.body.imageUrl || "";
 
     if (req.file) {
       const b64 = req.file.buffer.toString("base64");
