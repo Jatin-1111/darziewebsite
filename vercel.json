@@ -9,7 +9,7 @@
       }
     },
     {
-      "src": "server/**/*.js",
+      "src": "server/server.js",
       "use": "@vercel/node"
     }
   ],
@@ -22,5 +22,13 @@
       "src": "/(.*)",
       "dest": "/client/dist/$1"
     }
-  ]
+  ],
+  "functions": {
+    "server/server.js": {
+      "maxDuration": 30
+    }
+  },
+  "env": {
+    "NODE_ENV": "production"
+  }
 }
