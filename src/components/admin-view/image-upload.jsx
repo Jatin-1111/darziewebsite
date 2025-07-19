@@ -74,7 +74,7 @@ function ProductImageUpload({
 
     try {
       const response = await axios.post(
-        "/api/admin/products/upload-image",
+        "https://darziewebsite-backend.onrender.com/api/admin/products/upload-image",
         data // Sending FormData
       );
 
