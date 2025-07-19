@@ -74,7 +74,7 @@ function ProductImageUpload({
 
     try {
       const response = await axios.post(
-        "/api/admin/products/upload-image",
+        "http://localhost:5000/api/admin/products/upload-image",
         data // Sending FormData
       );
 
