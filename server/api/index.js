@@ -26,7 +26,11 @@ if (mongoose.connection.readyState === 0) {
 const app = express();
 
 app.use(cors({
-    origin: ["*"],
+    origin: [
+        "http://localhost:5173",
+        "https://your-vercel-domain.vercel.app", // Replace with your actual domain
+        "https://*.vercel.app"
+    ],
     methods: ["GET", "POST", "DELETE", "PUT"],
     allowedHeaders: [
         "Content-Type",
@@ -46,17 +50,17 @@ app.get("/", (req, res) => {
     res.json({ message: "API is working!" });
 });
 
-// All routes with /api prefix to match vercel.json
-app.use("/api/auth", authRouter);
-app.use("/api/admin/products", adminProductsRouter);
-app.use("/api/admin/orders", adminOrderRouter);
-app.use("/api/shop/products", shopProductsRouter);
-app.use("/api/shop/cart", shopCartRouter);
-app.use("/api/shop/address", shopAddressRouter);
-app.use("/api/shop/order", shopOrderRouter);
-app.use("/api/shop/search", shopSearchRouter);
-app.use("/api/shop/review", shopReviewRouter);
-app.use("/api/common/feature", commonFeatureRouter);
+// All routes
+app.use("/auth", authRouter);
+app.use("/admin/products", adminProductsRouter);
+app.use("/admin/orders", adminOrderRouter);
+app.use("/shop/products", shopProductsRouter);
+app.use("/shop/cart", shopCartRouter);
+app.use("/shop/address", shopAddressRouter);
+app.use("/shop/order", shopOrderRouter);
+app.use("/shop/search", shopSearchRouter);
+app.use("/shop/review", shopReviewRouter);
+app.use("/common/feature", commonFeatureRouter);
 
 // Export the Express app for Vercel
 module.exports = app;
