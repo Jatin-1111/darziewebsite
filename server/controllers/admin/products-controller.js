@@ -22,6 +22,7 @@ const handleImageUpload = async (req, res) => {
 const addProduct = async (req, res) => {
   try {
     const {
+      image,
       title,
       description,
       category,
@@ -31,16 +32,15 @@ const addProduct = async (req, res) => {
       averageReview,
     } = req.body;
 
-    let imageUrl = req.body.imageUrl || "";
 
     if (req.file) {
       const b64 = req.file.buffer.toString("base64");
       const dataURI = `data:${req.file.mimetype};base64,${b64}`;
-      imageUrl = await imageUploadUtil(dataURI);
+      image = await imageUploadUtil(dataURI);
     }
 
     const newProduct = new Product({
-      image: imageUrl,
+      image,
       title,
       description,
       category,
