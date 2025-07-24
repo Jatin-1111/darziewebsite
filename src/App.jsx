@@ -1,4 +1,3 @@
-
 import { Route, Routes, useLocation } from "react-router-dom";
 import AuthLayout from "./components/auth/layout";
 import AuthLogin from "./pages/auth/login";
@@ -24,6 +23,8 @@ import PaymentSuccessPage from "./pages/shopping-view/payment-success";
 import SearchProducts from "./pages/shopping-view/search";
 import LoginRequiredModal from "./components/common/login-required-modal"; // We'll create this next
 import { openLoginModal } from "./store/auth-slice/modal-slice.js"; // We'll create this next
+import PrivacyPolicy from "./pages/shopping-view/privacypolicy";
+import ReturnPolicy from "./pages/shopping-view/returnrefund";
 
 function App() {
   const { user, isAuthenticated, isLoading } = useSelector(
@@ -36,12 +37,16 @@ function App() {
     dispatch(checkAuth());
   }, [dispatch]);
   useEffect(() => {
-    const publicPaths = ['/', '/auth/login', '/auth/register'];
-    if (!isLoading && !isAuthenticated && !publicPaths.includes(location.pathname) && !location.pathname.startsWith('/auth')) {
+    const publicPaths = ["/", "/auth/login", "/auth/register"];
+    if (
+      !isLoading &&
+      !isAuthenticated &&
+      !publicPaths.includes(location.pathname) &&
+      !location.pathname.startsWith("/auth")
+    ) {
       dispatch(openLoginModal());
     }
   }, [isLoading, isAuthenticated, location.pathname, dispatch]);
-
 
   if (isLoading) return <Skeleton className="w-[800] bg-black h-[600px]" />;
 
@@ -52,6 +57,8 @@ function App() {
       <Routes>
         <Route path="/" element={<ShoppingLayout />}>
           <Route index element={<ShoppingHome />} />
+          <Route path="privacypolicy" element={<PrivacyPolicy />} />
+          <Route path="refund-policy" element={<ReturnPolicy />} />
         </Route>
         <Route path="/auth" element={<AuthLayout />}>
           <Route path="login" element={<AuthLogin />} />
@@ -78,7 +85,7 @@ function App() {
             </CheckAuth>
           }
         >
-          <Route path="home" element={<ShoppingHome />} /> 
+          <Route path="home" element={<ShoppingHome />} />
           <Route path="listing" element={<ShoppingListing />} />
           <Route path="checkout" element={<ShoppingCheckout />} />
           <Route path="account" element={<ShoppingAccount />} />
@@ -94,5 +101,3 @@ function App() {
 }
 
 export default App;
-
-
