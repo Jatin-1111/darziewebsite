@@ -41,7 +41,7 @@ export const getAllOrdersByUserId = createAsyncThunk(
   "/order/getAllOrdersByUserId",
   async (userId) => {
     const response = await axios.get(
-      `https://darziewebsite-backend.onrender.com/api/shop/order/list/${userId}`
+      `http://localhost:5000/api/shop/order/list/${userId}`
     );
 
     return response.data;
@@ -52,7 +52,7 @@ export const getOrderDetails = createAsyncThunk(
   "/order/getOrderDetails",
   async (id) => {
     const response = await axios.get(
-      `https://darziewebsite-backend.onrender.com/api/shop/order/details/${id}`
+      `http://localhost:5000/api/shop/order/details/${id}`
     );
 
     return response.data;

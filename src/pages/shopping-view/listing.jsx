@@ -10,7 +10,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/components/ui/use-toast";
-import { sortOptions } from "@/config";
+import { sortOptions } from "@/config"; // Assuming sortOptions is defined here
 import { addToCart, fetchCartItems } from "@/store/shop/cart-slice";
 import {
   fetchAllFilteredProducts,
@@ -27,13 +27,9 @@ function createSearchParamsHelper(filterParams) {
   for (const [key, value] of Object.entries(filterParams)) {
     if (Array.isArray(value) && value.length > 0) {
       const paramValue = value.join(",");
-
       queryParams.push(`${key}=${encodeURIComponent(paramValue)}`);
     }
   }
-
-  console.log(queryParams, "queryParams");
-
   return queryParams.join("&");
 }
 
@@ -58,20 +54,35 @@ function ShoppingListing() {
 
   function handleFilter(getSectionId, getCurrentOption) {
     let cpyFilters = { ...filters };
-    const indexOfCurrentSection = Object.keys(cpyFilters).indexOf(getSectionId);
 
-    if (indexOfCurrentSection === -1) {
-      cpyFilters = {
-        ...cpyFilters,
-        [getSectionId]: [getCurrentOption],
-      };
+    // Check if the filter category is 'Price' for special single-select handling
+    if (getSectionId === 'Price') {
+      const isCurrentlySelected = cpyFilters[getSectionId] && cpyFilters[getSectionId].includes(getCurrentOption);
+
+      if (isCurrentlySelected) {
+        // If the same option is clicked again, deselect it
+        delete cpyFilters[getSectionId]; // Remove the Price category entirely
+      } else {
+        // If a new price option is clicked, replace any existing price selections
+        cpyFilters = {
+          ...cpyFilters,
+          [getSectionId]: [getCurrentOption], // Set only the new option
+        };
+      }
     } else {
-      const indexOfCurrentOption =
-        cpyFilters[getSectionId].indexOf(getCurrentOption);
+      // Existing logic for multi-select categories (Category, Size, etc.)
+      const currentOptions = cpyFilters[getSectionId] || [];
+      const indexOfCurrentOption = currentOptions.indexOf(getCurrentOption);
 
-      if (indexOfCurrentOption === -1)
-        cpyFilters[getSectionId].push(getCurrentOption);
-      else cpyFilters[getSectionId].splice(indexOfCurrentOption, 1);
+      if (indexOfCurrentOption === -1) {
+        // Add option if not present
+        cpyFilters[getSectionId] = [...currentOptions, getCurrentOption];
+      } else {
+        // Remove option if present
+        cpyFilters[getSectionId] = currentOptions.filter(
+          (option) => option !== getCurrentOption
+        );
+      }
     }
 
     setFilters(cpyFilters);
@@ -98,7 +109,6 @@ function ShoppingListing() {
             title: `Only ${getQuantity} quantity can be added for this item`,
             variant: "destructive",
           });
-
           return;
         }
       }
@@ -121,25 +131,43 @@ function ShoppingListing() {
   }
 
   useEffect(() => {
-    setSort("price-lowtohigh");
-    setFilters(JSON.parse(sessionStorage.getItem("filters")) || {});
-  }, [categorySearchParam]);
+    // Initialize sort and filters on component mount or category change
+    setSort("price-lowtohigh"); // Default sort
+    const savedFilters = JSON.parse(sessionStorage.getItem("filters"));
+    if (categorySearchParam && !savedFilters?.Category?.includes(categorySearchParam)) {
+        // If category param exists and is not in saved filters, prioritize it
+        setFilters(prev => ({
+            ...prev,
+            Category: [categorySearchParam]
+        }));
+    } else {
+        setFilters(savedFilters || {});
+    }
+  }, [categorySearchParam]); // Rerun if categorySearchParam changes
 
   useEffect(() => {
+    // Update URL search params when filters change
     if (filters && Object.keys(filters).length > 0) {
       const createQueryString = createSearchParamsHelper(filters);
       setSearchParams(new URLSearchParams(createQueryString));
+    } else {
+      // Clear search params if no filters are active (important for clean URLs)
+      setSearchParams(new URLSearchParams(""));
     }
-  }, [filters]);
+  }, [filters, setSearchParams]);
 
   useEffect(() => {
-    if (filters !== null && sort !== null)
+    // Fetch products when filters or sort change
+    // Ensure filters is not null/undefined before dispatching
+    if (filters !== null && sort !== null) {
       dispatch(
         fetchAllFilteredProducts({ filterParams: filters, sortParams: sort })
       );
-  }, [dispatch, sort, filters]);
+    }
+  }, [dispatch, sort, filters]); // Depend on dispatch, sort, and filters
 
   useEffect(() => {
+    // Open product details dialog when productDetails is fetched
     if (productDetails !== null) setOpenDetailsDialog(true);
   }, [productDetails]);
 
@@ -182,21 +210,25 @@ function ShoppingListing() {
           </div>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4">
-          {productList && productList.length > 0
-            ? productList.map((productItem) => (
-                <ShoppingProductTile
-                  handleGetProductDetails={handleGetProductDetails}
-                  product={productItem}
-                  handleAddtoCart={handleAddtoCart}
-                />
-              ))
-            : null}
+          {productList && productList.length > 0 ? (
+            productList.map((productItem) => (
+              <ShoppingProductTile
+                key={productItem._id || productItem.id} // Ensure unique key
+                handleGetProductDetails={handleGetProductDetails}
+                product={productItem}
+                handleAddtoCart={handleAddtoCart}
+              />
+            ))
+          ) : (
+            <p className="col-span-full text-center text-gray-500">No products found matching your criteria.</p>
+          )}
         </div>
       </div>
       <ProductDetailsDialog
         open={openDetailsDialog}
         setOpen={setOpenDetailsDialog}
         productDetails={productDetails}
+        handleAddtoCart={handleAddtoCart} // Pass handleAddtoCart to dialog if needed
       />
     </div>
   );

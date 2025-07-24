@@ -4,7 +4,7 @@ import { loginFormControls } from "@/config";
 import { loginUser } from "@/store/auth-slice";
 import { useState } from "react";
 import { useDispatch } from "react-redux";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom"; // Import useNavigate
 
 const initialState = {
   email: "",
@@ -14,6 +14,7 @@ const initialState = {
 function AuthLogin() {
   const [formData, setFormData] = useState(initialState);
   const dispatch = useDispatch();
+  const navigate = useNavigate(); // Initialize useNavigate hook
   const { toast } = useToast();
 
   function onSubmit(event) {
@@ -24,6 +25,17 @@ function AuthLogin() {
         toast({
           title: data?.payload?.message,
         });
+
+        // IMPORTANT: Explicitly navigate after successful login
+        // Use the 'user' object from the action's payload for immediate access
+        const loggedInUser = data?.payload?.user;
+
+        if (loggedInUser?.role === "admin") {
+          navigate("/admin/dashboard");
+        } else {
+          navigate("/shop/home");
+        }
+
       } else {
         toast({
           title: data?.payload?.message,
@@ -34,7 +46,7 @@ function AuthLogin() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-md space-y-6">
+    <div className="font-josefin mx-auto w-full max-w-md space-y-6">
       <div className="text-center">
         <h1 className="text-3xl font-bold tracking-tight text-foreground">
           Sign in to your account

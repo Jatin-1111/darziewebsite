@@ -129,9 +129,15 @@ export const shoppingViewHeaderMenuItems = [
     label: "Search",
     path: "/shop/search",
   },
+  {
+    id: "bestseller",
+    label: "Best Seller",
+    path: "/shop/search",
+  },
 ];
 
 export const categoryOptionsMap = {
+  bestseller:"Best Seller",
   bridal: "Bridal",
   formals: "Formals",
   partywear: "Partywear",
@@ -147,6 +153,13 @@ export const filterOptions = {
     { id: "Partywear", label: "Partywear" },
     { id: "casual", label: "Casual" },
     { id: "reception", label: "Reception" },
+  ],
+  Price: [
+    { id: 'under_1000', label: 'Under ₹1000' },
+    { id: '1000_to_2000', label: '₹1,000 - ₹2,000' },
+    { id: '2000_to_5000', label: '₹2,000 - ₹5,000' },
+    { id: '5000_to_10000', label: '₹5,000 - ₹10,000' },
+    { id: 'over_10000', label: 'Over ₹10,000' },
   ],
 };
 

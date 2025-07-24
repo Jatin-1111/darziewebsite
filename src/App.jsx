@@ -1,4 +1,5 @@
-import { Route, Routes } from "react-router-dom";
+
+import { Route, Routes, useLocation } from "react-router-dom";
 import AuthLayout from "./components/auth/layout";
 import AuthLogin from "./pages/auth/login";
 import AuthRegister from "./pages/auth/register";
@@ -14,9 +15,6 @@ import ShoppingListing from "./pages/shopping-view/listing";
 import ShoppingCheckout from "./pages/shopping-view/checkout";
 import ShoppingAccount from "./pages/shopping-view/account";
 import CheckAuth from "./components/common/check-auth";
-import UnauthPage from "./pages/unauth-page";
-import PrivacyPolicy from "./pages/shopping-view/privacypolicy"
-import ReturnPolicy from "./pages/shopping-view/returnrefund"
 import { useDispatch, useSelector } from "react-redux";
 import { useEffect } from "react";
 import { checkAuth } from "./store/auth-slice";
@@ -24,16 +22,26 @@ import { Skeleton } from "@/components/ui/skeleton";
 import PaypalReturnPage from "./pages/shopping-view/paypal-return";
 import PaymentSuccessPage from "./pages/shopping-view/payment-success";
 import SearchProducts from "./pages/shopping-view/search";
+import LoginRequiredModal from "./components/common/login-required-modal"; // We'll create this next
+import { openLoginModal } from "./store/auth-slice/modal-slice.js"; // We'll create this next
 
 function App() {
   const { user, isAuthenticated, isLoading } = useSelector(
     (state) => state.auth
   );
   const dispatch = useDispatch();
+  const location = useLocation();
 
   useEffect(() => {
     dispatch(checkAuth());
   }, [dispatch]);
+  useEffect(() => {
+    const publicPaths = ['/', '/auth/login', '/auth/register'];
+    if (!isLoading && !isAuthenticated && !publicPaths.includes(location.pathname) && !location.pathname.startsWith('/auth')) {
+      dispatch(openLoginModal());
+    }
+  }, [isLoading, isAuthenticated, location.pathname, dispatch]);
+
 
   if (isLoading) return <Skeleton className="w-[800] bg-black h-[600px]" />;
 
@@ -42,23 +50,10 @@ function App() {
   return (
     <div className="flex flex-col overflow-hidden bg-white">
       <Routes>
-        <Route
-          path="/"
-          element={
-            <CheckAuth
-              isAuthenticated={isAuthenticated}
-              user={user}
-            ></CheckAuth>
-          }
-        />
-        <Route
-          path="/auth"
-          element={
-            <CheckAuth isAuthenticated={isAuthenticated} user={user}>
-              <AuthLayout />
-            </CheckAuth>
-          }
-        >
+        <Route path="/" element={<ShoppingLayout />}>
+          <Route index element={<ShoppingHome />} />
+        </Route>
+        <Route path="/auth" element={<AuthLayout />}>
           <Route path="login" element={<AuthLogin />} />
           <Route path="register" element={<AuthRegister />} />
         </Route>
@@ -83,7 +78,7 @@ function App() {
             </CheckAuth>
           }
         >
-          <Route path="home" element={<ShoppingHome />} />
+          <Route path="home" element={<ShoppingHome />} /> 
           <Route path="listing" element={<ShoppingListing />} />
           <Route path="checkout" element={<ShoppingCheckout />} />
           <Route path="account" element={<ShoppingAccount />} />
@@ -91,14 +86,13 @@ function App() {
           <Route path="payment-success" element={<PaymentSuccessPage />} />
           <Route path="search" element={<SearchProducts />} />
         </Route>
-        <Route path="/unauth-page" element={<UnauthPage />} />
         <Route path="*" element={<NotFound />} />
-        <Route path="/privacypolicy" element={<PrivacyPolicy/>} />
-        <Route path="/refund-policy" element={<ReturnPolicy/>} />
       </Routes>
-      
+      <LoginRequiredModal />
     </div>
   );
 }
 
 export default App;
+
+
