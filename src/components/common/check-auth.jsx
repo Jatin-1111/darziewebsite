@@ -1,61 +1,35 @@
-import { Navigate, useLocation } from "react-router-dom";
-
-function CheckAuth({ isAuthenticated, user, children }) {
+import React, { useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { openLoginModal } from '../../store/auth-slice/modal-slice.js'; 
+const CheckAuth = ({ children, isAuthenticated, user }) => {
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
   const location = useLocation();
 
-  console.log(location.pathname, isAuthenticated);
-
-  if (location.pathname === "/") {
-    if (!isAuthenticated) {
-      return <Navigate to="/auth/login" />;
-    } else {
+  useEffect(() => {
+    const isPublicOrAuthRoute = location.pathname === '/' || location.pathname.startsWith('/auth');
+    if (!isAuthenticated && !isPublicOrAuthRoute) {
+      dispatch(openLoginModal());
+    }
+    if (isAuthenticated && (location.pathname.includes("/login") || location.pathname.includes("/register"))) {
       if (user?.role === "admin") {
-        return <Navigate to="/admin/dashboard" />;
+        navigate("/admin/dashboard");
       } else {
-        return <Navigate to="/shop/home" />;
+        navigate("/shop/home");
       }
     }
-  }
-
-  if (
-    !isAuthenticated &&
-    !(
-      location.pathname.includes("/login") ||
-      location.pathname.includes("/register")
-    )
-  ) {
-    return <Navigate to="/auth/login" />;
-  }
-
-  if (
-    isAuthenticated &&
-    (location.pathname.includes("/login") ||
-      location.pathname.includes("/register"))
-  ) {
-    if (user?.role === "admin") {
-      return <Navigate to="/admin/dashboard" />;
-    } else {
-      return <Navigate to="/shop/home" />;
+    if (isAuthenticated) {
+      if (user?.role !== "admin" && location.pathname.includes("admin")) {
+        navigate("/unauth-page"); 
+      }
+      if (user?.role === "admin" && location.pathname.includes("shop")) {
+        navigate("/admin/dashboard");
+      }
     }
-  }
 
-  if (
-    isAuthenticated &&
-    user?.role !== "admin" &&
-    location.pathname.includes("admin")
-  ) {
-    return <Navigate to="/unauth-page" />;
-  }
-
-  if (
-    isAuthenticated &&
-    user?.role === "admin" &&
-    location.pathname.includes("shop")
-  ) {
-    return <Navigate to="/admin/dashboard" />;
-  }
-
+  }, [isAuthenticated, dispatch, location.pathname, navigate, user]);
   return <>{children}</>;
-}
+};
 
 export default CheckAuth;

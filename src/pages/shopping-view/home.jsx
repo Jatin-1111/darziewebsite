@@ -3,10 +3,6 @@ import "../../../src/App.css";
 import { Link } from 'react-router-dom';
 import banner from "../../assets/1.png";
 import bannerOne from "../../assets/banner.png";
-import best1 from "../../assets/Best-1.jpeg";
-import best2 from "../../assets/Beat-2.jpeg";
-import best3 from "../../assets/Best-3.jpeg";
-import best4 from "../../assets/Best-4.jpeg";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -88,13 +84,6 @@ const collectionCategories = [
   },
 ];
 
-const bestSellers = [
-  { id: "product-1", title: "Ipsum lorem", image: best1 },
-  { id: "product-2", title: "Ipsum lorem", image: best2 },
-  { id: "product-3", title: "Ipsum lorem", image: best3 },
-  { id: "product-4", title: "Ipsum lorem", image: best4 },
-];
-
 const sellerLinks = [
   "Anarkali Suit (Floor Length)",
   "Anarkali Suit (Knee Length)",
@@ -141,6 +130,11 @@ function ShoppingHome() {
   const navigate = useNavigate();
   const { toast } = useToast();
 
+  // Determine best sellers from the productList
+  // This will take the first 4 products from the fetched productList
+  const bestSellers = productList && productList.length > 0 ? productList.slice(0, 4) : [];
+
+
   useEffect(() => {
     if (productDetails !== null) setOpenDetailsDialog(true);
   }, [productDetails]);
@@ -173,10 +167,10 @@ function ShoppingHome() {
   useEffect(() => {
     dispatch(getFeatureImages());
   }, [dispatch]);
-  
+
   useEffect(() => {
-  window.scrollTo(0, 0);
-}, []);
+    window.scrollTo(0, 0);
+  }, []);
 
   const handleNavigateToListingPage = (item, section) => {
     sessionStorage.removeItem("filters");
@@ -201,7 +195,7 @@ function ShoppingHome() {
   };
 
   const handleNavigate = () => {
-      navigate(`/shop/listing?category=best+sellers`);
+    navigate(`/shop/listing?category=best+sellers`);
   };
 
   return (
@@ -258,15 +252,16 @@ function ShoppingHome() {
           best sellers
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8 px-4 md:px-12">
+          {/* Render best sellers from the dynamically created 'bestSellers' array */}
           {bestSellers.map((product) => (
             <div
-              key={product.id}
-              onClick={() => handleNavigate(product.id)}
+              key={product._id} // Use product._id if available from API
+              onClick={() => handleNavigateToListingPage(product, "id")} // Pass product object and a relevant filter section
               className="cursor-pointer transform transition duration-300 hover:scale-105"
             >
               <img
-                src={product.image}
-                alt={product.title}
+                src={product.image} // Use product.image from the API response
+                alt={product.title} // Use product.title from the API response
                 className="w-full h-[450px] object-cover rounded-lg shadow-md"
               />
               <p className="text-center mt-2 text-lg font-medium">
@@ -280,7 +275,7 @@ function ShoppingHome() {
             {sellerLinks.map((label, index) => (
               <button
                 key={index}
-                onClick={() => handleNavigate("product-1")}
+                onClick={() => handleNavigate("product-1")} // This still navigates to a generic product-1. You might want to update this to navigate based on the 'label'
                 className="flex items-center gap-2 whitespace-nowrap bg-white bg-opacity-10 rounded-full px-4 py-2 hover:bg-opacity-20 transition"
               >
                 <span className="text-xl">⬖</span>
