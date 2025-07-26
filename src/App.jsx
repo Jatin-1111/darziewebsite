@@ -24,6 +24,7 @@ import PaymentSuccessPage from "./pages/shopping-view/payment-success";
 import SearchProducts from "./pages/shopping-view/search";
 import LoginRequiredModal from "./components/common/login-required-modal"; // We'll create this next
 import { openLoginModal } from "./store/auth-slice/modal-slice.js"; // We'll create this next
+import AboutUs from "./pages/shopping-view/aboutus";
 
 function App() {
   const { user, isAuthenticated, isLoading } = useSelector(
@@ -85,6 +86,7 @@ function App() {
           <Route path="paypal-return" element={<PaypalReturnPage />} />
           <Route path="payment-success" element={<PaymentSuccessPage />} />
           <Route path="search" element={<SearchProducts />} />
+          <Route path= "about" element={< AboutUs/>} />
         </Route>
         <Route path="*" element={<NotFound />} />
       </Routes>

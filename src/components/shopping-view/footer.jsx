@@ -35,13 +35,13 @@ function ShoppingFooter() {
               <Link to="/" className="hover:text-[#CBB47B]">Home</Link>
             </li>
             <li>
-              <Link to="/about" className="hover:text-[#CBB47B]">About Us</Link>
+              <Link to="/shop/about" className="hover:text-[#CBB47B]">About Us</Link>
             </li>
             <li>
               <Link to="/shop/listing" className="hover:text-[#CBB47B]">Categories</Link>
             </li>
             <li>
-              <Link to="/account" className="hover:text-[#CBB47B]">Account</Link>
+              <Link to="/shop/account" className="hover:text-[#CBB47B]">Account</Link>
             </li>
           </ul>
         </div>
@@ -59,7 +59,7 @@ function ShoppingFooter() {
               </Link>
             </li>
             <li>
-              <Link to="/track-order" className="hover:text-[#CBB47B]">Track your Order</Link>
+              <Link to="/shop/account" className="hover:text-[#CBB47B]">Track your Order</Link>
             </li>
           </ul>
         </div>
