@@ -1,7 +1,5 @@
-import { Button } from "@/components/ui/button";
 import "../../../src/App.css";
 import { Link } from "react-router-dom";
-import bannerOne from "../../assets/banner.png";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
