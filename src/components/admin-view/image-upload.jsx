@@ -58,9 +58,9 @@ function ProductImageUpload({
       inputRef.current.value = "";
     }
     // Also clear the image in the form data when removed
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      image: ""
+      image: "",
     }));
     console.log("Image removed. uploadedImageUrl cleared.");
   }
@@ -74,7 +74,7 @@ function ProductImageUpload({
 
     try {
       const response = await axios.post(
-        "http://localhost:5000/api/admin/products/upload-image",
+        "https://darziewebsite-backend.onrender.com/api/admin/products/upload-image",
         data // Sending FormData
       );
 
@@ -82,19 +82,28 @@ function ProductImageUpload({
 
       // --- CRITICAL CHANGE HERE ---
       if (response?.data?.success && response.data?.imageUrl) {
-        console.log("ProductImageUpload: Successfully got image URL from backend:", response.data.imageUrl);
+        console.log(
+          "ProductImageUpload: Successfully got image URL from backend:",
+          response.data.imageUrl
+        );
         setUploadedImageUrl(response.data.imageUrl); // Set the state in ProductImageUpload
-        setFormData(prev => ({
+        setFormData((prev) => ({
           ...prev,
-          image: response.data.imageUrl // Update formData in AdminProducts
+          image: response.data.imageUrl, // Update formData in AdminProducts
         }));
         setImageLoadingState(false);
       } else {
-        console.error("ProductImageUpload: Backend upload failed or imageUrl missing:", response.data);
+        console.error(
+          "ProductImageUpload: Backend upload failed or imageUrl missing:",
+          response.data
+        );
         setImageLoadingState(false);
       }
     } catch (error) {
-      console.error("ProductImageUpload: Error during backend image upload:", error);
+      console.error(
+        "ProductImageUpload: Error during backend image upload:",
+        error
+      );
       setImageLoadingState(false);
     }
   }
@@ -102,16 +111,17 @@ function ProductImageUpload({
   // This useEffect will trigger `uploadImageToCloudinary` when `imageFile` changes.
   useEffect(() => {
     if (imageFile !== null) {
-        uploadImageToCloudinary();
+      uploadImageToCloudinary();
     }
   }, [imageFile]);
-
 
   // Add a useEffect to handle initial image for edit mode,
   // making sure uploadedImageUrl is set correctly for display.
   // This helps when an existing product is being edited.
   useEffect(() => {
-    console.log("ProductImageUpload useEffect [isEditMode, setFormData] triggered.");
+    console.log(
+      "ProductImageUpload useEffect [isEditMode, setFormData] triggered."
+    );
     if (isEditMode) {
       // When entering edit mode, if formData.image exists, use it as uploadedImageUrl
       // This is crucial for displaying the existing image in the upload component.
@@ -125,13 +135,17 @@ function ProductImageUpload({
   }, [isEditMode, setUploadedImageUrl, setFormData]); // Removed formData as direct dependency if not passing as object
 
   // Console log for ProductImageUpload component to see its internal state
-  console.log("ProductImageUpload Render - uploadedImageUrl:", uploadedImageUrl);
+  console.log(
+    "ProductImageUpload Render - uploadedImageUrl:",
+    uploadedImageUrl
+  );
   console.log("ProductImageUpload Render - imageFile:", imageFile);
-
 
   return (
     <div
-      className={`font-josefin w-full mt-4 ${isCustomStyling ? "" : "max-w-md mx-auto"}`}
+      className={`font-josefin w-full mt-4 ${
+        isCustomStyling ? "" : "max-w-md mx-auto"
+      }`}
     >
       <Label className="text-lg font-semibold mb-2 block">Upload Image</Label>
       <div
@@ -169,7 +183,8 @@ function ProductImageUpload({
               <span className="sr-only">Remove Image</span>
             </Button>
           </div>
-        ) : ( // If no image uploaded URL, show the upload area
+        ) : (
+          // If no image uploaded URL, show the upload area
           <Label
             htmlFor="image-upload"
             className={`${
