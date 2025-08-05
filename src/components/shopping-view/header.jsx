@@ -23,7 +23,6 @@ import UserCartWrapper from "./cart-wrapper";
 import { useEffect, useState } from "react";
 import { fetchCartItems } from "@/store/shop/cart-slice";
 import { Label } from "../ui/label";
-import logo from "../../assets/Logo.svg";
 
 function MenuItems() {
   const navigate = useNavigate();
@@ -140,7 +139,7 @@ function ShoppingHeader() {
     <header className="sticky z-40 w-full border-b bg-[#C4BA97]">
       <div className="flex h-20 items-center justify-between px-4  md:px-6 ">
         <Link to="/shop/home" className="flex gap-2 pt-3">
-          <img src={logo} alt="Logo" className="h-22 w-22" />
+          <img src='https://res.cloudinary.com/dpxiwelxk/image/upload/v1754385089/Logo_lzbe32.svg' alt="Logo" className="h-22 w-22" />
         </Link>
         <Sheet>
           <SheetTrigger asChild>

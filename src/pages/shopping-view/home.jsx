@@ -1,7 +1,6 @@
 import { Button } from "@/components/ui/button";
 import "../../../src/App.css";
-import { Link } from 'react-router-dom';
-import banner from "../../assets/1.png";
+import { Link } from "react-router-dom";
 import bannerOne from "../../assets/banner.png";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -132,8 +131,8 @@ function ShoppingHome() {
 
   // Determine best sellers from the productList
   // This will take the first 4 products from the fetched productList
-  const bestSellers = productList && productList.length > 0 ? productList.slice(0, 4) : [];
-
+  const bestSellers =
+    productList && productList.length > 0 ? productList.slice(0, 4) : [];
 
   useEffect(() => {
     if (productDetails !== null) setOpenDetailsDialog(true);
@@ -200,11 +199,34 @@ function ShoppingHome() {
 
   return (
     <div className="flex flex-col min-h-screen w-full">
-      <div className="relative w-full h-[700px] overflow-hidden font-josefin">
-        <img src={banner} alt="banner" className="w-full h-full object-cover" />
-        <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2">
+      <div className="relative w-full h-screen overflow-hidden font-josefin">
+        {/* Desktop/Tablet Image */}
+        <img
+          src="https://res.cloudinary.com/dpxiwelxk/image/upload/v1754393818/bannardestop_ri4m9p.svg"
+          alt="banner-desktop"
+          className="hidden sm:block w-full h-full object-cover object-center"
+          loading="lazy"
+        />
+
+        {/* Mobile Image */}
+        <div
+          className="absolute inset-0"
+          style={{
+            background: "linear-gradient(to bottom, #F4EFD6 59%, #8E8B7D 100%)",
+            opacity: 0.6,
+            zIndex: 1,
+          }}
+        />
+        <img
+          src="https://res.cloudinary.com/dpxiwelxk/image/upload/v1754392860/bannermobile_ml9vmo.svg"
+          alt="banner-mobile"
+          className="w-full h-full object-cover object-center relative z-0"
+          loading="lazy"
+        />
+
+        <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 px-4 text-center">
           <Link to="/shop/listing">
-            <button className="bg-black text-white px-6 py-2 rounded-full text-sm hover:bg-opacity-80 transition">
+            <button className="bg-black text-white text-xs sm:text-sm md:text-base px-4 sm:px-6 md:px-8 py-2 sm:py-2.5 md:py-3 rounded-full hover:bg-opacity-80 transition duration-300">
               Go to Collection
             </button>
           </Link>
@@ -214,7 +236,10 @@ function ShoppingHome() {
       <section>
         <div
           className="relative w-full h-screen bg-cover bg-center"
-          style={{ backgroundImage: `url(${bannerOne})` }}
+          style={{
+            backgroundImage: `url(https://res.cloudinary.com/dpxiwelxk/image/upload/v1754384807/banner_zj4u8n.png)`,
+            loading: "lazy",
+          }}
         >
           <div
             className="absolute inset-0"
