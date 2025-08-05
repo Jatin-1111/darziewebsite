@@ -1,5 +1,4 @@
 import { Link } from "react-router-dom";
-import logo from "../../assets/Logo.svg";
 
 function ShoppingFooter() {
   return (
@@ -7,7 +6,7 @@ function ShoppingFooter() {
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4">
         {/* Logo & Social Icons */}
         <div>
-          <img src={logo} alt="logo" className="h-22 w-22" />
+          <img src='https://res.cloudinary.com/dpxiwelxk/image/upload/v1754385089/Logo_lzbe32.svg' alt="logo" className="h-22 w-22" />
           <div className="flex gap-4 mt-4 text-white text-xl">
             <a href="https://facebook.com" target="_blank" rel="noreferrer">
               <i className="fab fa-facebook-f hover:text-[#CBB47B]"></i>

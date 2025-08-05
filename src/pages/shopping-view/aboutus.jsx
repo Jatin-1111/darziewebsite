@@ -1,5 +1,4 @@
 import React from "react";
-import accountImage from "../../assets/account.jpg"; // Adjust the path based on your folder structure
 
 const AboutUs = () => {
   return (
@@ -7,7 +6,7 @@ const AboutUs = () => {
       {/* Left Image Section */}
       <div className="lg:w-1/2 w-full h-[300px] lg:h-auto">
         <img
-          src={accountImage}
+          src='https://res.cloudinary.com/dpxiwelxk/image/upload/v1754385539/account_azjgs6.jpg'
           alt="Darzie's Couture"
           className="w-full h-full object-cover"
         />

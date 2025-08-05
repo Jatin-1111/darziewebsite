@@ -1,5 +1,4 @@
 import { Outlet } from "react-router-dom";
-import best4 from "../../assets/Best-4.jpeg";
 
 function AuthLayout() {
   return (
@@ -8,7 +7,7 @@ function AuthLayout() {
       <div
         className="hidden lg:flex items-center justify-center w-1/2 px-12 relative" // Added 'relative' for positioning the overlay
         style={{
-          backgroundImage: `url(${best4})`,
+          backgroundImage: `url(https://res.cloudinary.com/dpxiwelxk/image/upload/v1754394892/Best-4_v8jek0.jpg)`,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           backgroundRepeat: 'no-repeat',
