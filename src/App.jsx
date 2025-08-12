@@ -6,7 +6,6 @@ import { checkAuth } from "./store/auth-slice";
 import { Skeleton } from "@/components/ui/skeleton";
 import { openLoginModal } from "./store/auth-slice/modal-slice.js";
 import LoginRequiredModal from "./components/common/login-required-modal";
-import AuthTest from "./components/AuthTest";
 
 const AuthLayout = lazy(() => import("./components/auth/layout"));
 const AuthLogin = lazy(() => import("./pages/auth/login"));
@@ -49,25 +48,14 @@ function App() {
   const dispatch = useDispatch();
   const location = useLocation();
 
-  // 🔥 CRITICAL FIX: Check auth IMMEDIATELY on app mount
   useEffect(() => {
-    console.log("🔄 App mounted, checking auth...");
     dispatch(checkAuth());
   }, [dispatch]);
 
-  // 🔥 FIXED: Only handle login modal AFTER auth check is complete
   useEffect(() => {
-    // Don't do anything while loading
     if (isLoading) {
-      console.log("⏳ Still loading auth state...");
       return;
     }
-
-    console.log("🔍 Auth state:", {
-      isAuthenticated,
-      user: user?.userName,
-      location: location.pathname,
-    });
 
     const publicPaths = ["/", "/auth/login", "/auth/register"];
     const isPublicRoute =
@@ -75,18 +63,13 @@ function App() {
       location.pathname.startsWith("/auth");
 
     if (!isAuthenticated && !isPublicRoute) {
-      console.log("🚫 Not authenticated, opening login modal");
       dispatch(openLoginModal());
     }
   }, [isLoading, isAuthenticated, location.pathname, dispatch, user]);
 
-  // 🔥 CRITICAL: Don't render routes until we've checked authentication
   if (isLoading) {
-    console.log("⏳ App is loading, showing skeleton...");
     return <LoadingFallback />;
   }
-
-  console.log("✅ App ready, rendering routes...");
 
   return (
     <div className="flex flex-col overflow-hidden bg-white">
@@ -137,7 +120,6 @@ function App() {
         </Routes>
       </Suspense>
       <LoginRequiredModal />
-      {import.meta.env.VITE_NODE_ENV === "development" && <AuthTest />}
     </div>
   );
 }
