@@ -127,8 +127,6 @@ function ShoppingHome() {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  // Determine best sellers from the productList
-  // This will take the first 4 products from the fetched productList
   const bestSellers =
     productList && productList.length > 0 ? productList.slice(0, 4) : [];
 
@@ -198,28 +196,31 @@ function ShoppingHome() {
   return (
     <div className="flex flex-col min-h-screen w-full">
       <div className="relative w-full h-screen overflow-hidden font-josefin">
-        {/* Desktop/Tablet Image */}
-        <img
-          src="https://res.cloudinary.com/dpxiwelxk/image/upload/v1754393818/bannardestop_ri4m9p.svg"
-          alt="banner-desktop"
-          className="hidden sm:block w-full h-full object-cover object-center"
-          loading="lazy"
-        />
+        {/* Responsive Banner Image */}
+        <picture>
+          <source
+            media="(max-width: 640px)"
+            srcSet="https://res.cloudinary.com/dpxiwelxk/image/upload/v1754392860/bannermobile_ml9vmo.svg"
+          />
+          <source
+            media="(min-width: 641px)"
+            srcSet="https://res.cloudinary.com/dpxiwelxk/image/upload/v1754393818/bannardestop_ri4m9p.svg"
+          />
+          <img
+            src="https://res.cloudinary.com/dpxiwelxk/image/upload/v1754393818/bannardestop_ri4m9p.svg"
+            alt="Darzie's Couture Banner"
+            className="w-full h-full object-cover object-center"
+            loading="lazy"
+          />
+        </picture>
 
-        {/* Mobile Image */}
+        {/* Overlay */}
         <div
           className="absolute inset-0"
           style={{
             background: "linear-gradient(to bottom, #F4EFD6 59%, #8E8B7D 100%)",
             opacity: 0.6,
-            zIndex: 1,
           }}
-        />
-        <img
-          src="https://res.cloudinary.com/dpxiwelxk/image/upload/v1754392860/bannermobile_ml9vmo.svg"
-          alt="banner-mobile"
-          className="w-full h-full object-cover object-center relative z-0"
-          loading="lazy"
         />
 
         <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 px-4 text-center">
