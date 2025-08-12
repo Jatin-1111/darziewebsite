@@ -140,7 +140,10 @@ function ShoppingHeader() {
           <img
             src="https://res.cloudinary.com/dpxiwelxk/image/upload/v1754385089/Logo_lzbe32.svg"
             alt="Logo"
+            width="88"
+            height="88"
             className="h-22 w-22"
+            loading="eager" // Use "eager" for above-the-fold logo
           />
         </Link>
         <Sheet>

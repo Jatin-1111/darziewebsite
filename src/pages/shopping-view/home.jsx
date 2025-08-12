@@ -125,7 +125,6 @@ function ShoppingHome() {
   const { user } = useSelector((state) => state.auth);
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { toast } = useToast();
 
   const bestSellers =
     productList && productList.length > 0 ? productList.slice(0, 4) : [];
@@ -167,27 +166,27 @@ function ShoppingHome() {
     window.scrollTo(0, 0);
   }, []);
 
-  const handleNavigateToListingPage = (item, section) => {
-    sessionStorage.removeItem("filters");
-    const currentFilter = { [section]: [item.id] };
-    sessionStorage.setItem("filters", JSON.stringify(currentFilter));
-    navigate(`/shop/listing`);
-  };
+  // const handleNavigateToListingPage = (item, section) => {
+  //   sessionStorage.removeItem("filters");
+  //   const currentFilter = { [section]: [item.id] };
+  //   sessionStorage.setItem("filters", JSON.stringify(currentFilter));
+  //   navigate(`/shop/listing`);
+  // };
 
-  const handleGetProductDetails = (id) => {
-    dispatch(fetchProductDetails(id));
-  };
+  // const handleGetProductDetails = (id) => {
+  //   dispatch(fetchProductDetails(id));
+  // };
 
-  const handleAddtoCart = (id) => {
-    dispatch(addToCart({ userId: user?.id, productId: id, quantity: 1 })).then(
-      (data) => {
-        if (data?.payload?.success) {
-          dispatch(fetchCartItems(user?.id));
-          toast({ title: "Product is added to cart" });
-        }
-      }
-    );
-  };
+  // const handleAddtoCart = (id) => {
+  //   dispatch(addToCart({ userId: user?.id, productId: id, quantity: 1 })).then(
+  //     (data) => {
+  //       if (data?.payload?.success) {
+  //         dispatch(fetchCartItems(user?.id));
+  //         toast({ title: "Product is added to cart" });
+  //       }
+  //     }
+  //   );
+  // };
 
   const handleNavigate = () => {
     navigate(`/shop/listing?category=best+sellers`);
@@ -198,19 +197,23 @@ function ShoppingHome() {
       <div className="relative w-full h-screen overflow-hidden font-josefin">
         {/* Responsive Banner Image */}
         <picture>
+          {/* Add width and height attributes */}
           <source
             media="(max-width: 640px)"
-            srcSet="https://res.cloudinary.com/dpxiwelxk/image/upload/v1754392860/bannermobile_ml9vmo.svg"
+            srcSet="https://res.cloudinary.com/dpxiwelxk/image/upload/f_auto,q_auto,w_640/v1754392860/bannermobile_ml9vmo.svg"
           />
           <source
             media="(min-width: 641px)"
-            srcSet="https://res.cloudinary.com/dpxiwelxk/image/upload/v1754393818/bannardestop_ri4m9p.svg"
+            srcSet="https://res.cloudinary.com/dpxiwelxk/image/upload/f_auto,q_auto,w_1920/v1754393818/bannardestop_ri4m9p.svg"
           />
           <img
-            src="https://res.cloudinary.com/dpxiwelxk/image/upload/v1754393818/bannardestop_ri4m9p.svg"
+            src="https://res.cloudinary.com/dpxiwelxk/image/upload/f_auto,q_auto,w_1920/v1754393818/bannardestop_ri4m9p.svg"
             alt="Darzie's Couture Banner"
+            width="1920"
+            height="1080"
             className="w-full h-full object-cover object-center"
-            loading="lazy"
+            loading="eager"
+            fetchPriority="high"
           />
         </picture>
 
@@ -266,7 +269,7 @@ function ShoppingHome() {
             </div>
           </div>
           <div className="absolute bottom-4 ml-[5.75rem] font-faux text-white text-lg">
-            darzie's couture
+            darzie&apos;s couture
           </div>
         </div>
       </section>
@@ -278,19 +281,15 @@ function ShoppingHome() {
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8 px-4 md:px-12">
           {/* Render best sellers from the dynamically created 'bestSellers' array */}
           {bestSellers.map((product) => (
-            <div
-              key={product._id} // Use product._id if available from API
-              onClick={() => handleNavigateToListingPage(product, "id")} // Pass product object and a relevant filter section
-              className="cursor-pointer transform transition duration-300 hover:scale-105"
-            >
+            <div key={product._id}>
               <img
-                src={product.image} // Use product.image from the API response
-                alt={product.title} // Use product.title from the API response
+                src={product.image}
+                alt={product.title}
+                loading="lazy"
+                width="450"
+                height="450"
                 className="w-full h-[450px] object-cover rounded-lg shadow-md"
               />
-              <p className="text-center mt-2 text-lg font-medium">
-                {product.title}
-              </p>
             </div>
           ))}
         </div>

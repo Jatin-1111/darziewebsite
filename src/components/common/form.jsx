@@ -9,6 +9,7 @@ import {
 } from "../ui/select";
 import { Textarea } from "../ui/textarea";
 import { Button } from "../ui/button";
+import { useId } from "react";
 
 function CommonForm({
   formControls,
@@ -17,18 +18,24 @@ function CommonForm({
   onSubmit,
   buttonText,
   isBtnDisabled,
+  formTitle,
+  formDescription,
 }) {
+  const formId = useId();
+
   function renderInputsByComponentType(getControlItem) {
-    let element = null;
+    const inputId = `${formId}-${getControlItem.name}`;
+    const errorId = `${inputId}-error`;
     const value = formData[getControlItem.name] || "";
+    const hasError = getControlItem.error;
 
     switch (getControlItem.componentType) {
       case "input":
-        element = (
+        return (
           <Input
+            id={inputId}
             name={getControlItem.name}
             placeholder={getControlItem.placeholder}
-            id={getControlItem.name}
             type={getControlItem.type}
             value={value}
             onChange={(event) =>
@@ -37,23 +44,37 @@ function CommonForm({
                 [getControlItem.name]: event.target.value,
               })
             }
+            aria-describedby={hasError ? errorId : undefined}
+            aria-invalid={hasError ? "true" : "false"}
+            aria-required={getControlItem.required || false}
+            autoComplete={getControlItem.autoComplete}
           />
         );
 
-        break;
       case "select":
-        element = (
+        return (
           <Select
-            onValueChange={(value) =>
+            value={value}
+            onValueChange={(selectedValue) =>
               setFormData({
                 ...formData,
-                [getControlItem.name]: value,
+                [getControlItem.name]: selectedValue,
               })
             }
-            value={value}
+            aria-describedby={hasError ? errorId : undefined}
+            aria-invalid={hasError ? "true" : "false"}
+            aria-required={getControlItem.required || false}
           >
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder={getControlItem.label} />
+            <SelectTrigger
+              id={inputId}
+              className="w-full"
+              aria-label={getControlItem.label}
+            >
+              <SelectValue
+                placeholder={
+                  getControlItem.placeholder || `Select ${getControlItem.label}`
+                }
+              />
             </SelectTrigger>
             <SelectContent>
               {getControlItem.options && getControlItem.options.length > 0
@@ -67,13 +88,12 @@ function CommonForm({
           </Select>
         );
 
-        break;
       case "textarea":
-        element = (
+        return (
           <Textarea
+            id={inputId}
             name={getControlItem.name}
             placeholder={getControlItem.placeholder}
-            id={getControlItem.id}
             value={value}
             onChange={(event) =>
               setFormData({
@@ -81,17 +101,19 @@ function CommonForm({
                 [getControlItem.name]: event.target.value,
               })
             }
+            aria-describedby={hasError ? errorId : undefined}
+            aria-invalid={hasError ? "true" : "false"}
+            aria-required={getControlItem.required || false}
+            rows={getControlItem.rows || 4}
           />
         );
 
-        break;
-
       default:
-        element = (
+        return (
           <Input
+            id={inputId}
             name={getControlItem.name}
             placeholder={getControlItem.placeholder}
-            id={getControlItem.name}
             type={getControlItem.type}
             value={value}
             onChange={(event) =>
@@ -100,27 +122,95 @@ function CommonForm({
                 [getControlItem.name]: event.target.value,
               })
             }
+            aria-describedby={hasError ? errorId : undefined}
+            aria-invalid={hasError ? "true" : "false"}
+            aria-required={getControlItem.required || false}
           />
         );
-        break;
     }
-
-    return element;
   }
 
   return (
-    <form onSubmit={onSubmit}>
+    <form
+      onSubmit={onSubmit}
+      role="form"
+      aria-labelledby={formTitle ? `${formId}-title` : undefined}
+    >
+      {formTitle && (
+        <h2 id={`${formId}-title`} className="text-xl font-semibold mb-4">
+          {formTitle}
+        </h2>
+      )}
+      {formDescription && (
+        <p
+          className="text-sm text-muted-foreground mb-4"
+          id={`${formId}-description`}
+        >
+          {formDescription}
+        </p>
+      )}
+
       <div className="flex flex-col gap-3">
-        {formControls.map((controlItem) => (
-          <div className="grid w-full gap-1.5" key={controlItem.name}>
-            <Label className="mb-1">{controlItem.label}</Label>
-            {renderInputsByComponentType(controlItem)}
-          </div>
-        ))}
+        {formControls.map((controlItem) => {
+          const inputId = `${formId}-${controlItem.name}`;
+          const errorId = `${inputId}-error`;
+
+          return (
+            <div className="grid w-full gap-1.5" key={controlItem.name}>
+              <Label
+                htmlFor={inputId}
+                className="mb-1"
+                aria-required={controlItem.required || false}
+              >
+                {controlItem.label}
+                {controlItem.required && (
+                  <span className="text-destructive ml-1" aria-label="required">
+                    *
+                  </span>
+                )}
+              </Label>
+              {renderInputsByComponentType(controlItem)}
+              {controlItem.error && (
+                <div
+                  id={errorId}
+                  className="text-sm text-destructive"
+                  role="alert"
+                  aria-live="polite"
+                >
+                  {controlItem.error}
+                </div>
+              )}
+              {controlItem.helpText && (
+                <div className="text-xs text-muted-foreground">
+                  {controlItem.helpText}
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
-      <Button disabled={isBtnDisabled} type="submit" className="mt-2 w-full">
+
+      <Button
+        disabled={isBtnDisabled}
+        type="submit"
+        className="mt-6 w-full"
+        aria-describedby={
+          isBtnDisabled ? `${formId}-submit-disabled` : undefined
+        }
+      >
         {buttonText || "Submit"}
       </Button>
+
+      {isBtnDisabled && (
+        <div
+          id={`${formId}-submit-disabled`}
+          className="sr-only"
+          aria-live="polite"
+        >
+          Form submission is currently disabled. Please fill in all required
+          fields.
+        </div>
+      )}
     </form>
   );
 }
