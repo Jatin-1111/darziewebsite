@@ -1,5 +1,6 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import axios from "axios";
+import { API_ENDPOINTS } from "../../../config/api";
 
 const initialState = {
   isLoading: false,
@@ -10,7 +11,7 @@ export const addNewProduct = createAsyncThunk(
   "/products/addnewproduct",
   async (formData) => {
     const result = await axios.post(
-      "https://darziewebsite-backend.onrender.com/api/admin/products/add",
+      API_ENDPOINTS.ADMIN_PRODUCTS_ADD,
       formData,
       {
         headers: {
@@ -26,10 +27,7 @@ export const addNewProduct = createAsyncThunk(
 export const fetchAllProducts = createAsyncThunk(
   "/products/fetchAllProducts",
   async () => {
-    const result = await axios.get(
-      "https://darziewebsite-backend.onrender.com/api/admin/products/get"
-    );
-
+    const result = await axios.get(API_ENDPOINTS.ADMIN_PRODUCTS_GET);
     return result?.data;
   }
 );
@@ -38,7 +36,7 @@ export const editProduct = createAsyncThunk(
   "/products/editProduct",
   async ({ id, formData }) => {
     const result = await axios.put(
-      `https://darziewebsite-backend.onrender.com/api/admin/products/edit/${id}`,
+      API_ENDPOINTS.ADMIN_PRODUCTS_EDIT(id),
       formData,
       {
         headers: {
@@ -54,10 +52,7 @@ export const editProduct = createAsyncThunk(
 export const deleteProduct = createAsyncThunk(
   "/products/deleteProduct",
   async (id) => {
-    const result = await axios.delete(
-      `https://darziewebsite-backend.onrender.com/api/admin/products/delete/${id}`
-    );
-
+    const result = await axios.delete(API_ENDPOINTS.ADMIN_PRODUCTS_DELETE(id));
     return result?.data;
   }
 );
@@ -75,7 +70,7 @@ const AdminProductsSlice = createSlice({
         state.isLoading = false;
         state.productList = action.payload.data;
       })
-      .addCase(fetchAllProducts.rejected, (state, action) => {
+      .addCase(fetchAllProducts.rejected, (state) => {
         state.isLoading = false;
         state.productList = [];
       });

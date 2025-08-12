@@ -1,10 +1,11 @@
-import { FileIcon, UploadCloudIcon, XIcon } from "lucide-react";
+import { UploadCloudIcon, XIcon } from "lucide-react";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { useEffect, useRef } from "react";
 import { Button } from "../ui/button";
 import axios from "axios";
 import { Skeleton } from "../ui/skeleton";
+import { API_ENDPOINTS } from "../../config/api";
 
 function ProductImageUpload({
   imageFile,
@@ -19,7 +20,7 @@ function ProductImageUpload({
 }) {
   const inputRef = useRef(null);
 
-  console.log(isEditMode, "isEditMode from ProductImageUpload"); // Specific log
+  console.log(isEditMode, "isEditMode from ProductImageUpload");
 
   function handleImageFileChange(event) {
     console.log(event.target.files, "event.target.files");
@@ -28,9 +29,9 @@ function ProductImageUpload({
 
     if (selectedFile) {
       setImageFile(selectedFile);
-      setUploadedImageUrl(""); // Clear previous URL when a new file is selected
+      setUploadedImageUrl("");
       if (inputRef.current) {
-        inputRef.current.value = ""; // Clear the input field for visual consistency
+        inputRef.current.value = "";
       }
     }
   }
@@ -44,7 +45,7 @@ function ProductImageUpload({
     const droppedFile = event.dataTransfer.files?.[0];
     if (droppedFile) {
       setImageFile(droppedFile);
-      setUploadedImageUrl(""); // Clear previous URL when a new file is dropped
+      setUploadedImageUrl("");
       if (inputRef.current) {
         inputRef.current.value = "";
       }
@@ -53,11 +54,10 @@ function ProductImageUpload({
 
   function handleRemoveImage() {
     setImageFile(null);
-    setUploadedImageUrl(""); // Also clear the uploaded URL
+    setUploadedImageUrl("");
     if (inputRef.current) {
       inputRef.current.value = "";
     }
-    // Also clear the image in the form data when removed
     setFormData((prev) => ({
       ...prev,
       image: "",
@@ -70,26 +70,25 @@ function ProductImageUpload({
     console.log("ProductImageUpload: Attempting to upload image to backend...");
 
     const data = new FormData();
-    data.append("image", imageFile); // 'image' should match what your backend expects for the file
+    data.append("image", imageFile);
 
     try {
       const response = await axios.post(
-        "https://darziewebsite-backend.onrender.com/api/admin/products/upload-image",
-        data // Sending FormData
+        API_ENDPOINTS.ADMIN_UPLOAD_IMAGE, // Using environment config
+        data
       );
 
       console.log("ProductImageUpload: Backend response:", response.data);
 
-      // --- CRITICAL CHANGE HERE ---
       if (response?.data?.success && response.data?.imageUrl) {
         console.log(
           "ProductImageUpload: Successfully got image URL from backend:",
           response.data.imageUrl
         );
-        setUploadedImageUrl(response.data.imageUrl); // Set the state in ProductImageUpload
+        setUploadedImageUrl(response.data.imageUrl);
         setFormData((prev) => ({
           ...prev,
-          image: response.data.imageUrl, // Update formData in AdminProducts
+          image: response.data.imageUrl,
         }));
         setImageLoadingState(false);
       } else {
@@ -108,33 +107,21 @@ function ProductImageUpload({
     }
   }
 
-  // This useEffect will trigger `uploadImageToCloudinary` when `imageFile` changes.
   useEffect(() => {
     if (imageFile !== null) {
       uploadImageToCloudinary();
     }
   }, [imageFile]);
 
-  // Add a useEffect to handle initial image for edit mode,
-  // making sure uploadedImageUrl is set correctly for display.
-  // This helps when an existing product is being edited.
   useEffect(() => {
     console.log(
       "ProductImageUpload useEffect [isEditMode, setFormData] triggered."
     );
     if (isEditMode) {
-      // When entering edit mode, if formData.image exists, use it as uploadedImageUrl
-      // This is crucial for displaying the existing image in the upload component.
-      setUploadedImageUrl(setFormData.image || ""); // setFormData is a function, this should be formData.image if you pass formData as a prop
-      // Correction: setFormData is a function, you need the actual formData object for the image value
-      // This part depends on whether `ProductImageUpload` directly receives `formData` as a prop or expects it to be controlled by `AdminProducts`.
-      // Given your current setup, the `uploadedImageUrl` from `AdminProducts` (via the edit mode useEffect in AdminProducts)
-      // should already be propagating here. So this `useEffect` might not be strictly necessary for display,
-      // but if you want to initialize the local component's state, you need to be careful.
+      setUploadedImageUrl(setFormData.image || "");
     }
-  }, [isEditMode, setUploadedImageUrl, setFormData]); // Removed formData as direct dependency if not passing as object
+  }, [isEditMode, setUploadedImageUrl, setFormData]);
 
-  // Console log for ProductImageUpload component to see its internal state
   console.log(
     "ProductImageUpload Render - uploadedImageUrl:",
     uploadedImageUrl
@@ -161,17 +148,16 @@ function ProductImageUpload({
           className="hidden"
           ref={inputRef}
           onChange={handleImageFileChange}
-          disabled={isEditMode && uploadedImageUrl} // Disable if in edit mode and an image is already uploaded (or being edited)
+          disabled={isEditMode && uploadedImageUrl}
         />
-        {/* Display logic for uploaded image or upload area */}
         {imageLoadingState ? (
           <Skeleton className="h-10 bg-gray-100" />
-        ) : uploadedImageUrl ? ( // If we have an uploaded URL, show the image
+        ) : uploadedImageUrl ? (
           <div className="relative">
             <img
               src={uploadedImageUrl}
               alt="Uploaded Preview"
-              className="w-full h-[200px] object-cover rounded-lg" // Adjust height as needed
+              className="w-full h-[200px] object-cover rounded-lg"
             />
             <Button
               variant="ghost"
@@ -184,7 +170,6 @@ function ProductImageUpload({
             </Button>
           </div>
         ) : (
-          // If no image uploaded URL, show the upload area
           <Label
             htmlFor="image-upload"
             className={`${
