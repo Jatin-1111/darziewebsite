@@ -1,3 +1,4 @@
+// src/store/auth-slice/index.js
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import axios from "axios";
 import { API_ENDPOINTS } from "../../config/api";
@@ -52,23 +53,24 @@ export const logoutUser = createAsyncThunk(
 
 export const checkAuth = createAsyncThunk(
   "/auth/checkauth",
-  async (_, { getState }) => {
-    const { auth } = getState();
-    if (auth.isAuthenticated && auth.user) {
-      return { success: true, user: auth.user };
-    }
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await axios.get(
+        API_ENDPOINTS.CHECK_AUTH,
+        {
+          withCredentials: true,
+          headers: {
+            "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+          },
+        }
+      );
 
-    const response = await axios.get(
-      API_ENDPOINTS.CHECK_AUTH,
-      {
-        withCredentials: true,
-        headers: {
-          "Cache-Control":
-            "no-store, no-cache, must-revalidate, proxy-revalidate",
-        },
-      }
-    );
-    return response.data;
+      // 💀 THE BUG WAS HERE - Your backend returns success: false for unauthenticated users
+      // but that's not an error, it's a valid response
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data || { success: false, message: "Network error" });
+    }
   }
 );
 
@@ -115,14 +117,24 @@ const authSlice = createSlice({
         state.isAuthenticated = false;
       })
       .addCase(checkAuth.pending, (state) => {
+        console.log("🔄 Auth check starting...");
         state.isLoading = true;
       })
       .addCase(checkAuth.fulfilled, (state, action) => {
+        console.log("✅ Auth check completed:", action.payload);
         state.isLoading = false;
-        state.user = action.payload.success ? action.payload.user : null;
-        state.isAuthenticated = action.payload.success;
+        if (action.payload.success) {
+          console.log("🎉 User authenticated:", action.payload.user.userName);
+          state.user = action.payload.user;
+          state.isAuthenticated = true;
+        } else {
+          console.log("❌ User not authenticated");
+          state.user = null;
+          state.isAuthenticated = false;
+        }
       })
-      .addCase(checkAuth.rejected, (state) => {
+      .addCase(checkAuth.rejected, (state, action) => {
+        console.error("💥 Auth check failed:", action.payload || action.error.message);
         state.isLoading = false;
         state.user = null;
         state.isAuthenticated = false;
