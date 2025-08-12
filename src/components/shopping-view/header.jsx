@@ -79,8 +79,6 @@ function HeaderRightContent() {
     dispatch(fetchCartItems(user?.id));
   }, [dispatch]);
 
-  console.log(cartItems, "sangam");
-
   return (
     <div className="flex lg:items-center lg:flex-row flex-col gap-4">
       <Sheet open={openCartSheet} onOpenChange={() => setOpenCartSheet(false)}>
@@ -139,7 +137,11 @@ function ShoppingHeader() {
     <header className="sticky z-40 w-full border-b bg-[#C4BA97]">
       <div className="flex h-20 items-center justify-between px-4  md:px-6 ">
         <Link to="/shop/home" className="flex gap-2 pt-3">
-          <img src='https://res.cloudinary.com/dpxiwelxk/image/upload/v1754385089/Logo_lzbe32.svg' alt="Logo" className="h-22 w-22" />
+          <img
+            src="https://res.cloudinary.com/dpxiwelxk/image/upload/v1754385089/Logo_lzbe32.svg"
+            alt="Logo"
+            className="h-22 w-22"
+          />
         </Link>
         <Sheet>
           <SheetTrigger asChild>
@@ -154,7 +156,7 @@ function ShoppingHeader() {
           </SheetContent>
         </Sheet>
         <div className="hidden lg:block text-white text-lg">
-          <MenuItems /> 
+          <MenuItems />
         </div>
 
         <div className="hidden lg:block">

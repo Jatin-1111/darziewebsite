@@ -56,8 +56,10 @@ function ShoppingListing() {
     let cpyFilters = { ...filters };
 
     // Check if the filter category is 'Price' for special single-select handling
-    if (getSectionId === 'Price') {
-      const isCurrentlySelected = cpyFilters[getSectionId] && cpyFilters[getSectionId].includes(getCurrentOption);
+    if (getSectionId === "Price") {
+      const isCurrentlySelected =
+        cpyFilters[getSectionId] &&
+        cpyFilters[getSectionId].includes(getCurrentOption);
 
       if (isCurrentlySelected) {
         // If the same option is clicked again, deselect it
@@ -90,12 +92,10 @@ function ShoppingListing() {
   }
 
   function handleGetProductDetails(getCurrentProductId) {
-    console.log(getCurrentProductId);
     dispatch(fetchProductDetails(getCurrentProductId));
   }
 
   function handleAddtoCart(getCurrentProductId, getTotalStock) {
-    console.log(cartItems);
     let getCartItems = cartItems.items || [];
 
     if (getCartItems.length) {
@@ -134,14 +134,17 @@ function ShoppingListing() {
     // Initialize sort and filters on component mount or category change
     setSort("price-lowtohigh"); // Default sort
     const savedFilters = JSON.parse(sessionStorage.getItem("filters"));
-    if (categorySearchParam && !savedFilters?.Category?.includes(categorySearchParam)) {
-        // If category param exists and is not in saved filters, prioritize it
-        setFilters(prev => ({
-            ...prev,
-            Category: [categorySearchParam]
-        }));
+    if (
+      categorySearchParam &&
+      !savedFilters?.Category?.includes(categorySearchParam)
+    ) {
+      // If category param exists and is not in saved filters, prioritize it
+      setFilters((prev) => ({
+        ...prev,
+        Category: [categorySearchParam],
+      }));
     } else {
-        setFilters(savedFilters || {});
+      setFilters(savedFilters || {});
     }
   }, [categorySearchParam]); // Rerun if categorySearchParam changes
 
@@ -170,8 +173,6 @@ function ShoppingListing() {
     // Open product details dialog when productDetails is fetched
     if (productDetails !== null) setOpenDetailsDialog(true);
   }, [productDetails]);
-
-  console.log(productList, "productListproductListproductList");
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-[200px_1fr] gap-6 p-4 md:p-6">
@@ -220,7 +221,9 @@ function ShoppingListing() {
               />
             ))
           ) : (
-            <p className="col-span-full text-center text-gray-500">No products found matching your criteria.</p>
+            <p className="col-span-full text-center text-gray-500">
+              No products found matching your criteria.
+            </p>
           )}
         </div>
       </div>

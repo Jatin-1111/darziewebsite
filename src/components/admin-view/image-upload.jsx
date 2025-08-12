@@ -20,12 +20,8 @@ function ProductImageUpload({
 }) {
   const inputRef = useRef(null);
 
-  console.log(isEditMode, "isEditMode from ProductImageUpload");
-
   function handleImageFileChange(event) {
-    console.log(event.target.files, "event.target.files");
     const selectedFile = event.target.files?.[0];
-    console.log("Selected file:", selectedFile);
 
     if (selectedFile) {
       setImageFile(selectedFile);
@@ -62,12 +58,10 @@ function ProductImageUpload({
       ...prev,
       image: "",
     }));
-    console.log("Image removed. uploadedImageUrl cleared.");
   }
 
   async function uploadImageToCloudinary() {
     setImageLoadingState(true);
-    console.log("ProductImageUpload: Attempting to upload image to backend...");
 
     const data = new FormData();
     data.append("image", imageFile);
@@ -78,13 +72,7 @@ function ProductImageUpload({
         data
       );
 
-      console.log("ProductImageUpload: Backend response:", response.data);
-
       if (response?.data?.success && response.data?.imageUrl) {
-        console.log(
-          "ProductImageUpload: Successfully got image URL from backend:",
-          response.data.imageUrl
-        );
         setUploadedImageUrl(response.data.imageUrl);
         setFormData((prev) => ({
           ...prev,
@@ -114,19 +102,10 @@ function ProductImageUpload({
   }, [imageFile]);
 
   useEffect(() => {
-    console.log(
-      "ProductImageUpload useEffect [isEditMode, setFormData] triggered."
-    );
     if (isEditMode) {
       setUploadedImageUrl(setFormData.image || "");
     }
   }, [isEditMode, setUploadedImageUrl, setFormData]);
-
-  console.log(
-    "ProductImageUpload Render - uploadedImageUrl:",
-    uploadedImageUrl
-  );
-  console.log("ProductImageUpload Render - imageFile:", imageFile);
 
   return (
     <div

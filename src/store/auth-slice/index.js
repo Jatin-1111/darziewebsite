@@ -4,7 +4,7 @@ import { API_ENDPOINTS } from "../../config/api";
 
 const initialState = {
   isAuthenticated: false,
-  isLoading: true,
+  isLoading: false,
   user: null,
 };
 
@@ -52,7 +52,12 @@ export const logoutUser = createAsyncThunk(
 
 export const checkAuth = createAsyncThunk(
   "/auth/checkauth",
-  async () => {
+  async (_, { getState }) => {
+    const { auth } = getState();
+    if (auth.isAuthenticated && auth.user) {
+      return { success: true, user: auth.user };
+    }
+
     const response = await axios.get(
       API_ENDPOINTS.CHECK_AUTH,
       {
@@ -71,7 +76,14 @@ const authSlice = createSlice({
   name: "auth",
   initialState,
   reducers: {
-    setUser: () => {
+    setUser: (state, action) => {
+      state.user = action.payload;
+      state.isAuthenticated = !!action.payload;
+    },
+    clearAuth: (state) => {
+      state.user = null;
+      state.isAuthenticated = false;
+      state.isLoading = false;
     },
   },
   extraReducers: (builder) => {
@@ -93,7 +105,6 @@ const authSlice = createSlice({
         state.isLoading = true;
       })
       .addCase(loginUser.fulfilled, (state, action) => {
-        console.log(action);
         state.isLoading = false;
         state.user = action.payload.success ? action.payload.user : null;
         state.isAuthenticated = action.payload.success;
@@ -124,5 +135,5 @@ const authSlice = createSlice({
   },
 });
 
-export const { setUser } = authSlice.actions;
+export const { setUser, clearAuth } = authSlice.actions;
 export default authSlice.reducer;

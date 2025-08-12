@@ -45,14 +45,12 @@ function AdminProducts() {
 
   // New useEffect to update formData.image when uploadedImageUrl changes
   useEffect(() => {
-    console.log("useEffect [uploadedImageUrl] triggered. Current uploadedImageUrl:", uploadedImageUrl);
     if (uploadedImageUrl) {
       setFormData((prevFormData) => {
         const newFormData = {
           ...prevFormData,
           image: uploadedImageUrl,
         };
-        console.log("setFormData (from useEffect): formData.image updated to:", newFormData.image);
         return newFormData;
       });
     }
@@ -60,10 +58,6 @@ function AdminProducts() {
 
   function onSubmit(event) {
     event.preventDefault();
-
-    console.log("onSubmit called. Final formData before dispatch:", formData); // Crucial log
-    console.log("uploadedImageUrl at onSubmit:", uploadedImageUrl); // Another crucial log
-
     currentEditedId !== null
       ? dispatch(
           editProduct({
@@ -71,8 +65,6 @@ function AdminProducts() {
             formData, // formData should now correctly include the image URL
           })
         ).then((data) => {
-          console.log(data, "edit product dispatch result");
-
           if (data?.payload?.success) {
             dispatch(fetchAllProducts());
             setFormData(initialFormData);
@@ -114,10 +106,12 @@ function AdminProducts() {
 
   function isFormValid() {
     // Also include image check in form validity
-    return Object.keys(formData)
-      .filter((currentKey) => currentKey !== "averageReview")
-      .map((key) => formData[key] !== "")
-      .every((item) => item) && formData.image !== ""; // Ensure image is also not empty
+    return (
+      Object.keys(formData)
+        .filter((currentKey) => currentKey !== "averageReview")
+        .map((key) => formData[key] !== "")
+        .every((item) => item) && formData.image !== ""
+    ); // Ensure image is also not empty
   }
 
   useEffect(() => {
@@ -126,7 +120,6 @@ function AdminProducts() {
 
   // When opening for edit, populate the image URL in formData and uploadedImageUrl state
   useEffect(() => {
-    console.log("useEffect [currentEditedId, openCreateProductsDialog] triggered.");
     if (currentEditedId !== null && openCreateProductsDialog) {
       const productToEdit = productList.find(
         (product) => product._id === currentEditedId
@@ -143,21 +136,15 @@ function AdminProducts() {
           averageReview: productToEdit.averageReview,
         });
         setUploadedImageUrl(productToEdit.image || ""); // Populate uploadedImageUrl for image preview
-        console.log("Edit mode: Set formData.image to:", productToEdit.image);
-        console.log("Edit mode: Set uploadedImageUrl to:", productToEdit.image);
-      }
-    } else if (!openCreateProductsDialog) { // When closing the dialog, reset
+      } else if (!openCreateProductsDialog) {
+        // When closing the dialog, reset
         setFormData(initialFormData);
         setUploadedImageUrl("");
         setImageFile(null);
         setCurrentEditedId(null);
-        console.log("Dialog closed: Resetting form data.");
+      }
     }
   }, [currentEditedId, openCreateProductsDialog, productList]);
-
-
-  console.log("AdminProducts Render - Current formData:", formData);
-  console.log("AdminProducts Render - Current uploadedImageUrl:", uploadedImageUrl);
 
   return (
     <Fragment>
@@ -183,15 +170,16 @@ function AdminProducts() {
       </div>
       <Sheet
         open={openCreateProductsDialog}
-        onOpenChange={(isOpen) => { // Use isOpen argument from onOpenChange
-            setOpenCreateProductsDialog(isOpen);
-            if (!isOpen) { // Only reset when closing
-                setCurrentEditedId(null);
-                setFormData(initialFormData);
-                setUploadedImageUrl(""); // Clear URL when dialog closes
-                setImageFile(null); // Clear file when dialog closes
-                console.log("Sheet onOpenChange: Dialog is closing, resetting.");
-            }
+        onOpenChange={(isOpen) => {
+          // Use isOpen argument from onOpenChange
+          setOpenCreateProductsDialog(isOpen);
+          if (!isOpen) {
+            // Only reset when closing
+            setCurrentEditedId(null);
+            setFormData(initialFormData);
+            setUploadedImageUrl(""); // Clear URL when dialog closes
+            setImageFile(null); // Clear file when dialog closes
+          }
         }}
       >
         <SheetContent side="right" className="overflow-auto">
