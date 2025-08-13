@@ -1,4 +1,4 @@
-import { HousePlug, LogOut, Menu, ShoppingCart, UserCog } from "lucide-react";
+import { LogOut, Menu, ShoppingCart, UserCog } from "lucide-react";
 import {
   Link,
   useLocation,
@@ -142,7 +142,7 @@ function ShoppingHeader() {
             alt="Logo"
             width="88"
             height="88"
-            className="h-22 w-22"
+            className="h-44 w-44"
             loading="eager" // Use "eager" for above-the-fold logo
           />
         </Link>

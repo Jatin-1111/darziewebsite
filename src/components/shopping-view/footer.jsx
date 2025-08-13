@@ -11,7 +11,7 @@ function ShoppingFooter() {
             alt="Logo"
             width="88"
             height="88"
-            className="h-22 w-22"
+            className="h-52 w-52"
             loading="lazy"
           />
           <div className="flex gap-4 mt-4 text-white text-xl">
