@@ -10,7 +10,7 @@ export const getSearchResults = createAsyncThunk(
   "/order/getSearchResults",
   async (keyword) => {
     const response = await axios.get(
-      `https://darziewebsite-backend.onrender.com/api/shop/search/${keyword}`
+      `http://darziecoulture-env-1.eba-nidg3atv.ap-south-1.elasticbeanstalk.com/api/shop/search/${keyword}`
     );
 
     return response.data;

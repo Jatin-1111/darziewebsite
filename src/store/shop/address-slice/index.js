@@ -10,7 +10,7 @@ export const addNewAddress = createAsyncThunk(
   "/addresses/addNewAddress",
   async (formData) => {
     const response = await axios.post(
-      "https://darziewebsite-backend.onrender.com/api/shop/address/add",
+      "http://darziecoulture-env-1.eba-nidg3atv.ap-south-1.elasticbeanstalk.com/api/shop/address/add",
       formData
     );
 
@@ -22,7 +22,7 @@ export const fetchAllAddresses = createAsyncThunk(
   "/addresses/fetchAllAddresses",
   async (userId) => {
     const response = await axios.get(
-      `https://darziewebsite-backend.onrender.com/api/shop/address/get/${userId}`
+      `http://darziecoulture-env-1.eba-nidg3atv.ap-south-1.elasticbeanstalk.com/api/shop/address/get/${userId}`
     );
 
     return response.data;
@@ -33,7 +33,7 @@ export const editaAddress = createAsyncThunk(
   "/addresses/editaAddress",
   async ({ userId, addressId, formData }) => {
     const response = await axios.put(
-      `https://darziewebsite-backend.onrender.com/api/shop/address/update/${userId}/${addressId}`,
+      `http://darziecoulture-env-1.eba-nidg3atv.ap-south-1.elasticbeanstalk.com/api/shop/address/update/${userId}/${addressId}`,
       formData
     );
 
@@ -45,7 +45,7 @@ export const deleteAddress = createAsyncThunk(
   "/addresses/deleteAddress",
   async ({ userId, addressId }) => {
     const response = await axios.delete(
-      `https://darziewebsite-backend.onrender.com/api/shop/address/delete/${userId}/${addressId}`
+      `http://darziecoulture-env-1.eba-nidg3atv.ap-south-1.elasticbeanstalk.com/api/shop/address/delete/${userId}/${addressId}`
     );
 
     return response.data;

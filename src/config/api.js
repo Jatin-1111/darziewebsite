@@ -3,7 +3,7 @@ const getApiBaseUrl = () => {
 
     if (!baseUrl) {
         console.warn('VITE_API_BASE_URL not found, falling back to production URL');
-        return 'https://darziewebsite-backend.onrender.com';
+        return 'http://darziecoulture-env-1.eba-nidg3atv.ap-south-1.elasticbeanstalk.com';
     }
 
     return baseUrl;

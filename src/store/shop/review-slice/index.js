@@ -10,7 +10,7 @@ export const addReview = createAsyncThunk(
   "/order/addReview",
   async (formdata) => {
     const response = await axios.post(
-      `https://darziewebsite-backend.onrender.com/api/shop/review/add`,
+      `http://darziecoulture-env-1.eba-nidg3atv.ap-south-1.elasticbeanstalk.com/api/shop/review/add`,
       formdata
     );
 
@@ -20,7 +20,7 @@ export const addReview = createAsyncThunk(
 
 export const getReviews = createAsyncThunk("/order/getReviews", async (id) => {
   const response = await axios.get(
-    `https://darziewebsite-backend.onrender.com/api/shop/review/${id}`
+    `http://darziecoulture-env-1.eba-nidg3atv.ap-south-1.elasticbeanstalk.com/api/shop/review/${id}`
   );
 
   return response.data;

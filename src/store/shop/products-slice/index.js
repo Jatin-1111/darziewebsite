@@ -16,7 +16,7 @@ export const fetchAllFilteredProducts = createAsyncThunk(
     });
 
     const result = await axios.get(
-      `https://darziewebsite-backend.onrender.com/api/shop/products/get?${query}`
+      `http://darziecoulture-env-1.eba-nidg3atv.ap-south-1.elasticbeanstalk.com/api/shop/products/get?${query}`
     );
     return result?.data;
   }
@@ -26,7 +26,7 @@ export const fetchProductDetails = createAsyncThunk(
   "/products/fetchProductDetails",
   async (id) => {
     const result = await axios.get(
-      `https://darziewebsite-backend.onrender.com/api/shop/products/get/${id}`
+      `http://darziecoulture-env-1.eba-nidg3atv.ap-south-1.elasticbeanstalk.com/api/shop/products/get/${id}`
     );
 
     return result?.data;
