@@ -1,3 +1,4 @@
+// src/config/api.js - FIXED WITH ABSOLUTE URLS
 const getApiBaseUrl = () => {
     const baseUrl = import.meta.env.VITE_API_BASE_URL;
 
@@ -10,8 +11,10 @@ const getApiBaseUrl = () => {
 };
 
 export const API_BASE_URL = getApiBaseUrl();
+
+// ✅ FIXED: Use absolute URLs to ensure proper API calls
 export const API_ENDPOINTS = {
-    // Auth endpoints
+    // Auth endpoints - ABSOLUTE URLS
     REGISTER: `${API_BASE_URL}/api/auth/register`,
     LOGIN: `${API_BASE_URL}/api/auth/login`,
     LOGOUT: `${API_BASE_URL}/api/auth/logout`,
@@ -69,4 +72,5 @@ export const isProduction = () => import.meta.env.VITE_NODE_ENV === 'production'
 if (isDevelopment()) {
     console.log('🚀 Development Mode Active');
     console.log('📡 API Base URL:', API_BASE_URL);
+    console.log('🔍 CHECK_AUTH URL:', API_ENDPOINTS.CHECK_AUTH);
 }

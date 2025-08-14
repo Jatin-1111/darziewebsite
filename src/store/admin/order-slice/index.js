@@ -1,18 +1,18 @@
+// src/store/admin/order-slice/index.js - UPDATED
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import axios from "axios";
+import apiClient from "../../../utils/apiClient";
+import { API_ENDPOINTS } from "../../../config/api";
 
 const initialState = {
   orderList: [],
   orderDetails: null,
+  isLoading: false,
 };
 
 export const getAllOrdersForAdmin = createAsyncThunk(
   "/order/getAllOrdersForAdmin",
   async () => {
-    const response = await axios.get(
-      `http://darziecoulture-env-1.eba-nidg3atv.ap-south-1.elasticbeanstalk.com/api/admin/orders/get`
-    );
-
+    const response = await apiClient.get(API_ENDPOINTS.ADMIN_ORDERS_GET);
     return response.data;
   }
 );
@@ -20,10 +20,7 @@ export const getAllOrdersForAdmin = createAsyncThunk(
 export const getOrderDetailsForAdmin = createAsyncThunk(
   "/order/getOrderDetailsForAdmin",
   async (id) => {
-    const response = await axios.get(
-      `http://darziecoulture-env-1.eba-nidg3atv.ap-south-1.elasticbeanstalk.com/api/admin/orders/details/${id}`
-    );
-
+    const response = await apiClient.get(API_ENDPOINTS.ADMIN_ORDER_DETAILS(id));
     return response.data;
   }
 );
@@ -31,13 +28,10 @@ export const getOrderDetailsForAdmin = createAsyncThunk(
 export const updateOrderStatus = createAsyncThunk(
   "/order/updateOrderStatus",
   async ({ id, orderStatus }) => {
-    const response = await axios.put(
-      `http://darziecoulture-env-1.eba-nidg3atv.ap-south-1.elasticbeanstalk.com/api/admin/orders/update/${id}`,
-      {
-        orderStatus,
-      }
+    const response = await apiClient.put(
+      API_ENDPOINTS.ADMIN_ORDER_UPDATE(id),
+      { orderStatus }
     );
-
     return response.data;
   }
 );
@@ -78,5 +72,4 @@ const adminOrderSlice = createSlice({
 });
 
 export const { resetOrderDetails } = adminOrderSlice.actions;
-
 export default adminOrderSlice.reducer;

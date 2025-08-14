@@ -1,5 +1,6 @@
-import axios from "axios";
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import apiClient from "../../../utils/apiClient";
+import { API_ENDPOINTS } from "../../../config/api";
 
 const initialState = {
   cartItems: [],
@@ -9,15 +10,11 @@ const initialState = {
 export const addToCart = createAsyncThunk(
   "cart/addToCart",
   async ({ userId, productId, quantity }) => {
-    const response = await axios.post(
-      "http://darziecoulture-env-1.eba-nidg3atv.ap-south-1.elasticbeanstalk.com/api/shop/cart/add",
-      {
-        userId,
-        productId,
-        quantity,
-      }
-    );
-
+    const response = await apiClient.post(API_ENDPOINTS.SHOP_CART_ADD, {
+      userId,
+      productId,
+      quantity,
+    });
     return response.data;
   }
 );
@@ -25,10 +22,7 @@ export const addToCart = createAsyncThunk(
 export const fetchCartItems = createAsyncThunk(
   "cart/fetchCartItems",
   async (userId) => {
-    const response = await axios.get(
-      `http://darziecoulture-env-1.eba-nidg3atv.ap-south-1.elasticbeanstalk.com/api/shop/cart/get/${userId}`
-    );
-
+    const response = await apiClient.get(API_ENDPOINTS.SHOP_CART_GET(userId));
     return response.data;
   }
 );
@@ -36,10 +30,9 @@ export const fetchCartItems = createAsyncThunk(
 export const deleteCartItem = createAsyncThunk(
   "cart/deleteCartItem",
   async ({ userId, productId }) => {
-    const response = await axios.delete(
-      `http://darziecoulture-env-1.eba-nidg3atv.ap-south-1.elasticbeanstalk.com/api/shop/cart/${userId}/${productId}`
+    const response = await apiClient.delete(
+      API_ENDPOINTS.SHOP_CART_DELETE(userId, productId)
     );
-
     return response.data;
   }
 );
@@ -47,15 +40,11 @@ export const deleteCartItem = createAsyncThunk(
 export const updateCartQuantity = createAsyncThunk(
   "cart/updateCartQuantity",
   async ({ userId, productId, quantity }) => {
-    const response = await axios.put(
-      "http://darziecoulture-env-1.eba-nidg3atv.ap-south-1.elasticbeanstalk.com/api/shop/cart/update-cart",
-      {
-        userId,
-        productId,
-        quantity,
-      }
-    );
-
+    const response = await apiClient.put(API_ENDPOINTS.SHOP_CART_UPDATE, {
+      userId,
+      productId,
+      quantity,
+    });
     return response.data;
   }
 );

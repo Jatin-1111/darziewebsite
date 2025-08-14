@@ -1,11 +1,14 @@
-// src/App.jsx
+// src/App.jsx - WITH DEBUG COMPONENT (TEMPORARY)
 import { Route, Routes, useLocation } from "react-router-dom";
 import { Suspense, lazy, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { checkAuth } from "./store/auth-slice";
+import { checkAuth, initializeAuth } from "./store/auth-slice";
 import { Skeleton } from "@/components/ui/skeleton";
 import { openLoginModal } from "./store/auth-slice/modal-slice.js";
 import LoginRequiredModal from "./components/common/login-required-modal";
+
+// ✅ TEMPORARY: Import debug component
+import TokenDebug from "./components/debug/TokenDebug";
 
 const AuthLayout = lazy(() => import("./components/auth/layout"));
 const AuthLogin = lazy(() => import("./pages/auth/login"));
@@ -34,24 +37,37 @@ const PaymentSuccessPage = lazy(() =>
 const NotFound = lazy(() => import("./pages/not-found"));
 const CheckAuth = lazy(() => import("./components/common/check-auth"));
 
-// Loading component
 const LoadingFallback = () => (
   <div className="flex items-center justify-center min-h-screen">
-    <Skeleton className="w-[800px] bg-black h-[600px]" />
+    <div className="text-center">
+      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto"></div>
+      <p className="mt-4 text-gray-600">Loading...</p>
+    </div>
   </div>
 );
 
 function App() {
-  const { user, isAuthenticated, isLoading } = useSelector(
+  const { user, isAuthenticated, isLoading, token } = useSelector(
     (state) => state.auth
   );
   const dispatch = useDispatch();
   const location = useLocation();
 
+  // ✅ Initialize auth state on app start
   useEffect(() => {
-    dispatch(checkAuth());
+    console.log("🚀 App starting, initializing auth...");
+    dispatch(initializeAuth());
   }, [dispatch]);
 
+  // ✅ Check auth when we have token but no user
+  useEffect(() => {
+    if (token && !user && !isLoading) {
+      console.log("🔍 Token found but no user, checking auth...");
+      dispatch(checkAuth());
+    }
+  }, [dispatch, token, user, isLoading]);
+
+  // ✅ Handle login modal for protected routes
   useEffect(() => {
     if (isLoading) {
       return;
@@ -62,10 +78,10 @@ function App() {
       publicPaths.includes(location.pathname) ||
       location.pathname.startsWith("/auth");
 
-    if (!isAuthenticated && !isPublicRoute) {
+    if (!isAuthenticated && !isPublicRoute && !token) {
       dispatch(openLoginModal());
     }
-  }, [isLoading, isAuthenticated, location.pathname, dispatch, user]);
+  }, [isLoading, isAuthenticated, location.pathname, dispatch, token]);
 
   if (isLoading) {
     return <LoadingFallback />;
@@ -73,6 +89,9 @@ function App() {
 
   return (
     <div className="flex flex-col overflow-hidden bg-white">
+      {/* ✅ TEMPORARY: Debug component to see token status */}
+      <TokenDebug />
+
       <Suspense fallback={<LoadingFallback />}>
         <Routes>
           <Route path="/" element={<ShoppingLayout />}>

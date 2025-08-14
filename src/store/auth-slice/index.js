@@ -1,23 +1,18 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import axios from "axios";
+import apiClient, { tokenManager } from "../../utils/apiClient";
 import { API_ENDPOINTS } from "../../config/api";
 
 const initialState = {
   isAuthenticated: false,
   isLoading: true,
   user: null,
+  token: null,
 };
 
 export const registerUser = createAsyncThunk(
   "/auth/register",
   async (formData) => {
-    const response = await axios.post(
-      API_ENDPOINTS.REGISTER,
-      formData,
-      {
-        withCredentials: true,
-      }
-    );
+    const response = await apiClient.post(API_ENDPOINTS.REGISTER, formData);
     return response.data;
   }
 );
@@ -25,28 +20,31 @@ export const registerUser = createAsyncThunk(
 export const loginUser = createAsyncThunk(
   "/auth/login",
   async (formData) => {
-    const response = await axios.post(
-      API_ENDPOINTS.LOGIN,
-      formData,
-      {
-        withCredentials: true,
-      }
-    );
+    const response = await apiClient.post(API_ENDPOINTS.LOGIN, formData);
+
+    if (response.data.success && response.data.token) {
+      // Store token using token manager
+      tokenManager.setToken(response.data.token);
+    }
+
     return response.data;
   }
 );
 
 export const logoutUser = createAsyncThunk(
   "/auth/logout",
-  async () => {
-    const response = await axios.post(
-      API_ENDPOINTS.LOGOUT,
-      {},
-      {
-        withCredentials: true,
-      }
-    );
-    return response.data;
+  async (_, { dispatch }) => {
+    try {
+      await apiClient.post(API_ENDPOINTS.LOGOUT);
+    } catch (error) {
+      console.warn('Logout API call failed, but continuing with local cleanup');
+    } finally {
+      // Always clean up local storage using token manager
+      tokenManager.removeToken();
+      dispatch(clearAuth());
+    }
+
+    return { success: true };
   }
 );
 
@@ -54,17 +52,22 @@ export const checkAuth = createAsyncThunk(
   "/auth/checkauth",
   async (_, { rejectWithValue }) => {
     try {
-      const response = await axios.get(
-        API_ENDPOINTS.CHECK_AUTH,
-        {
-          withCredentials: true,
-          headers: {
-            "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
-          },
-        }
-      );
+      const token = tokenManager.getToken();
+
+      if (!token) {
+        return rejectWithValue({ success: false, message: "No token found" });
+      }
+
+      const response = await apiClient.get(API_ENDPOINTS.CHECK_AUTH, {
+        headers: {
+          "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+        },
+      });
+
       return response.data;
     } catch (error) {
+      // If token is invalid, remove it using token manager
+      tokenManager.removeToken();
       return rejectWithValue(error.response?.data || { success: false, message: "Network error" });
     }
   }
@@ -82,7 +85,27 @@ const authSlice = createSlice({
       state.user = null;
       state.isAuthenticated = false;
       state.isLoading = false;
+      state.token = null;
+      tokenManager.removeToken();
     },
+    setToken: (state, action) => {
+      state.token = action.payload;
+      if (action.payload) {
+        tokenManager.setToken(action.payload);
+      } else {
+        tokenManager.removeToken();
+      }
+    },
+    initializeAuth: (state) => {
+      const token = tokenManager.getToken();
+      if (token) {
+        state.token = token;
+        // checkAuth will be called to verify the token
+      } else {
+        state.isLoading = false;
+        state.isAuthenticated = false;
+      }
+    }
   },
   extraReducers: (builder) => {
     builder
@@ -104,13 +127,22 @@ const authSlice = createSlice({
       })
       .addCase(loginUser.fulfilled, (state, action) => {
         state.isLoading = false;
-        state.user = action.payload.success ? action.payload.user : null;
-        state.isAuthenticated = action.payload.success;
+        if (action.payload.success) {
+          state.user = action.payload.user;
+          state.token = action.payload.token;
+          state.isAuthenticated = true;
+        } else {
+          state.user = null;
+          state.isAuthenticated = false;
+          state.token = null;
+        }
       })
       .addCase(loginUser.rejected, (state) => {
         state.isLoading = false;
         state.user = null;
         state.isAuthenticated = false;
+        state.token = null;
+        tokenManager.removeToken();
       })
       .addCase(checkAuth.pending, (state) => {
         state.isLoading = true;
@@ -123,6 +155,8 @@ const authSlice = createSlice({
         } else {
           state.user = null;
           state.isAuthenticated = false;
+          state.token = null;
+          tokenManager.removeToken();
         }
       })
       .addCase(checkAuth.rejected, (state, action) => {
@@ -130,14 +164,18 @@ const authSlice = createSlice({
         state.isLoading = false;
         state.user = null;
         state.isAuthenticated = false;
+        state.token = null;
+        tokenManager.removeToken();
       })
       .addCase(logoutUser.fulfilled, (state) => {
         state.isLoading = false;
         state.user = null;
         state.isAuthenticated = false;
+        state.token = null;
+        // Token already removed in the thunk
       });
   },
 });
 
-export const { setUser, clearAuth } = authSlice.actions;
+export const { setUser, clearAuth, setToken, initializeAuth } = authSlice.actions;
 export default authSlice.reducer;

@@ -1,5 +1,7 @@
+// src/store/shop/search-slice/index.js - UPDATED
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import axios from "axios";
+import apiClient from "../../../utils/apiClient";
+import { API_ENDPOINTS } from "../../../config/api";
 
 const initialState = {
   isLoading: false,
@@ -9,10 +11,7 @@ const initialState = {
 export const getSearchResults = createAsyncThunk(
   "/order/getSearchResults",
   async (keyword) => {
-    const response = await axios.get(
-      `http://darziecoulture-env-1.eba-nidg3atv.ap-south-1.elasticbeanstalk.com/api/shop/search/${keyword}`
-    );
-
+    const response = await apiClient.get(API_ENDPOINTS.SHOP_SEARCH(keyword));
     return response.data;
   }
 );
@@ -42,5 +41,4 @@ const searchSlice = createSlice({
 });
 
 export const { resetSearchResults } = searchSlice.actions;
-
 export default searchSlice.reducer;

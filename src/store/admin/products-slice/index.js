@@ -1,5 +1,6 @@
+// src/store/admin/products-slice/index.js - UPDATED
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import axios from "axios";
+import apiClient from "../../../utils/apiClient";
 import { API_ENDPOINTS } from "../../../config/api";
 
 const initialState = {
@@ -10,7 +11,7 @@ const initialState = {
 export const addNewProduct = createAsyncThunk(
   "/products/addnewproduct",
   async (formData) => {
-    const result = await axios.post(
+    const response = await apiClient.post(
       API_ENDPOINTS.ADMIN_PRODUCTS_ADD,
       formData,
       {
@@ -19,23 +20,22 @@ export const addNewProduct = createAsyncThunk(
         },
       }
     );
-
-    return result?.data;
+    return response.data;
   }
 );
 
 export const fetchAllProducts = createAsyncThunk(
   "/products/fetchAllProducts",
   async () => {
-    const result = await axios.get(API_ENDPOINTS.ADMIN_PRODUCTS_GET);
-    return result?.data;
+    const response = await apiClient.get(API_ENDPOINTS.ADMIN_PRODUCTS_GET);
+    return response.data;
   }
 );
 
 export const editProduct = createAsyncThunk(
   "/products/editProduct",
   async ({ id, formData }) => {
-    const result = await axios.put(
+    const response = await apiClient.put(
       API_ENDPOINTS.ADMIN_PRODUCTS_EDIT(id),
       formData,
       {
@@ -44,16 +44,15 @@ export const editProduct = createAsyncThunk(
         },
       }
     );
-
-    return result?.data;
+    return response.data;
   }
 );
 
 export const deleteProduct = createAsyncThunk(
   "/products/deleteProduct",
   async (id) => {
-    const result = await axios.delete(API_ENDPOINTS.ADMIN_PRODUCTS_DELETE(id));
-    return result?.data;
+    const response = await apiClient.delete(API_ENDPOINTS.ADMIN_PRODUCTS_DELETE(id));
+    return response.data;
   }
 );
 
