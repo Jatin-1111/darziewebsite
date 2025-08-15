@@ -143,7 +143,7 @@ function AuthLogin() {
         </Link>
         <div className="text-xs text-gray-500">
           <p>Having trouble signing in?</p>
-          <p>Contact support at support@darziescouture.com</p>
+          <p>Contact support at ragnigupta@gmail.com</p>
         </div>
       </div>
     </div>

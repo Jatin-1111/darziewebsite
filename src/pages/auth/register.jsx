@@ -399,7 +399,7 @@ function AuthRegister() {
       <div className="text-center space-y-2">
         <div className="text-xs text-gray-500">
           <p>Need help with registration?</p>
-          <p>Contact us at support@darziescouture.com</p>
+          <p>Contact us at ragnigupta@gmail.com</p>
         </div>
       </div>
     </div>

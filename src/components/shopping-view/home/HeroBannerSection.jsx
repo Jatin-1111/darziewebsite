@@ -48,7 +48,7 @@ const HeroBannerSection = memo(() => {
           <Link to="/shop/listing" className="block">
             <button
               className="
-              w-full bg-black/80 backdrop-blur-sm text-white 
+              font-faux w-full bg-black/80 backdrop-blur-sm text-white 
               font-medium rounded-full border-2 border-white/20
               py-3 sm:py-4 px-6 sm:px-8
               text-sm sm:text-base md:text-lg

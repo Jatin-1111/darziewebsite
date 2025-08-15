@@ -275,7 +275,7 @@ function ShoppingHeader() {
           <img
             src="https://res.cloudinary.com/dpxiwelxk/image/upload/v1754385089/Logo_lzbe32.svg"
             alt="Darzie's Couture Logo"
-            className="h-10 w-10 md:h-14 md:w-14 lg:h-16 lg:w-16 object-contain"
+            className="h-32 w-32 md:h-40 md:w-40 lg:h-44 lg:w-44 object-contain"
             loading="eager"
           />
         </Link>
