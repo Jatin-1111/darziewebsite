@@ -320,7 +320,7 @@ function ShoppingHeader() {
                     className="h-8 w-8"
                   />
                   <span className="font-bold text-[#6C3D1D]">
-                    Darzie's Couture
+                    Darzie&apos;s Couture
                   </span>
                 </Link>
               </div>
@@ -332,52 +332,6 @@ function ShoppingHeader() {
                   isMobile={true}
                 />
               </div>
-
-              {/* Mobile Menu Footer with User Info */}
-              {isAuthenticated && (
-                <div className="p-4 border-t bg-gray-50">
-                  <div className="text-center">
-                    <div className="flex items-center justify-center gap-2 mb-3">
-                      <Avatar className="w-8 h-8 bg-[#6C3D1D]">
-                        <AvatarFallback className="bg-[#6C3D1D] text-white text-sm">
-                          {isAuthenticated?.user?.userName?.[0]?.toUpperCase() ||
-                            "U"}
-                        </AvatarFallback>
-                      </Avatar>
-                      <span className="text-sm font-medium text-gray-700">
-                        {isAuthenticated?.user?.userName || "User"}
-                      </span>
-                    </div>
-                    <div className="flex gap-2 justify-center">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          setIsMobileMenuOpen(false);
-                          // Small delay to let menu close
-                          setTimeout(() => navigate("/shop/account"), 100);
-                        }}
-                        className="flex-1"
-                      >
-                        <UserCog className="w-4 h-4 mr-1" />
-                        Account
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          setIsMobileMenuOpen(false);
-                          dispatch(logoutUser());
-                        }}
-                        className="flex-1 text-red-600 border-red-200 hover:bg-red-50"
-                      >
-                        <LogOut className="w-4 h-4 mr-1" />
-                        Logout
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              )}
             </SheetContent>
           </Sheet>
         </div>
