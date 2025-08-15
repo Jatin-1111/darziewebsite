@@ -1,4 +1,4 @@
-// src/pages/shopping-view/listing.jsx - MOBILE RESPONSIVE UPDATE
+// src/pages/shopping-view/listing.jsx - UPDATED WITHOUT MODAL
 import {
   memo,
   useCallback,
@@ -11,19 +11,14 @@ import {
 import { useToast } from "@/components/ui/use-toast";
 import { sortOptions } from "@/config";
 import { addToCart, fetchCartItems } from "@/store/shop/cart-slice";
-import {
-  fetchAllFilteredProducts,
-  fetchProductDetails,
-} from "@/store/shop/products-slice";
+import { fetchAllFilteredProducts } from "@/store/shop/products-slice"; // REMOVED fetchProductDetails
 import { ArrowUpDownIcon } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import { useSearchParams } from "react-router-dom";
 
 // Lazy load components
 const ProductFilter = lazy(() => import("@/components/shopping-view/filter"));
-const ProductDetailsDialog = lazy(() =>
-  import("@/components/shopping-view/product-details")
-);
+// REMOVED ProductDetailsDialog import
 const ShoppingProductTile = lazy(() =>
   import("@/components/shopping-view/product-tile")
 );
@@ -101,10 +96,11 @@ const createSearchParamsHelper = (filterParams) => {
   return queryParams.join("&");
 };
 
-// Main mobile-responsive component
+// Main mobile-responsive component - UPDATED WITHOUT MODAL
 function ShoppingListing() {
   const dispatch = useDispatch();
-  const { productList, productDetails, isLoading } = useSelector(
+  const { productList, isLoading } = useSelector(
+    // REMOVED productDetails
     (state) => state.shopProducts
   );
   const { cartItems } = useSelector((state) => state.shopCart);
@@ -113,7 +109,7 @@ function ShoppingListing() {
   const [filters, setFilters] = useState({});
   const [sort, setSort] = useState("price-lowtohigh");
   const [searchParams, setSearchParams] = useSearchParams();
-  const [openDetailsDialog, setOpenDetailsDialog] = useState(false);
+  // REMOVED openDetailsDialog state
   const { toast } = useToast();
 
   const categorySearchParam = searchParams.get("category");
@@ -165,12 +161,7 @@ function ShoppingListing() {
     [filters]
   );
 
-  const handleGetProductDetails = useCallback(
-    (getCurrentProductId) => {
-      dispatch(fetchProductDetails(getCurrentProductId));
-    },
-    [dispatch]
-  );
+  // REMOVED handleGetProductDetails function since we're using navigation
 
   const handleAddtoCart = useCallback(
     (getCurrentProductId, getTotalStock) => {
@@ -261,9 +252,7 @@ function ShoppingListing() {
     }
   }, [dispatch, sort, filters]);
 
-  useEffect(() => {
-    if (productDetails !== null) setOpenDetailsDialog(true);
-  }, [productDetails]);
+  // REMOVED useEffect for productDetails modal
 
   // Memoized product grid with mobile-responsive layout
   const productGrid = useMemo(() => {
@@ -283,13 +272,13 @@ function ShoppingListing() {
         fallback={<ProductSkeleton />}
       >
         <ShoppingProductTile
-          handleGetProductDetails={handleGetProductDetails}
           product={productItem}
           handleAddtoCart={handleAddtoCart}
+          // REMOVED handleGetProductDetails prop
         />
       </Suspense>
     ));
-  }, [productList, isLoading, handleGetProductDetails, handleAddtoCart]);
+  }, [productList, isLoading, handleAddtoCart]); // REMOVED handleGetProductDetails
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -390,16 +379,6 @@ function ShoppingListing() {
           </div>
         </div>
       </div>
-
-      {/* Product Details Modal */}
-      <Suspense fallback={null}>
-        <ProductDetailsDialog
-          open={openDetailsDialog}
-          setOpen={setOpenDetailsDialog}
-          productDetails={productDetails}
-          handleAddtoCart={handleAddtoCart}
-        />
-      </Suspense>
     </div>
   );
 }

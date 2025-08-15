@@ -1,4 +1,4 @@
-// src/components/shopping-view/home/BestSellersSection.jsx - MOBILE RESPONSIVE
+// src/components/shopping-view/home/BestSellersSection.jsx - UPDATED FOR NAVIGATION
 import { memo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -41,6 +41,16 @@ const BestSellersSection = memo(({ bestSellers = [] }) => {
   }, [navigate]);
 
   const handleProductClick = useCallback(
+    (product) => {
+      // Navigate to individual product page instead of opening modal
+      if (product && product._id) {
+        navigate(`/shop/product/${product._id}`);
+      }
+    },
+    [navigate]
+  );
+
+  const handleCategoryClick = useCallback(
     (label) => {
       handleNavigate();
     },
@@ -85,11 +95,12 @@ const BestSellersSection = memo(({ bestSellers = [] }) => {
             {bestSellers.map((product, index) => (
               <div
                 key={product._id || index}
+                onClick={() => handleProductClick(product)} // UPDATED: Navigate instead of modal
                 className="
                   group relative overflow-hidden rounded-xl shadow-md
                   transition-all duration-300 ease-in-out
                   hover:shadow-xl hover:-translate-y-2
-                  bg-white
+                  bg-white cursor-pointer
                 "
               >
                 <div className="aspect-[3/4] overflow-hidden">
@@ -120,6 +131,9 @@ const BestSellersSection = memo(({ bestSellers = [] }) => {
                     </h3>
                     <p className="text-xs sm:text-sm text-gray-200">
                       ₹{product.price?.toLocaleString("en-IN")}
+                    </p>
+                    <p className="text-xs text-gray-300 mt-1">
+                      Click to view details
                     </p>
                   </div>
                 </div>
@@ -159,7 +173,7 @@ const BestSellersSection = memo(({ bestSellers = [] }) => {
             {sellerLinks.map((label, index) => (
               <button
                 key={index}
-                onClick={() => handleProductClick(label)}
+                onClick={() => handleCategoryClick(label)}
                 className="
                   group flex items-center gap-3 p-3 sm:p-4
                   bg-white/10 backdrop-blur-sm rounded-lg border border-white/20

@@ -1,4 +1,4 @@
-// src/App.jsx - SIMPLIFIED & FIXED VERSION
+// src/App.jsx - UPDATED WITH PRODUCT DETAIL ROUTE
 import { Route, Routes, useLocation } from "react-router-dom";
 import { Suspense, lazy, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -24,6 +24,9 @@ const ShoppingCheckout = lazy(() => import("./pages/shopping-view/checkout"));
 const ShoppingAccount = lazy(() => import("./pages/shopping-view/account"));
 const AboutUs = lazy(() => import("./pages/shopping-view/aboutus"));
 const SearchProducts = lazy(() => import("./pages/shopping-view/search"));
+const ProductDetailPage = lazy(() =>
+  import("./pages/shopping-view/product-detail")
+); // NEW
 const PaypalReturnPage = lazy(() =>
   import("./pages/shopping-view/paypal-return")
 );
@@ -139,6 +142,11 @@ function App() {
           >
             <Route path="home" element={<ShoppingHome />} />
             <Route path="listing" element={<ShoppingListing />} />
+            <Route
+              path="product/:productId"
+              element={<ProductDetailPage />}
+            />{" "}
+            {/* NEW ROUTE */}
             <Route path="checkout" element={<ShoppingCheckout />} />
             <Route path="account" element={<ShoppingAccount />} />
             <Route path="paypal-return" element={<PaypalReturnPage />} />

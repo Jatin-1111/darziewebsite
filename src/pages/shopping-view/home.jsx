@@ -1,17 +1,26 @@
+// src/pages/shopping-view/home.jsx - UPDATED WITHOUT MODAL
 import { Suspense, lazy, useEffect, useState, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   fetchAllFilteredProducts,
-  fetchProductDetails,
+  // REMOVED fetchProductDetails
 } from "@/store/shop/products-slice";
 import { getFeatureImages } from "@/store/common-slice";
-import ProductDetailsDialog from "@/components/shopping-view/product-details";
+// REMOVED ProductDetailsDialog import
 
 // Lazy load section components
-const HeroBannerSection = lazy(() => import("../../components/shopping-view/home/HeroBannerSection"));
-const CollectionsSection = lazy(() => import("../../components/shopping-view/home/CollectionsSection"));
-const BestSellersSection = lazy(() => import("../../components/shopping-view/home/BestSellersSection"));
-const TestimonialsSection = lazy(() => import("../../components/shopping-view/home/TestimonialsSection"));
+const HeroBannerSection = lazy(() =>
+  import("../../components/shopping-view/home/HeroBannerSection")
+);
+const CollectionsSection = lazy(() =>
+  import("../../components/shopping-view/home/CollectionsSection")
+);
+const BestSellersSection = lazy(() =>
+  import("../../components/shopping-view/home/BestSellersSection")
+);
+const TestimonialsSection = lazy(() =>
+  import("../../components/shopping-view/home/TestimonialsSection")
+);
 
 // Loading skeleton components
 const SectionSkeleton = ({ height = "h-screen" }) => (
@@ -23,10 +32,11 @@ const SectionSkeleton = ({ height = "h-screen" }) => (
 );
 
 function ShoppingHome() {
-  const [openDetailsDialog, setOpenDetailsDialog] = useState(false);
+  // REMOVED openDetailsDialog state
 
   const dispatch = useDispatch();
-  const { productList, productDetails } = useSelector(
+  const { productList } = useSelector(
+    // REMOVED productDetails
     (state) => state.shopProducts
   );
   const { featureImageList } = useSelector((state) => state.commonFeature);
@@ -36,10 +46,7 @@ function ShoppingHome() {
     return productList && productList.length > 0 ? productList.slice(0, 4) : [];
   }, [productList]);
 
-  // Effect for product details modal
-  useEffect(() => {
-    if (productDetails !== null) setOpenDetailsDialog(true);
-  }, [productDetails]);
+  // REMOVED useEffect for product details modal
 
   // Initial data fetching
   useEffect(() => {
@@ -78,13 +85,6 @@ function ShoppingHome() {
       <Suspense fallback={<SectionSkeleton height="h-96" />}>
         <TestimonialsSection />
       </Suspense>
-
-      {/* Product Details Modal */}
-      <ProductDetailsDialog
-        open={openDetailsDialog}
-        setOpen={setOpenDetailsDialog}
-        productDetails={productDetails}
-      />
     </div>
   );
 }
