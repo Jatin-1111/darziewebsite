@@ -1,15 +1,12 @@
-// src/App.jsx - WITH DEBUG COMPONENT (TEMPORARY)
+// src/App.jsx - SIMPLIFIED & FIXED VERSION
 import { Route, Routes, useLocation } from "react-router-dom";
 import { Suspense, lazy, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { checkAuth, initializeAuth } from "./store/auth-slice";
-import { Skeleton } from "@/components/ui/skeleton";
-import { openLoginModal } from "./store/auth-slice/modal-slice.js";
+import { closeLoginModal } from "./store/auth-slice/modal-slice.js";
 import LoginRequiredModal from "./components/common/login-required-modal";
 
-// ✅ TEMPORARY: Import debug component
-import TokenDebug from "./components/debug/TokenDebug";
-
+// Lazy load components
 const AuthLayout = lazy(() => import("./components/auth/layout"));
 const AuthLogin = lazy(() => import("./pages/auth/login"));
 const AuthRegister = lazy(() => import("./pages/auth/register"));
@@ -47,41 +44,47 @@ const LoadingFallback = () => (
 );
 
 function App() {
-  const { user, isAuthenticated, isLoading, token } = useSelector(
+  const { user, isAuthenticated, isLoading } = useSelector(
     (state) => state.auth
   );
   const dispatch = useDispatch();
   const location = useLocation();
 
-  // ✅ Initialize auth state on app start
+  // ✅ SIMPLIFIED: Initialize auth once on app start
   useEffect(() => {
-    console.log("🚀 App starting, initializing auth...");
+    console.log("🚀 App initializing...");
     dispatch(initializeAuth());
-  }, [dispatch]);
 
-  // ✅ Check auth when we have token but no user
-  useEffect(() => {
-    if (token && !user && !isLoading) {
-      console.log("🔍 Token found but no user, checking auth...");
+    // Only check auth if we have a token
+    const token = localStorage.getItem("authToken");
+    if (token) {
+      console.log("🔍 Token found, verifying with server...");
       dispatch(checkAuth());
     }
-  }, [dispatch, token, user, isLoading]);
+  }, [dispatch]);
 
-  // ✅ Handle login modal for protected routes
+  // ✅ SIMPLIFIED: Handle auth redirects after auth state is determined
   useEffect(() => {
-    if (isLoading) {
+    if (isLoading) return; // Don't redirect while loading
+
+    const isAuthPage = location.pathname.startsWith("/auth");
+    const isPublicPage = location.pathname === "/";
+
+    // If on auth page and authenticated, redirect based on role
+    if (isAuthPage && isAuthenticated && user) {
+      if (user.role === "admin") {
+        window.location.replace("/admin/dashboard");
+      } else {
+        window.location.replace("/shop/home");
+      }
       return;
     }
 
-    const publicPaths = ["/", "/auth/login", "/auth/register"];
-    const isPublicRoute =
-      publicPaths.includes(location.pathname) ||
-      location.pathname.startsWith("/auth");
-
-    if (!isAuthenticated && !isPublicRoute && !token) {
-      dispatch(openLoginModal());
+    // If on protected page and not authenticated, close any modals
+    if (!isPublicPage && !isAuthPage && !isAuthenticated) {
+      dispatch(closeLoginModal());
     }
-  }, [isLoading, isAuthenticated, location.pathname, dispatch, token]);
+  }, [isAuthenticated, user, location.pathname, isLoading, dispatch]);
 
   if (isLoading) {
     return <LoadingFallback />;
@@ -89,24 +92,28 @@ function App() {
 
   return (
     <div className="flex flex-col overflow-hidden bg-white">
-      {/* ✅ TEMPORARY: Debug component to see token status */}
-      <TokenDebug />
-
       <Suspense fallback={<LoadingFallback />}>
         <Routes>
+          {/* Public Home Route */}
           <Route path="/" element={<ShoppingLayout />}>
             <Route index element={<ShoppingHome />} />
           </Route>
 
+          {/* Auth Routes */}
           <Route path="/auth" element={<AuthLayout />}>
             <Route path="login" element={<AuthLogin />} />
             <Route path="register" element={<AuthRegister />} />
           </Route>
 
+          {/* Admin Routes */}
           <Route
             path="/admin"
             element={
-              <CheckAuth isAuthenticated={isAuthenticated} user={user}>
+              <CheckAuth
+                isAuthenticated={isAuthenticated}
+                user={user}
+                requiredRole="admin"
+              >
                 <AdminLayout />
               </CheckAuth>
             }
@@ -117,10 +124,15 @@ function App() {
             <Route path="features" element={<AdminFeatures />} />
           </Route>
 
+          {/* Shop Routes */}
           <Route
             path="/shop"
             element={
-              <CheckAuth isAuthenticated={isAuthenticated} user={user}>
+              <CheckAuth
+                isAuthenticated={isAuthenticated}
+                user={user}
+                requiredRole="user"
+              >
                 <ShoppingLayout />
               </CheckAuth>
             }
