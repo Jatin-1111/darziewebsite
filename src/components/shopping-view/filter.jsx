@@ -1,4 +1,4 @@
-// src/components/shopping-view/filter.jsx - MOBILE RESPONSIVE VERSION
+// src/components/shopping-view/filter.jsx - WITH ACCESSIBILITY IMPROVEMENTS
 import { memo, useMemo, useCallback, Fragment, useState } from "react";
 import { filterOptions } from "@/config";
 import { Label } from "../ui/label";
@@ -14,7 +14,7 @@ import {
 } from "../ui/sheet";
 import { Filter, X } from "lucide-react";
 
-// Memoized filter option component
+// Memoized filter option component with accessibility
 const FilterOption = memo(({ option, keyItem, filters, handleFilter }) => {
   const isChecked = useMemo(() => {
     return filters?.[keyItem]?.includes(option.id) || false;
@@ -30,6 +30,7 @@ const FilterOption = memo(({ option, keyItem, filters, handleFilter }) => {
         flex font-medium items-center gap-3 cursor-pointer 
         hover:bg-gray-50 p-3 rounded-lg transition-colors duration-200
         text-sm sm:text-base
+        focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2
       "
       htmlFor={`${keyItem}-${option.id}`}
     >
@@ -37,22 +38,30 @@ const FilterOption = memo(({ option, keyItem, filters, handleFilter }) => {
         id={`${keyItem}-${option.id}`}
         checked={isChecked}
         onCheckedChange={handleChange}
-        aria-label={`Filter by ${option.label}`}
+        aria-label={`Filter by ${option.label} in ${keyItem} category`}
+        aria-describedby={`${keyItem}-${option.id}-desc`}
         className="w-5 h-5"
       />
       <span className="select-none flex-1">{option.label}</span>
+      <span id={`${keyItem}-${option.id}-desc`} className="sr-only">
+        {isChecked ? "Currently selected" : "Not selected"}
+      </span>
     </Label>
   );
 });
 
 FilterOption.displayName = "FilterOption";
 
-// Memoized filter category component
+// Memoized filter category component with accessibility
 const FilterCategory = memo(
   ({ keyItem, options, filters, handleFilter, isLast }) => {
     const categoryTitle = useMemo(() => {
       return keyItem.charAt(0).toUpperCase() + keyItem.slice(1);
     }, [keyItem]);
+
+    const selectedCount = useMemo(() => {
+      return filters?.[keyItem]?.length || 0;
+    }, [filters, keyItem]);
 
     const filterOptions = useMemo(() => {
       return options.map((option) => (
@@ -68,18 +77,27 @@ const FilterCategory = memo(
 
     return (
       <Fragment>
-        <div className="space-y-4">
-          <h3
-            className="
-            text-base sm:text-lg font-bold text-gray-900 
-            border-b pb-2 mb-4
-          "
-          >
+        <fieldset className="space-y-4">
+          <legend className="text-base sm:text-lg font-bold text-gray-900 border-b pb-2 mb-4">
             {categoryTitle}
-          </h3>
-          <div className="space-y-2">{filterOptions}</div>
-        </div>
-        {!isLast && <Separator className="my-6" />}
+            {selectedCount > 0 && (
+              <span
+                className="ml-2 text-sm font-normal text-blue-600"
+                aria-label={`${selectedCount} filters selected in ${categoryTitle}`}
+              >
+                ({selectedCount} selected)
+              </span>
+            )}
+          </legend>
+          <div
+            className="space-y-2"
+            role="group"
+            aria-label={`${categoryTitle} filter options`}
+          >
+            {filterOptions}
+          </div>
+        </fieldset>
+        {!isLast && <Separator className="my-6" role="separator" />}
       </Fragment>
     );
   }
@@ -87,7 +105,7 @@ const FilterCategory = memo(
 
 FilterCategory.displayName = "FilterCategory";
 
-// Mobile filter sheet content
+// Mobile filter sheet content with accessibility
 const MobileFilterContent = memo(
   ({ filters, handleFilter, activeFilterCount, onClearAll }) => {
     const filterCategories = useMemo(() => {
@@ -108,11 +126,23 @@ const MobileFilterContent = memo(
     return (
       <div className="h-full flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b bg-gray-50">
-          <h2 className="text-xl font-bold text-gray-900">Filters</h2>
+        <div
+          className="flex items-center justify-between p-6 border-b bg-gray-50"
+          role="banner"
+        >
+          <h2
+            className="text-xl font-bold text-gray-900"
+            id="mobile-filter-title"
+          >
+            Filters
+          </h2>
           {activeFilterCount > 0 && (
             <div className="flex items-center gap-2">
-              <span className="bg-primary text-primary-foreground text-xs px-2 py-1 rounded-full">
+              <span
+                className="bg-primary text-primary-foreground text-xs px-2 py-1 rounded-full"
+                aria-label={`${activeFilterCount} filters currently active`}
+                role="status"
+              >
                 {activeFilterCount}
               </span>
               <Button
@@ -120,6 +150,7 @@ const MobileFilterContent = memo(
                 size="sm"
                 onClick={onClearAll}
                 className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                aria-label="Clear all active filters"
               >
                 Clear All
               </Button>
@@ -128,7 +159,11 @@ const MobileFilterContent = memo(
         </div>
 
         {/* Filter Content */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-6">
+        <div
+          className="flex-1 overflow-y-auto p-6 space-y-6"
+          role="main"
+          aria-labelledby="mobile-filter-title"
+        >
           {filterCategories}
         </div>
       </div>
@@ -138,7 +173,7 @@ const MobileFilterContent = memo(
 
 MobileFilterContent.displayName = "MobileFilterContent";
 
-// Desktop filter sidebar
+// Desktop filter sidebar with accessibility
 const DesktopFilter = memo(
   ({ filters, handleFilter, activeFilterCount, onClearAll }) => {
     const filterCategories = useMemo(() => {
@@ -162,14 +197,20 @@ const DesktopFilter = memo(
         role="complementary"
         aria-label="Product filters"
       >
-        <div className="p-4 border-b bg-gray-50 rounded-t-lg">
+        <div className="p-4 border-b bg-gray-50 rounded-t-lg" role="banner">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-extrabold text-gray-900">Filters</h2>
+            <h2
+              className="text-lg font-extrabold text-gray-900"
+              id="desktop-filter-title"
+            >
+              Filters
+            </h2>
             <div className="flex items-center gap-2">
               {activeFilterCount > 0 && (
                 <span
                   className="bg-primary text-primary-foreground text-xs px-2 py-1 rounded-full"
                   aria-label={`${activeFilterCount} filters applied`}
+                  role="status"
                 >
                   {activeFilterCount}
                 </span>
@@ -180,6 +221,7 @@ const DesktopFilter = memo(
                   size="sm"
                   onClick={onClearAll}
                   className="text-red-600 hover:text-red-700 hover:bg-red-50 text-xs p-1"
+                  aria-label="Clear all applied filters"
                 >
                   Clear
                 </Button>
@@ -188,7 +230,11 @@ const DesktopFilter = memo(
           </div>
         </div>
 
-        <div className="p-4 space-y-4 max-h-[80vh] overflow-y-auto">
+        <div
+          className="p-4 space-y-4 max-h-[80vh] overflow-y-auto"
+          role="main"
+          aria-labelledby="desktop-filter-title"
+        >
           {filterCategories}
         </div>
       </aside>
@@ -198,7 +244,7 @@ const DesktopFilter = memo(
 
 DesktopFilter.displayName = "DesktopFilter";
 
-// Main optimized filter component with mobile support
+// Main accessible filter component with mobile support
 const ProductFilter = memo(({ filters, handleFilter }) => {
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
 
@@ -219,28 +265,50 @@ const ProductFilter = memo(({ filters, handleFilter }) => {
         });
       }
     });
-  }, [filters, handleFilter]);
+
+    // Announce clearing to screen readers
+    const announcement = `All ${activeFilterCount} filters have been cleared`;
+    // You could implement a toast notification here or use aria-live region
+    console.log(announcement); // Replace with proper announcement mechanism
+  }, [filters, handleFilter, activeFilterCount]);
 
   return (
     <>
       {/* Mobile Filter Button */}
       <div className="md:hidden mb-4">
-        <Sheet open={isMobileFilterOpen} onOpenChange={setIsMobileFilterOpen}>
+        <Sheet
+          open={isMobileFilterOpen}
+          onOpenChange={setIsMobileFilterOpen}
+          aria-label="Mobile filter menu"
+        >
           <SheetTrigger asChild>
             <Button
               variant="outline"
               className="w-full flex items-center justify-center gap-2 h-12"
+              aria-label={`Open filters menu. ${activeFilterCount} filters currently active`}
+              aria-expanded={isMobileFilterOpen}
+              aria-haspopup="dialog"
             >
-              <Filter className="w-4 h-4" />
+              <Filter className="w-4 h-4" aria-hidden="true" />
               <span>Filters</span>
               {activeFilterCount > 0 && (
-                <span className="bg-primary text-primary-foreground text-xs px-2 py-1 rounded-full ml-2">
+                <span
+                  className="bg-primary text-primary-foreground text-xs px-2 py-1 rounded-full ml-2"
+                  aria-hidden="true"
+                >
                   {activeFilterCount}
                 </span>
               )}
             </Button>
           </SheetTrigger>
-          <SheetContent side="left" className="w-full max-w-sm p-0">
+          <SheetContent
+            side="left"
+            className="w-full max-w-sm p-0"
+            aria-label="Filter options"
+          >
+            <SheetHeader className="sr-only">
+              <SheetTitle>Product Filters</SheetTitle>
+            </SheetHeader>
             <MobileFilterContent
               filters={filters}
               handleFilter={handleFilter}

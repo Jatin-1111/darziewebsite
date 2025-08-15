@@ -1,4 +1,4 @@
-// src/components/common/form.jsx - ENHANCED WITH VALIDATION
+// src/components/common/form.jsx - ENHANCED WITH ACCESSIBILITY
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import {
@@ -11,7 +11,7 @@ import {
 import { Textarea } from "../ui/textarea";
 import { Button } from "../ui/button";
 import { useId, useState, useCallback, useEffect } from "react";
-import { CheckCircle, AlertCircle, Eye, EyeOff } from "lucide-react";
+import { CheckCircle, AlertCircle, Eye, EyeOff, Info } from "lucide-react";
 
 // Validation rules
 const validationRules = {
@@ -54,7 +54,7 @@ const validationRules = {
   },
 };
 
-// Enhanced input component with validation
+// Enhanced input component with accessibility
 function ValidatedInput({
   controlItem,
   value,
@@ -68,6 +68,8 @@ function ValidatedInput({
 }) {
   const hasError = touched && error;
   const isValid = touched && !error && value;
+  const errorId = hasError ? `${inputId}-error` : undefined;
+  const helpId = controlItem.helpText ? `${inputId}-help` : undefined;
 
   return (
     <div className="relative">
@@ -83,7 +85,9 @@ function ValidatedInput({
         value={value}
         onChange={onChange}
         onBlur={onBlur}
-        aria-describedby={hasError ? `${inputId}-error` : undefined}
+        aria-describedby={
+          [errorId, helpId].filter(Boolean).join(" ") || undefined
+        }
         aria-invalid={hasError ? "true" : "false"}
         aria-required={controlItem.required || false}
         autoComplete={controlItem.autoComplete}
@@ -106,11 +110,13 @@ function ValidatedInput({
           onClick={togglePassword}
           className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors"
           aria-label={showPassword ? "Hide password" : "Show password"}
+          aria-pressed={showPassword}
+          tabIndex={0}
         >
           {showPassword ? (
-            <EyeOff className="w-4 h-4" />
+            <EyeOff className="w-4 h-4" aria-hidden="true" />
           ) : (
-            <Eye className="w-4 h-4" />
+            <Eye className="w-4 h-4" aria-hidden="true" />
           )}
         </button>
       )}
@@ -118,15 +124,27 @@ function ValidatedInput({
       {/* Validation icons */}
       {controlItem.type !== "password" && (
         <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-          {hasError && <AlertCircle className="w-4 h-4 text-red-500" />}
-          {isValid && <CheckCircle className="w-4 h-4 text-green-500" />}
+          {hasError && (
+            <AlertCircle
+              className="w-4 h-4 text-red-500"
+              aria-hidden="true"
+              role="presentation"
+            />
+          )}
+          {isValid && (
+            <CheckCircle
+              className="w-4 h-4 text-green-500"
+              aria-hidden="true"
+              role="presentation"
+            />
+          )}
         </div>
       )}
     </div>
   );
 }
 
-// Enhanced select component with validation
+// Enhanced select component with accessibility
 function ValidatedSelect({
   controlItem,
   value,
@@ -137,13 +155,17 @@ function ValidatedSelect({
 }) {
   const hasError = touched && error;
   const isValid = touched && !error && value;
+  const errorId = hasError ? `${inputId}-error` : undefined;
+  const helpId = controlItem.helpText ? `${inputId}-help` : undefined;
 
   return (
     <div className="relative">
       <Select
         value={value}
         onValueChange={onChange}
-        aria-describedby={hasError ? `${inputId}-error` : undefined}
+        aria-describedby={
+          [errorId, helpId].filter(Boolean).join(" ") || undefined
+        }
         aria-invalid={hasError ? "true" : "false"}
         aria-required={controlItem.required || false}
       >
@@ -167,10 +189,15 @@ function ValidatedSelect({
             }
           />
         </SelectTrigger>
-        <SelectContent>
+        <SelectContent role="listbox">
           {controlItem.options && controlItem.options.length > 0
             ? controlItem.options.map((optionItem) => (
-                <SelectItem key={optionItem.id} value={optionItem.id}>
+                <SelectItem
+                  key={optionItem.id}
+                  value={optionItem.id}
+                  role="option"
+                  aria-selected={value === optionItem.id}
+                >
                   {optionItem.label}
                 </SelectItem>
               ))
@@ -180,14 +207,26 @@ function ValidatedSelect({
 
       {/* Validation icons */}
       <div className="absolute right-8 top-1/2 transform -translate-y-1/2 pointer-events-none">
-        {hasError && <AlertCircle className="w-4 h-4 text-red-500" />}
-        {isValid && <CheckCircle className="w-4 h-4 text-green-500" />}
+        {hasError && (
+          <AlertCircle
+            className="w-4 h-4 text-red-500"
+            aria-hidden="true"
+            role="presentation"
+          />
+        )}
+        {isValid && (
+          <CheckCircle
+            className="w-4 h-4 text-green-500"
+            aria-hidden="true"
+            role="presentation"
+          />
+        )}
       </div>
     </div>
   );
 }
 
-// Enhanced textarea component with validation
+// Enhanced textarea component with accessibility
 function ValidatedTextarea({
   controlItem,
   value,
@@ -199,6 +238,8 @@ function ValidatedTextarea({
 }) {
   const hasError = touched && error;
   const isValid = touched && !error && value;
+  const errorId = hasError ? `${inputId}-error` : undefined;
+  const helpId = controlItem.helpText ? `${inputId}-help` : undefined;
 
   return (
     <div className="relative">
@@ -209,10 +250,13 @@ function ValidatedTextarea({
         value={value}
         onChange={onChange}
         onBlur={onBlur}
-        aria-describedby={hasError ? `${inputId}-error` : undefined}
+        aria-describedby={
+          [errorId, helpId].filter(Boolean).join(" ") || undefined
+        }
         aria-invalid={hasError ? "true" : "false"}
         aria-required={controlItem.required || false}
         rows={controlItem.rows || 4}
+        maxLength={controlItem.maxLength}
         className={`
           transition-all duration-200 resize-none
           ${
@@ -227,7 +271,12 @@ function ValidatedTextarea({
 
       {/* Character count for textarea */}
       {controlItem.maxLength && (
-        <div className="absolute bottom-2 right-2 text-xs text-gray-500 bg-white px-1">
+        <div
+          className="absolute bottom-2 right-2 text-xs text-gray-500 bg-white px-1"
+          aria-label={`${value.length} of ${controlItem.maxLength} characters used`}
+          role="status"
+          aria-live="polite"
+        >
           {value.length}/{controlItem.maxLength}
         </div>
       )}
@@ -253,6 +302,7 @@ function CommonForm({
   const [touched, setTouched] = useState({});
   const [showPasswords, setShowPasswords] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [announceMessage, setAnnounceMessage] = useState("");
 
   // Validation function
   const validateField = useCallback((name, value, rules) => {
@@ -285,7 +335,7 @@ function CommonForm({
     return "";
   }, []);
 
-  // Real-time validation
+  // Real-time validation with announcements
   const handleFieldChange = useCallback(
     (fieldName, fieldValue) => {
       setFormData((prev) => ({
@@ -320,16 +370,32 @@ function CommonForm({
         ...prev,
         [fieldName]: error,
       }));
+
+      // Announce validation result to screen readers
+      if (error) {
+        setAnnounceMessage(`Error in ${fieldName}: ${error}`);
+      } else if (formData[fieldName]) {
+        setAnnounceMessage(`${fieldName} is valid`);
+      }
     },
     [formData, validateField]
   );
 
   // Toggle password visibility
   const togglePasswordVisibility = useCallback((fieldName) => {
-    setShowPasswords((prev) => ({
-      ...prev,
-      [fieldName]: !prev[fieldName],
-    }));
+    setShowPasswords((prev) => {
+      const newState = {
+        ...prev,
+        [fieldName]: !prev[fieldName],
+      };
+
+      // Announce password visibility change
+      setAnnounceMessage(
+        `Password is now ${newState[fieldName] ? "visible" : "hidden"}`
+      );
+
+      return newState;
+    });
   }, []);
 
   // Validate all fields
@@ -352,6 +418,13 @@ function CommonForm({
     setTouched(newTouched);
     setErrors(newErrors);
 
+    const errorCount = Object.values(newErrors).filter((error) => error).length;
+    if (errorCount > 0) {
+      setAnnounceMessage(
+        `Form has ${errorCount} validation errors. Please review and correct them.`
+      );
+    }
+
     return Object.values(newErrors).every((error) => !error);
   }, [formControls, formData, validateField]);
 
@@ -363,19 +436,42 @@ function CommonForm({
       if (isSubmitting) return;
 
       const isValid = validateAllFields();
-      if (!isValid) return;
+      if (!isValid) {
+        // Focus first error field
+        const firstErrorField = formControls.find(
+          (control) => errors[control.name] && touched[control.name]
+        );
+        if (firstErrorField) {
+          const errorElement = document.getElementById(
+            `${formId}-${firstErrorField.name}`
+          );
+          errorElement?.focus();
+        }
+        return;
+      }
 
       setIsSubmitting(true);
+      setAnnounceMessage("Submitting form...");
 
       try {
         await onSubmit(event);
+        setAnnounceMessage("Form submitted successfully");
       } catch (error) {
         console.error("Form submission error:", error);
+        setAnnounceMessage("Form submission failed. Please try again.");
       } finally {
         setIsSubmitting(false);
       }
     },
-    [validateAllFields, onSubmit, isSubmitting]
+    [
+      validateAllFields,
+      onSubmit,
+      isSubmitting,
+      formControls,
+      errors,
+      touched,
+      formId,
+    ]
   );
 
   // Check if form is valid
@@ -451,11 +547,28 @@ function CommonForm({
 
   return (
     <div className="w-full max-w-md mx-auto">
+      {/* Screen reader announcements */}
+      <div
+        aria-live="polite"
+        aria-atomic="true"
+        className="sr-only"
+        role="status"
+      >
+        {announceMessage}
+      </div>
+
       {/* Success Message */}
       {showSuccessMessage && (
-        <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+        <div
+          className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg"
+          role="alert"
+          aria-live="assertive"
+        >
           <div className="flex items-start">
-            <CheckCircle className="w-5 h-5 text-green-500 mt-0.5 mr-3 flex-shrink-0" />
+            <CheckCircle
+              className="w-5 h-5 text-green-500 mt-0.5 mr-3 flex-shrink-0"
+              aria-hidden="true"
+            />
             <div className="flex-1">
               <p className="text-green-800 font-medium">Success!</p>
               <p className="text-green-700 text-sm mt-1">
@@ -467,6 +580,7 @@ function CommonForm({
                 onClick={onSuccessClose}
                 className="text-green-500 hover:text-green-700 ml-2"
                 aria-label="Close success message"
+                type="button"
               >
                 ×
               </button>
@@ -479,7 +593,9 @@ function CommonForm({
         onSubmit={handleSubmit}
         role="form"
         aria-labelledby={formTitle ? `${formId}-title` : undefined}
+        aria-describedby={formDescription ? `${formId}-description` : undefined}
         className="space-y-6"
+        noValidate
       >
         {formTitle && (
           <div className="text-center">
@@ -490,12 +606,16 @@ function CommonForm({
               {formTitle}
             </h2>
             {formDescription && (
-              <p className="text-gray-600 text-sm">{formDescription}</p>
+              <p id={`${formId}-description`} className="text-gray-600 text-sm">
+                {formDescription}
+              </p>
             )}
           </div>
         )}
 
-        <div className="space-y-5">
+        <fieldset className="space-y-5">
+          <legend className="sr-only">{formTitle || "Form fields"}</legend>
+
           {formControls.map((controlItem) => {
             const inputId = `${formId}-${controlItem.name}`;
             const error = errors[controlItem.name];
@@ -510,7 +630,11 @@ function CommonForm({
                 >
                   {controlItem.label}
                   {controlItem.required && (
-                    <span className="text-red-500 ml-1" aria-label="required">
+                    <span
+                      className="text-red-500 ml-1"
+                      aria-label="required field"
+                      role="presentation"
+                    >
                       *
                     </span>
                   )}
@@ -526,36 +650,59 @@ function CommonForm({
                     role="alert"
                     aria-live="polite"
                   >
-                    <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                    <AlertCircle
+                      className="w-4 h-4 mt-0.5 flex-shrink-0"
+                      aria-hidden="true"
+                    />
                     <span>{error}</span>
                   </div>
                 )}
 
                 {/* Help Text */}
                 {controlItem.helpText && !hasError && (
-                  <div className="text-xs text-gray-500">
-                    {controlItem.helpText}
+                  <div
+                    id={`${inputId}-help`}
+                    className="flex items-start space-x-2 text-xs text-gray-500"
+                    role="note"
+                  >
+                    <Info
+                      className="w-3 h-3 mt-0.5 flex-shrink-0"
+                      aria-hidden="true"
+                    />
+                    <span>{controlItem.helpText}</span>
                   </div>
                 )}
               </div>
             );
           })}
-        </div>
+        </fieldset>
 
         <Button
           disabled={isBtnDisabled || isSubmitting || !isFormValid()}
           type="submit"
           className="w-full h-12 text-base font-medium transition-all duration-200 disabled:opacity-50"
+          aria-describedby={`${formId}-submit-status`}
         >
           {isSubmitting ? (
             <div className="flex items-center justify-center space-x-2">
-              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              <div
+                className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"
+                aria-hidden="true"
+              />
               <span>Processing...</span>
             </div>
           ) : (
             buttonText || "Submit"
           )}
         </Button>
+
+        <div
+          id={`${formId}-submit-status`}
+          className="sr-only"
+          aria-live="polite"
+        >
+          {isSubmitting ? "Form is being submitted" : ""}
+        </div>
       </form>
     </div>
   );

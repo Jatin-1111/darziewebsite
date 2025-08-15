@@ -1,10 +1,14 @@
-// src/components/shopping-view/home/HeroBannerSection.jsx - MOBILE RESPONSIVE
+// src/components/shopping-view/home/HeroBannerSection.jsx - MOBILE RESPONSIVE WITH ARIA ONLY
 import { memo } from "react";
 import { Link } from "react-router-dom";
 
 const HeroBannerSection = memo(() => {
   return (
-    <div className="relative w-full h-screen overflow-hidden font-josefin">
+    <div
+      className="relative w-full h-screen overflow-hidden font-josefin"
+      role="banner"
+      aria-label="Darzie's Couture hero section"
+    >
       {/* Mobile-First Responsive Banner Image */}
       <picture>
         <source
@@ -21,7 +25,7 @@ const HeroBannerSection = memo(() => {
         />
         <img
           src="https://res.cloudinary.com/dpxiwelxk/image/upload/f_auto,q_auto,w_1920/v1754393818/bannardestop_ri4m9p.svg"
-          alt="Darzie's Couture Banner - Elegant ethnic wear collection"
+          alt="Elegant ethnic wear collection showcasing traditional and contemporary designs"
           className="w-full h-full object-cover object-center"
           loading="eager"
           fetchPriority="high"
@@ -39,13 +43,18 @@ const HeroBannerSection = memo(() => {
             rgba(142, 139, 125, 0.8) 100%
           )`,
         }}
+        aria-hidden="true"
       />
 
       {/* Mobile-First Content Positioning */}
       <div className="absolute inset-0 flex flex-col justify-end items-center p-4 sm:p-6 md:p-8">
         {/* Mobile-Optimized CTA Button */}
         <div className="w-full max-w-xs sm:max-w-sm">
-          <Link to="/shop/listing" className="block">
+          <Link
+            to="/shop/listing"
+            className="block"
+            aria-label="Explore our fashion collection"
+          >
             <button
               className="
               font-faux w-full bg-black/80 backdrop-blur-sm text-white 
@@ -58,19 +67,32 @@ const HeroBannerSection = memo(() => {
               active:scale-95
               focus:outline-none focus:ring-4 focus:ring-white/50
             "
+              type="button"
+              aria-describedby="cta-description"
             >
               Explore Collection
             </button>
           </Link>
+          <span id="cta-description" className="sr-only">
+            Browse our latest ethnic wear and contemporary fashion collection
+          </span>
         </div>
 
         {/* Mobile Scroll Indicator */}
-        <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 sm:hidden">
+        <div
+          className="absolute bottom-4 left-1/2 transform -translate-x-1/2 sm:hidden"
+          role="presentation"
+          aria-label="Scroll down indicator"
+        >
           <div className="animate-bounce">
-            <div className="w-6 h-10 border-2 border-white/60 rounded-full flex justify-center">
+            <div
+              className="w-6 h-10 border-2 border-white/60 rounded-full flex justify-center"
+              aria-hidden="true"
+            >
               <div className="w-1 h-3 bg-white/60 rounded-full mt-2 animate-pulse"></div>
             </div>
           </div>
+          <span className="sr-only">Scroll down to see more content</span>
         </div>
       </div>
     </div>
