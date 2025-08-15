@@ -1,21 +1,14 @@
-<!-- 1. First, check if your font file exists at /font/Samarkan.ttf -->
-<!-- You can test this by going to: http://localhost:5173/font/Samarkan.ttf -->
-
-<!-- 2. Update your index.html with better font preloading -->
 <!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="https://res.cloudinary.com/dpxiwelxk/image/upload/v1754385089/Logo_lzbe32.svg" />
+    <link rel="icon" type="image/svg+xml" href="/src/assets/Logo.svg" />
 
+    <!-- Critical font preloading FIRST -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@300;400;500;600;700&display=swap"
-      rel="stylesheet"
-    />
 
-    <!-- Preload the Samarkan font with higher priority -->
+    <!-- Preload Samarkan font with highest priority -->
     <link
       rel="preload"
       href="/font/Samarkan.ttf"
@@ -24,32 +17,74 @@
       crossorigin="anonymous"
     />
 
-    <!-- Your existing image preloads -->
+    <!-- LCP IMAGE PRELOADING - HIGHEST PRIORITY -->
     <link
       rel="preload"
       fetchpriority="high"
       as="image"
-      href="https://res.cloudinary.com/dpxiwelxk/image/upload/v1754393818/bannardestop_ri4m9p.svg"
-      imagesrcset="https://res.cloudinary.com/dpxiwelxk/image/upload/v1754392860/bannermobile_ml9vmo.svg 640w, https://res.cloudinary.com/dpxiwelxk/image/upload/v1754393818/bannardestop_ri4m9p.svg 641w"
+      href="https://res.cloudinary.com/dpxiwelxk/image/upload/f_auto,q_auto,w_640,h_800,c_fill,fl_progressive:steep,q_80/v1754392860/bannermobile_ml9vmo.svg"
+      media="(max-width: 640px)"
       type="image/svg+xml"
     />
+    <link
+      rel="preload"
+      fetchpriority="high"
+      as="image"
+      href="https://res.cloudinary.com/dpxiwelxk/image/upload/f_auto,q_auto,w_1920,h_1080,c_fill,fl_progressive:steep,q_90/v1754393818/bannardestop_ri4m9p.svg"
+      media="(min-width: 641px)"
+      type="image/svg+xml"
+    />
+
+    <!-- Google Fonts with display=swap for better performance -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- DNS prefetch for Cloudinary -->
+    <link rel="dns-prefetch" href="//res.cloudinary.com" />
+    <link rel="preconnect" href="https://res.cloudinary.com" crossorigin />
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Darzie's Couture</title>
 
-    <!-- Inline critical font CSS to prevent FOUT -->
+    <!-- Critical CSS inline for fonts -->
     <style>
       @font-face {
         font-family: "Faux Sanskrit";
         src: url("/font/Samarkan.ttf") format("truetype");
         font-weight: normal;
         font-style: normal;
-        font-display: swap; /* This helps with loading performance */
+        font-display: swap;
       }
 
-      /* Fallback for when font is loading */
+      /* Critical hero section styles to prevent CLS */
+      .hero-container {
+        position: relative;
+        width: 100%;
+        height: 100vh;
+        overflow: hidden;
+        background: linear-gradient(
+          135deg,
+          #f4efd6 0%,
+          #e5d5a3 50%,
+          #c4ba97 100%
+        );
+      }
+
       .font-faux {
         font-family: "Faux Sanskrit", "Georgia", "Times New Roman", serif;
+      }
+
+      /* Prevent layout shift */
+      .hero-image {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: center;
       }
     </style>
   </head>
