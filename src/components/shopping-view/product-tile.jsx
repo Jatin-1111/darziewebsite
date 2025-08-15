@@ -1,4 +1,4 @@
-// src/components/shopping-view/product-tile.jsx - MOBILE RESPONSIVE FIXES
+// src/components/shopping-view/product-tile.jsx - FIXED PRICE LOGIC + MOBILE RESPONSIVE
 import { memo, useState, useCallback, useMemo } from "react";
 import { Card, CardContent, CardFooter } from "../ui/card";
 import { Button } from "../ui/button";
@@ -66,7 +66,7 @@ const OptimizedImage = memo(({ src, alt, className, onLoad, onError }) => {
 
 OptimizedImage.displayName = "OptimizedImage";
 
-// Optimized badge component with mobile considerations
+// Fixed badge component with correct price logic
 const ProductBadge = memo(({ product }) => {
   if (product?.totalStock === 0) {
     return (
@@ -84,10 +84,16 @@ const ProductBadge = memo(({ product }) => {
     );
   }
 
-  if (product?.salePrice > 0) {
+  // Fixed: Sale badge shows when salePrice is LESS than price
+  const price = Number(product?.price) || 0;
+  const salePrice = Number(product?.salePrice) || 0;
+  const isOnSale = salePrice > 0 && salePrice < price;
+
+  if (isOnSale) {
+    const discountPercent = Math.round(((price - salePrice) / price) * 100);
     return (
       <Badge className="absolute top-2 left-2 bg-red-500 hover:bg-red-600 text-xs px-2 py-1">
-        Sale
+        {discountPercent}% OFF
       </Badge>
     );
   }
@@ -122,19 +128,24 @@ const ShoppingProductTile = memo(
       [handleAddtoCart, product?._id, product?.totalStock]
     );
 
-    // Memoize price display logic with mobile-friendly formatting
+    // FIXED: Corrected price display logic based on your data structure
     const priceDisplay = useMemo(() => {
-      const price = Number(product?.price) || 0;
+      const originalPrice = Number(product?.price) || 0;
       const salePrice = Number(product?.salePrice) || 0;
-      const isOnSale = salePrice > 0;
-      const currentPrice = isOnSale ? salePrice : price;
+
+      // Sale exists when salePrice > 0 AND salePrice < originalPrice
+      const isOnSale = salePrice > 0 && salePrice < originalPrice;
+      const currentPrice = isOnSale ? salePrice : originalPrice;
+      const savings = isOnSale ? originalPrice - salePrice : 0;
 
       return {
         currentPrice,
-        originalPrice: price,
+        originalPrice,
         isOnSale,
+        savings,
         formattedCurrentPrice: `₹${currentPrice.toLocaleString("en-IN")}`,
-        formattedOriginalPrice: `₹${price.toLocaleString("en-IN")}`,
+        formattedOriginalPrice: `₹${originalPrice.toLocaleString("en-IN")}`,
+        formattedSavings: `₹${savings.toLocaleString("en-IN")}`,
       };
     }, [product?.price, product?.salePrice]);
 
@@ -154,15 +165,17 @@ const ShoppingProductTile = memo(
     return (
       <Card
         className="
-        w-full mx-auto 
+        w-full max-w-sm mx-auto 
+        min-h-[400px] sm:min-h-[450px] md:min-h-[480px]
         hover:shadow-lg transition-all duration-300 ease-in-out
         transform hover:-translate-y-1
         border border-gray-200 hover:border-gray-300
+        flex flex-col
       "
       >
         <div
           onClick={handleProductClick}
-          className="cursor-pointer"
+          className="cursor-pointer flex-1 flex flex-col"
           role="button"
           tabIndex={0}
           onKeyDown={(e) => {
@@ -185,7 +198,7 @@ const ShoppingProductTile = memo(
             )}
           </div>
 
-          <CardContent className="p-3 sm:p-4">
+          <CardContent className="p-3 sm:p-4 flex-1 flex flex-col justify-between">
             {/* Product Title - Mobile optimized with proper line clamping */}
             <h2
               className="
@@ -208,22 +221,23 @@ const ShoppingProductTile = memo(
               </span>
             </div>
 
-            {/* Price Section - Mobile optimized layout */}
+            {/* FIXED: Price Section with correct logic */}
             <div className="flex items-center justify-between mb-2">
               <div className="flex flex-col sm:flex-row sm:items-center sm:gap-2">
-                <span
-                  className={`
-                    ${
-                      priceDisplay.isOnSale
-                        ? "line-through text-gray-500 text-sm"
-                        : "text-lg font-semibold text-[#6C3D1D]"
-                    }
-                  `}
-                >
-                  {priceDisplay.formattedOriginalPrice}
-                </span>
-                {priceDisplay.isOnSale && (
-                  <span className="text-lg font-bold text-[#6C3D1D]">
+                {priceDisplay.isOnSale ? (
+                  <>
+                    {/* Show discounted price prominently */}
+                    <span className="text-lg font-bold text-[#6C3D1D]">
+                      {priceDisplay.formattedCurrentPrice}
+                    </span>
+                    {/* Show original price crossed out */}
+                    <span className="line-through text-gray-500 text-sm">
+                      {priceDisplay.formattedOriginalPrice}
+                    </span>
+                  </>
+                ) : (
+                  /* No sale - show regular price */
+                  <span className="text-lg font-semibold text-[#6C3D1D]">
                     {priceDisplay.formattedCurrentPrice}
                   </span>
                 )}
@@ -232,10 +246,7 @@ const ShoppingProductTile = memo(
               {/* Savings indicator for mobile */}
               {priceDisplay.isOnSale && (
                 <div className="text-xs text-green-600 font-medium">
-                  Save ₹
-                  {(
-                    priceDisplay.originalPrice - priceDisplay.currentPrice
-                  ).toLocaleString("en-IN")}
+                  Save {priceDisplay.formattedSavings}
                 </div>
               )}
             </div>
