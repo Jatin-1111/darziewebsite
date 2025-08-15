@@ -1,4 +1,4 @@
-// src/store/admin/order-slice/index.js - UPDATED
+// src/store/admin/order-slice/index.js - FIXED EXPORT ISSUE 🔥
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import apiClient from "../../../utils/apiClient";
 import { API_ENDPOINTS } from "../../../config/api";
@@ -8,6 +8,14 @@ const initialState = {
   orderDetails: null,
   isLoading: false,
 };
+
+export const getAllOrdersOfAllUsers = createAsyncThunk(
+  "/order/getAllOrdersOfAllUsers",
+  async () => {
+    const response = await apiClient.get(API_ENDPOINTS.ADMIN_ORDERS_GET);
+    return response.data;
+  }
+);
 
 export const getAllOrdersForAdmin = createAsyncThunk(
   "/order/getAllOrdersForAdmin",
@@ -46,12 +54,23 @@ const adminOrderSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
+      .addCase(getAllOrdersOfAllUsers.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(getAllOrdersOfAllUsers.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.orderList = action.payload.data || [];
+      })
+      .addCase(getAllOrdersOfAllUsers.rejected, (state) => {
+        state.isLoading = false;
+        state.orderList = [];
+      })
       .addCase(getAllOrdersForAdmin.pending, (state) => {
         state.isLoading = true;
       })
       .addCase(getAllOrdersForAdmin.fulfilled, (state, action) => {
         state.isLoading = false;
-        state.orderList = action.payload.data;
+        state.orderList = action.payload.data || [];
       })
       .addCase(getAllOrdersForAdmin.rejected, (state) => {
         state.isLoading = false;
@@ -67,9 +86,20 @@ const adminOrderSlice = createSlice({
       .addCase(getOrderDetailsForAdmin.rejected, (state) => {
         state.isLoading = false;
         state.orderDetails = null;
+      })
+      .addCase(updateOrderStatus.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(updateOrderStatus.fulfilled, (state) => {
+        state.isLoading = false;
+      })
+      .addCase(updateOrderStatus.rejected, (state) => {
+        state.isLoading = false;
       });
   },
 });
 
 export const { resetOrderDetails } = adminOrderSlice.actions;
+
+// ✅ FIXED: Export the reducer as default
 export default adminOrderSlice.reducer;
