@@ -369,21 +369,6 @@ const ProductDetailPage = () => {
         </div>
       </div>
       
-      {productDetails && (
-        <div className="fixed top-20 right-4 bg-red-100 p-4 rounded text-xs max-w-xs z-50">
-          <h4>🔍 DEBUG:</h4>
-          <p>Type: {typeof productDetails.image}</p>
-          <p>IsArray: {Array.isArray(productDetails.image).toString()}</p>
-          <p>
-            Length:{" "}
-            {Array.isArray(productDetails.image)
-              ? productDetails.image.length
-              : "N/A"}
-          </p>
-          <p>Value: {JSON.stringify(productDetails.image)}</p>
-        </div>
-      )}
-
       {/* Product Details */}
       <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
