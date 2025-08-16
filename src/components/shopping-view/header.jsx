@@ -31,8 +31,6 @@ function MenuItems({ onItemClick, isMobile = false }) {
   const [searchParams, setSearchParams] = useSearchParams();
 
   function handleNavigate(getCurrentMenuItem) {
-    console.log("🚀 Navigation clicked:", getCurrentMenuItem);
-
     // ✅ FIX 1: Consistent category filtering logic
     if (getCurrentMenuItem.id === "home") {
       navigate("/shop/home");
@@ -98,7 +96,6 @@ function MenuItems({ onItemClick, isMobile = false }) {
           .join(",")}`;
         navigate(`/shop/listing?${queryString}`);
 
-        console.log("🎯 Updated category filters:", newFilters);
       } catch (error) {
         console.error("❌ Error updating filters:", error);
         // Fallback to single category

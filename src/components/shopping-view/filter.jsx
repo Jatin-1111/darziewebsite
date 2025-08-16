@@ -22,11 +22,6 @@ const FilterOption = memo(({ option, keyItem, filters, handleFilter }) => {
   }, [filters, keyItem, option.id]);
 
   const handleChange = useCallback(() => {
-    console.log("🎯 Filter option clicked:", {
-      keyItem,
-      optionId: option.id,
-      currentFilters: filters,
-    });
     handleFilter(keyItem, option.id);
   }, [handleFilter, keyItem, option.id]);
 
@@ -329,8 +324,6 @@ const ProductFilter = memo(({ filters, handleFilter }) => {
   const activeFilterCount = useMemo(() => {
     if (!filters) return 0;
 
-    console.log("🔍 Calculating active filters:", filters);
-
     return Object.values(filters).reduce((count, filterArray) => {
       return count + (Array.isArray(filterArray) ? filterArray.length : 0);
     }, 0);
@@ -338,8 +331,6 @@ const ProductFilter = memo(({ filters, handleFilter }) => {
 
   // ✅ FIX 6: Enhanced clear all filters handler
   const handleClearAll = useCallback(() => {
-    console.log("🧹 Clearing all filters, current filters:", filters);
-
     if (!filters) return;
 
     // Clear each filter category by toggling all selected options
@@ -354,8 +345,6 @@ const ProductFilter = memo(({ filters, handleFilter }) => {
 
     // Also clear sessionStorage to prevent conflicts
     sessionStorage.removeItem("filters");
-
-    console.log("✅ All filters cleared");
   }, [filters, handleFilter]);
 
   return (

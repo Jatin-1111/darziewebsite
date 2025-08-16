@@ -121,12 +121,6 @@ function ShoppingListing() {
   // ✅ FIX 2: Enhanced filter handler with consistent key usage and price logic
   const handleFilter = useCallback(
     (getSectionId, getCurrentOption) => {
-      console.log("🎛️ Filter change:", {
-        getSectionId,
-        getCurrentOption,
-        currentFilters: filters,
-      });
-
       let cpyFilters = { ...filters };
 
       // ✅ FIX 3: Handle price filters differently (single selection)
@@ -162,7 +156,6 @@ function ShoppingListing() {
         }
       }
 
-      console.log("✅ Updated filters:", cpyFilters);
       setFilters(cpyFilters);
       sessionStorage.setItem("filters", JSON.stringify(cpyFilters));
     },
@@ -209,13 +202,11 @@ function ShoppingListing() {
 
   // ✅ FIXED: Improved filter initialization with proper URL parsing
   useEffect(() => {
-    console.log("🚀 Initializing filters...", { categorySearchParam });
 
     try {
       const savedFilters = JSON.parse(
         sessionStorage.getItem("filters") || "{}"
       );
-      console.log("💾 SessionStorage filters:", savedFilters);
 
       // ✅ FIX: Handle URL category parameter with comma-separated values
       if (categorySearchParam) {
@@ -225,18 +216,13 @@ function ShoppingListing() {
           .map((cat) => decodeURIComponent(cat.trim()))
           .filter((cat) => cat); // Remove empty strings
 
-        console.log("🔗 Parsed URL categories:", categoryArray);
-
         // Merge with existing filters (preserve other filter types)
         const mergedFilters = { ...savedFilters };
         mergedFilters.category = categoryArray;
 
-        console.log("✅ Final merged filters:", mergedFilters);
         setFilters(mergedFilters);
         sessionStorage.setItem("filters", JSON.stringify(mergedFilters));
       } else {
-        // No URL category - use sessionStorage filters
-        console.log("📦 Using sessionStorage filters");
         setFilters(savedFilters);
       }
     } catch (error) {
@@ -251,10 +237,8 @@ function ShoppingListing() {
       if (filters && Object.keys(filters).length > 0) {
         const createQueryString = createSearchParamsHelper(filters);
         setSearchParams(new URLSearchParams(createQueryString));
-        console.log("📝 URL updated:", createQueryString);
       } else {
         setSearchParams(new URLSearchParams(""));
-        console.log("🧹 URL cleared");
       }
     }, 300);
 
@@ -265,12 +249,6 @@ function ShoppingListing() {
   useEffect(() => {
     if (filters !== null && sort !== null) {
       const timeout = setTimeout(() => {
-        console.log(
-          "🔍 Fetching products with filters:",
-          filters,
-          "sort:",
-          sort
-        );
         dispatch(
           fetchAllFilteredProducts({ filterParams: filters, sortParams: sort })
         );

@@ -55,13 +55,11 @@ function App() {
 
   // ✅ SIMPLIFIED: Initialize auth once on app start
   useEffect(() => {
-    console.log("🚀 App initializing...");
     dispatch(initializeAuth());
 
     // Only check auth if we have a token
     const token = localStorage.getItem("authToken");
     if (token) {
-      console.log("🔍 Token found, verifying with server...");
       dispatch(checkAuth());
     }
   }, [dispatch]);
