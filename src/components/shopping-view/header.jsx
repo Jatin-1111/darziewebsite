@@ -24,6 +24,7 @@ import UserCartWrapper from "./cart-wrapper";
 import { useEffect, useState } from "react";
 import { fetchCartItems } from "@/store/shop/cart-slice";
 import { Label } from "../ui/label";
+import { isDevelopment } from "@/config/api";
 
 function MenuItems({ onItemClick, isMobile = false }) {
   const navigate = useNavigate();
@@ -95,7 +96,6 @@ function MenuItems({ onItemClick, isMobile = false }) {
           .map((cat) => encodeURIComponent(cat))
           .join(",")}`;
         navigate(`/shop/listing?${queryString}`);
-
       } catch (error) {
         console.error("❌ Error updating filters:", error);
         // Fallback to single category
@@ -410,14 +410,15 @@ function ShoppingHeader() {
 
   return (
     <header
-      className="sticky top-0 z-40 w-full border-b bg-[#C4BA97] shadow-sm"
-      role="banner"
+      className={`sticky top-0 z-40 w-full border-b shadow-sm ${
+        isDevelopment() ? "bg-blue-800" : "bg-[#C4BA97]"
+      }`}
     >
       <div className="flex h-16 md:h-20 items-center justify-between px-4 md:px-6">
         {/* Logo */}
         <Link
           to="/shop/home"
-          className="flex items-center gap-2 flex-shrink-0"
+          className="flex items-center gap-2 flex-shrink-0 relative"
           aria-label="Darzie's Couture - Go to homepage"
         >
           <img
@@ -427,6 +428,13 @@ function ShoppingHeader() {
             loading="eager"
           />
         </Link>
+
+        {/* Dev Mode Floating Indicator */}
+        {isDevelopment() && (
+          <div className="fixed bottom-4 right-4 z-50 bg-gradient-to-r from-green-500 to-blue-500 text-white px-4 py-2 rounded-full text-sm font-bold shadow-lg backdrop-blur-sm border border-white/20 animate-pulse">
+            🔧 DEVELOPMENT MODE
+          </div>
+        )}
 
         {/* Desktop Navigation */}
         <div className="hidden lg:block">
