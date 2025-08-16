@@ -1,4 +1,4 @@
-// src/pages/shopping-view/listing.jsx - UPDATED WITHOUT MODAL
+// src/pages/shopping-view/listing.jsx - FIXED VERSION 🔧
 import {
   memo,
   useCallback,
@@ -9,16 +9,15 @@ import {
   useState,
 } from "react";
 import { useToast } from "@/components/ui/use-toast";
-import { sortOptions } from "@/config";
+import { sortOptions, categoryOptionsMap } from "@/config";
 import { addToCart, fetchCartItems } from "@/store/shop/cart-slice";
-import { fetchAllFilteredProducts } from "@/store/shop/products-slice"; // REMOVED fetchProductDetails
-import { ArrowUpDownIcon } from "lucide-react";
+import { fetchAllFilteredProducts } from "@/store/shop/products-slice";
 import { useDispatch, useSelector } from "react-redux";
 import { useSearchParams } from "react-router-dom";
+import { ArrowUpDownIcon, X } from "lucide-react";
 
 // Lazy load components
 const ProductFilter = lazy(() => import("@/components/shopping-view/filter"));
-// REMOVED ProductDetailsDialog import
 const ShoppingProductTile = lazy(() =>
   import("@/components/shopping-view/product-tile")
 );
@@ -84,32 +83,29 @@ const NoProducts = memo(() => (
 
 NoProducts.displayName = "NoProducts";
 
-// Optimized search params helper
+// ✅ FIXED: Enhanced search params helper with proper array handling
 const createSearchParamsHelper = (filterParams) => {
   const queryParams = [];
   for (const [key, value] of Object.entries(filterParams)) {
     if (Array.isArray(value) && value.length > 0) {
-      const paramValue = value.join(",");
-      queryParams.push(`${key}=${encodeURIComponent(paramValue)}`);
+      // ✅ FIXED: Properly encode each value and join with commas
+      const encodedValues = value.map((v) => encodeURIComponent(v)).join(",");
+      queryParams.push(`${key}=${encodedValues}`);
     }
   }
   return queryParams.join("&");
 };
 
-// Main mobile-responsive component - UPDATED WITHOUT MODAL
+// Main mobile-responsive component - FIXED VERSION
 function ShoppingListing() {
   const dispatch = useDispatch();
-  const { productList, isLoading } = useSelector(
-    // REMOVED productDetails
-    (state) => state.shopProducts
-  );
+  const { productList, isLoading } = useSelector((state) => state.shopProducts);
   const { cartItems } = useSelector((state) => state.shopCart);
   const { user } = useSelector((state) => state.auth);
 
   const [filters, setFilters] = useState({});
   const [sort, setSort] = useState("price-lowtohigh");
   const [searchParams, setSearchParams] = useSearchParams();
-  // REMOVED openDetailsDialog state
   const { toast } = useToast();
 
   const categorySearchParam = searchParams.get("category");
@@ -117,19 +113,24 @@ function ShoppingListing() {
   // Memoize expensive calculations
   const productCount = useMemo(() => productList?.length || 0, [productList]);
 
-  // Debounced filter application
-  const [filterTimeout, setFilterTimeout] = useState(null);
-
   // Optimized handlers with useCallback
   const handleSort = useCallback((value) => {
     setSort(value);
   }, []);
 
+  // ✅ FIX 2: Enhanced filter handler with consistent key usage and price logic
   const handleFilter = useCallback(
     (getSectionId, getCurrentOption) => {
+      console.log("🎛️ Filter change:", {
+        getSectionId,
+        getCurrentOption,
+        currentFilters: filters,
+      });
+
       let cpyFilters = { ...filters };
 
-      if (getSectionId === "Price") {
+      // ✅ FIX 3: Handle price filters differently (single selection)
+      if (getSectionId === "price") {
         const isCurrentlySelected =
           cpyFilters[getSectionId] &&
           cpyFilters[getSectionId].includes(getCurrentOption);
@@ -143,6 +144,7 @@ function ShoppingListing() {
           };
         }
       } else {
+        // ✅ FIX 4: Handle category filters (multiple selection)
         const currentOptions = cpyFilters[getSectionId] || [];
         const indexOfCurrentOption = currentOptions.indexOf(getCurrentOption);
 
@@ -153,15 +155,19 @@ function ShoppingListing() {
             (option) => option !== getCurrentOption
           );
         }
+
+        // Remove empty arrays
+        if (cpyFilters[getSectionId].length === 0) {
+          delete cpyFilters[getSectionId];
+        }
       }
 
+      console.log("✅ Updated filters:", cpyFilters);
       setFilters(cpyFilters);
       sessionStorage.setItem("filters", JSON.stringify(cpyFilters));
     },
     [filters]
   );
-
-  // REMOVED handleGetProductDetails function since we're using navigation
 
   const handleAddtoCart = useCallback(
     (getCurrentProductId, getTotalStock) => {
@@ -201,48 +207,70 @@ function ShoppingListing() {
     [cartItems.items, dispatch, toast, user?.id]
   );
 
-  // Initialize filters and sort on mount
+  // ✅ FIXED: Improved filter initialization with proper URL parsing
   useEffect(() => {
-    const savedFilters = JSON.parse(sessionStorage.getItem("filters"));
-    if (
-      categorySearchParam &&
-      !savedFilters?.Category?.includes(categorySearchParam)
-    ) {
-      setFilters((prev) => ({
-        ...prev,
-        Category: [categorySearchParam],
-      }));
-    } else {
-      setFilters(savedFilters || {});
+    console.log("🚀 Initializing filters...", { categorySearchParam });
+
+    try {
+      const savedFilters = JSON.parse(
+        sessionStorage.getItem("filters") || "{}"
+      );
+      console.log("💾 SessionStorage filters:", savedFilters);
+
+      // ✅ FIX: Handle URL category parameter with comma-separated values
+      if (categorySearchParam) {
+        // Parse comma-separated categories from URL
+        const categoryArray = categorySearchParam
+          .split(",")
+          .map((cat) => decodeURIComponent(cat.trim()))
+          .filter((cat) => cat); // Remove empty strings
+
+        console.log("🔗 Parsed URL categories:", categoryArray);
+
+        // Merge with existing filters (preserve other filter types)
+        const mergedFilters = { ...savedFilters };
+        mergedFilters.category = categoryArray;
+
+        console.log("✅ Final merged filters:", mergedFilters);
+        setFilters(mergedFilters);
+        sessionStorage.setItem("filters", JSON.stringify(mergedFilters));
+      } else {
+        // No URL category - use sessionStorage filters
+        console.log("📦 Using sessionStorage filters");
+        setFilters(savedFilters);
+      }
+    } catch (error) {
+      console.error("❌ Error parsing filters:", error);
+      setFilters({});
     }
   }, [categorySearchParam]);
 
-  // Debounced URL update
+  // ✅ FIX 7: Debounced URL update with proper cleanup
   useEffect(() => {
-    if (filterTimeout) {
-      clearTimeout(filterTimeout);
-    }
-
     const timeout = setTimeout(() => {
       if (filters && Object.keys(filters).length > 0) {
         const createQueryString = createSearchParamsHelper(filters);
         setSearchParams(new URLSearchParams(createQueryString));
+        console.log("📝 URL updated:", createQueryString);
       } else {
         setSearchParams(new URLSearchParams(""));
+        console.log("🧹 URL cleared");
       }
     }, 300);
 
-    setFilterTimeout(timeout);
-
-    return () => {
-      if (timeout) clearTimeout(timeout);
-    };
+    return () => clearTimeout(timeout);
   }, [filters, setSearchParams]);
 
-  // Debounced product fetching
+  // ✅ FIX 8: Debounced product fetching with error handling
   useEffect(() => {
     if (filters !== null && sort !== null) {
       const timeout = setTimeout(() => {
+        console.log(
+          "🔍 Fetching products with filters:",
+          filters,
+          "sort:",
+          sort
+        );
         dispatch(
           fetchAllFilteredProducts({ filterParams: filters, sortParams: sort })
         );
@@ -251,8 +279,6 @@ function ShoppingListing() {
       return () => clearTimeout(timeout);
     }
   }, [dispatch, sort, filters]);
-
-  // REMOVED useEffect for productDetails modal
 
   // Memoized product grid with mobile-responsive layout
   const productGrid = useMemo(() => {
@@ -274,11 +300,10 @@ function ShoppingListing() {
         <ShoppingProductTile
           product={productItem}
           handleAddtoCart={handleAddtoCart}
-          // REMOVED handleGetProductDetails prop
         />
       </Suspense>
     ));
-  }, [productList, isLoading, handleAddtoCart]); // REMOVED handleGetProductDetails
+  }, [productList, isLoading, handleAddtoCart]);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -322,6 +347,35 @@ function ShoppingListing() {
                     {productCount} {productCount === 1 ? "Product" : "Products"}{" "}
                     Found
                   </p>
+
+                  {/* ✅ FIXED: Show active filters as separate removable tags */}
+                  {Object.keys(filters).length > 0 && (
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {Object.entries(filters).map(([key, values]) =>
+                        Array.isArray(values)
+                          ? values.map((value) => (
+                              <span
+                                key={`${key}-${value}`}
+                                className="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-800 text-xs rounded-full border border-blue-200"
+                              >
+                                <span className="font-medium">
+                                  {key === "category"
+                                    ? categoryOptionsMap[value] || value
+                                    : value}
+                                </span>
+                                <button
+                                  onClick={() => handleFilter(key, value)}
+                                  className="hover:bg-blue-200 rounded-full p-1 transition-colors duration-200 ml-1"
+                                  aria-label={`Remove ${value} filter`}
+                                >
+                                  <X className="w-3 h-3" />
+                                </button>
+                              </span>
+                            ))
+                          : null
+                      )}
+                    </div>
+                  )}
                 </div>
 
                 {/* Sort Dropdown */}
@@ -367,12 +421,7 @@ function ShoppingListing() {
 
             {/* Mobile-Responsive Product Grid */}
             <div className="p-4 sm:p-6">
-              <div
-                className="
-  grid gap-6 sm:gap-8
-  grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3
-"
-              >
+              <div className="grid gap-6 sm:gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3">
                 {productGrid}
               </div>
             </div>

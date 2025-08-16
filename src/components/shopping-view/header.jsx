@@ -1,4 +1,4 @@
-// src/components/shopping-view/header.jsx - FIXED WITH ALL IMPORTS 🔧
+// src/components/shopping-view/header.jsx - FIXED VERSION 🔧
 import { LogOut, Menu, ShoppingCart, UserCog, X } from "lucide-react";
 import {
   Link,
@@ -8,7 +8,7 @@ import {
 } from "react-router-dom";
 import { Sheet, SheetContent, SheetTrigger } from "../ui/sheet";
 import { Button } from "../ui/button";
-import { useDispatch, useSelector } from "react-redux"; // ✅ FIXED: Added useDispatch
+import { useDispatch, useSelector } from "react-redux";
 import { shoppingViewHeaderMenuItems } from "@/config";
 import {
   DropdownMenu,
@@ -31,37 +31,118 @@ function MenuItems({ onItemClick, isMobile = false }) {
   const [searchParams, setSearchParams] = useSearchParams();
 
   function handleNavigate(getCurrentMenuItem) {
-    sessionStorage.removeItem("filters");
-    const currentFilter =
-      getCurrentMenuItem.id !== "home" &&
-      getCurrentMenuItem.id !== "products" &&
-      getCurrentMenuItem.id !== "search"
-        ? {
-            category: [getCurrentMenuItem.id],
-          }
-        : null;
+    console.log("🚀 Navigation clicked:", getCurrentMenuItem);
 
-    sessionStorage.setItem("filters", JSON.stringify(currentFilter));
+    // ✅ FIX 1: Consistent category filtering logic
+    if (getCurrentMenuItem.id === "home") {
+      navigate("/shop/home");
+      if (onItemClick) onItemClick();
+      return;
+    }
 
-    location.pathname.includes("listing") && currentFilter !== null
-      ? setSearchParams(
-          new URLSearchParams(`?category=${getCurrentMenuItem.id}`)
-        )
-      : navigate(getCurrentMenuItem.path);
+    if (getCurrentMenuItem.id === "search") {
+      navigate("/shop/search");
+      if (onItemClick) onItemClick();
+      return;
+    }
 
-    // Close mobile menu after navigation
+    // ✅ FIX 2: Handle products (show all) vs specific categories
+    if (getCurrentMenuItem.id === "products") {
+      // Show all products - clear filters
+      sessionStorage.removeItem("filters");
+      navigate("/shop/listing");
+      if (onItemClick) onItemClick();
+      return;
+    }
+
+    // ✅ FIXED: Category mapping and ADDITIVE filtering
+    const categoryFilters = {
+      bestseller: "best sellers",
+      bridal: "bridal",
+      formals: "formals",
+      Partywear: "Partywear",
+      casual: "casual",
+      reception: "reception",
+    };
+
+    const filterCategoryId = categoryFilters[getCurrentMenuItem.id];
+
+    if (filterCategoryId) {
+      // ✅ FIXED: Get existing filters and ADD to category array instead of replacing
+      try {
+        const existingFilters = JSON.parse(
+          sessionStorage.getItem("filters") || "{}"
+        );
+        const existingCategories = existingFilters.category || [];
+
+        // ✅ FIXED: Add category if not already selected, or replace if clicking same category
+        let newCategories;
+        if (existingCategories.includes(filterCategoryId)) {
+          // Category already selected - just navigate (don't duplicate)
+          newCategories = existingCategories;
+        } else {
+          // Add new category to existing ones
+          newCategories = [...existingCategories, filterCategoryId];
+        }
+
+        const newFilters = {
+          ...existingFilters,
+          category: newCategories,
+        };
+
+        sessionStorage.setItem("filters", JSON.stringify(newFilters));
+
+        // ✅ FIXED: Create proper comma-separated URL
+        const queryString = `category=${newCategories
+          .map((cat) => encodeURIComponent(cat))
+          .join(",")}`;
+        navigate(`/shop/listing?${queryString}`);
+
+        console.log("🎯 Updated category filters:", newFilters);
+      } catch (error) {
+        console.error("❌ Error updating filters:", error);
+        // Fallback to single category
+        const newFilters = { category: [filterCategoryId] };
+        sessionStorage.setItem("filters", JSON.stringify(newFilters));
+        navigate(
+          `/shop/listing?category=${encodeURIComponent(filterCategoryId)}`
+        );
+      }
+    } else {
+      navigate(getCurrentMenuItem.path);
+    }
+
     if (onItemClick) onItemClick();
   }
 
+  // ✅ FIX 8: Improved active state detection
   const isActive = (menuItem) => {
-    if (menuItem.id === "home" && location.pathname === "/shop/home")
-      return true;
-    if (menuItem.id === "products" && location.pathname === "/shop/listing")
-      return true;
-    if (location.pathname === "/shop/listing") {
-      const category = searchParams.get("category");
-      return category === menuItem.id;
+    if (menuItem.id === "home") {
+      return location.pathname === "/shop/home" || location.pathname === "/";
     }
+
+    if (menuItem.id === "search") {
+      return location.pathname === "/shop/search";
+    }
+
+    if (menuItem.id === "products") {
+      return (
+        location.pathname === "/shop/listing" && !searchParams.get("category")
+      );
+    }
+
+    // For category items, check if that category is selected in URL
+    if (location.pathname === "/shop/listing") {
+      const categoryParam = searchParams.get("category");
+
+      // ✅ FIX 9: Handle the bestseller mapping correctly
+      if (menuItem.id === "bestseller") {
+        return categoryParam === "best sellers";
+      }
+
+      return categoryParam === menuItem.id;
+    }
+
     return false;
   };
 
@@ -114,8 +195,8 @@ function MobileHeaderActions() {
   const { user } = useSelector((state) => state.auth);
   const { cartItems } = useSelector((state) => state.shopCart);
   const [openCartSheet, setOpenCartSheet] = useState(false);
-  const navigate = useNavigate(); // ✅ FIXED: Added useNavigate hook
-  const dispatch = useDispatch(); // ✅ FIXED: Added useDispatch hook
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   function handleLogout() {
     dispatch(logoutUser());
@@ -219,8 +300,8 @@ function DesktopHeaderActions() {
   const { user } = useSelector((state) => state.auth);
   const { cartItems } = useSelector((state) => state.shopCart);
   const [openCartSheet, setOpenCartSheet] = useState(false);
-  const navigate = useNavigate(); // ✅ FIXED: Added useNavigate hook
-  const dispatch = useDispatch(); // ✅ FIXED: Added useDispatch hook
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   function handleLogout() {
     dispatch(logoutUser());
@@ -325,10 +406,10 @@ function DesktopHeaderActions() {
 }
 
 function ShoppingHeader() {
-  const { isAuthenticated, user } = useSelector((state) => state.auth); // ✅ FIXED: Added user to selector
+  const { isAuthenticated, user } = useSelector((state) => state.auth);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const navigate = useNavigate(); // ✅ FIXED: Added useNavigate hook for main component
-  const dispatch = useDispatch(); // ✅ FIXED: Added useDispatch hook for main component
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   return (
     <header
@@ -445,7 +526,6 @@ function ShoppingHeader() {
                         size="sm"
                         onClick={() => {
                           setIsMobileMenuOpen(false);
-                          // Small delay to let menu close
                           setTimeout(() => navigate("/shop/account"), 100);
                         }}
                         className="flex-1"

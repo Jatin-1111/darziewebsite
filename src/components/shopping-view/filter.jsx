@@ -1,4 +1,4 @@
-// src/components/shopping-view/filter.jsx - FULLY RESPONSIVE WITH MOBILE-FIRST TEXT 📱
+// src/components/shopping-view/filter.jsx - COMPLETE FIXED VERSION 📱🔧
 import { memo, useMemo, useCallback, Fragment, useState } from "react";
 import { filterOptions } from "@/config";
 import { Label } from "../ui/label";
@@ -16,11 +16,17 @@ import { Filter, X } from "lucide-react";
 
 // Memoized filter option component with responsive text
 const FilterOption = memo(({ option, keyItem, filters, handleFilter }) => {
+  // ✅ FIX 1: Consistent lowercase key usage throughout
   const isChecked = useMemo(() => {
     return filters?.[keyItem]?.includes(option.id) || false;
   }, [filters, keyItem, option.id]);
 
   const handleChange = useCallback(() => {
+    console.log("🎯 Filter option clicked:", {
+      keyItem,
+      optionId: option.id,
+      currentFilters: filters,
+    });
     handleFilter(keyItem, option.id);
   }, [handleFilter, keyItem, option.id]);
 
@@ -63,6 +69,7 @@ const FilterCategory = memo(
       return keyItem.charAt(0).toUpperCase() + keyItem.slice(1);
     }, [keyItem]);
 
+    // ✅ FIX 2: Consistent lowercase key access
     const selectedCount = useMemo(() => {
       return filters?.[keyItem]?.length || 0;
     }, [filters, keyItem]);
@@ -124,6 +131,7 @@ FilterCategory.displayName = "FilterCategory";
 // Mobile filter sheet content with responsive text
 const MobileFilterContent = memo(
   ({ filters, handleFilter, activeFilterCount, onClearAll }) => {
+    // ✅ FIX 3: Consistent key mapping - use lowercase throughout
     const filterCategories = useMemo(() => {
       const categories = Object.keys(filterOptions);
 
@@ -214,6 +222,7 @@ MobileFilterContent.displayName = "MobileFilterContent";
 // Desktop filter sidebar with responsive text
 const DesktopFilter = memo(
   ({ filters, handleFilter, activeFilterCount, onClearAll }) => {
+    // ✅ FIX 4: Consistent key mapping - use lowercase throughout
     const filterCategories = useMemo(() => {
       const categories = Object.keys(filterOptions);
 
@@ -316,29 +325,38 @@ DesktopFilter.displayName = "DesktopFilter";
 const ProductFilter = memo(({ filters, handleFilter }) => {
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
 
-  // Memoize active filter count
+  // ✅ FIX 5: Improved active filter count calculation with consistent keys
   const activeFilterCount = useMemo(() => {
     if (!filters) return 0;
+
+    console.log("🔍 Calculating active filters:", filters);
+
     return Object.values(filters).reduce((count, filterArray) => {
       return count + (Array.isArray(filterArray) ? filterArray.length : 0);
     }, 0);
   }, [filters]);
 
-  // Clear all filters handler
+  // ✅ FIX 6: Enhanced clear all filters handler
   const handleClearAll = useCallback(() => {
-    Object.keys(filters || {}).forEach((key) => {
-      if (filters[key] && Array.isArray(filters[key])) {
-        filters[key].forEach((value) => {
-          handleFilter(key, value);
+    console.log("🧹 Clearing all filters, current filters:", filters);
+
+    if (!filters) return;
+
+    // Clear each filter category by toggling all selected options
+    Object.keys(filters).forEach((filterKey) => {
+      const selectedOptions = filters[filterKey];
+      if (Array.isArray(selectedOptions)) {
+        selectedOptions.forEach((optionValue) => {
+          handleFilter(filterKey, optionValue);
         });
       }
     });
 
-    // Announce clearing to screen readers
-    const announcement = `All ${activeFilterCount} filters have been cleared`;
-    // You could implement a toast notification here or use aria-live region
-    console.log(announcement); // Replace with proper announcement mechanism
-  }, [filters, handleFilter, activeFilterCount]);
+    // Also clear sessionStorage to prevent conflicts
+    sessionStorage.removeItem("filters");
+
+    console.log("✅ All filters cleared");
+  }, [filters, handleFilter]);
 
   return (
     <>
