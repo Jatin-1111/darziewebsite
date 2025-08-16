@@ -1,5 +1,7 @@
+// src/store/admin/products-slice/index.js - UPDATED
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import axios from "axios";
+import apiClient from "../../../utils/apiClient";
+import { API_ENDPOINTS } from "../../../config/api";
 
 const initialState = {
   isLoading: false,
@@ -9,8 +11,8 @@ const initialState = {
 export const addNewProduct = createAsyncThunk(
   "/products/addnewproduct",
   async (formData) => {
-    const result = await axios.post(
-      "https://darziewebsite-backend.onrender.com/api/admin/products/add",
+    const response = await apiClient.post(
+      API_ENDPOINTS.ADMIN_PRODUCTS_ADD,
       formData,
       {
         headers: {
@@ -18,27 +20,23 @@ export const addNewProduct = createAsyncThunk(
         },
       }
     );
-
-    return result?.data;
+    return response.data;
   }
 );
 
 export const fetchAllProducts = createAsyncThunk(
   "/products/fetchAllProducts",
   async () => {
-    const result = await axios.get(
-      "https://darziewebsite-backend.onrender.com/api/admin/products/get"
-    );
-
-    return result?.data;
+    const response = await apiClient.get(API_ENDPOINTS.ADMIN_PRODUCTS_GET);
+    return response.data;
   }
 );
 
 export const editProduct = createAsyncThunk(
   "/products/editProduct",
   async ({ id, formData }) => {
-    const result = await axios.put(
-      `https://darziewebsite-backend.onrender.com/api/admin/products/edit/${id}`,
+    const response = await apiClient.put(
+      API_ENDPOINTS.ADMIN_PRODUCTS_EDIT(id),
       formData,
       {
         headers: {
@@ -46,19 +44,15 @@ export const editProduct = createAsyncThunk(
         },
       }
     );
-
-    return result?.data;
+    return response.data;
   }
 );
 
 export const deleteProduct = createAsyncThunk(
   "/products/deleteProduct",
   async (id) => {
-    const result = await axios.delete(
-      `https://darziewebsite-backend.onrender.com/api/admin/products/delete/${id}`
-    );
-
-    return result?.data;
+    const response = await apiClient.delete(API_ENDPOINTS.ADMIN_PRODUCTS_DELETE(id));
+    return response.data;
   }
 );
 
@@ -75,7 +69,7 @@ const AdminProductsSlice = createSlice({
         state.isLoading = false;
         state.productList = action.payload.data;
       })
-      .addCase(fetchAllProducts.rejected, (state, action) => {
+      .addCase(fetchAllProducts.rejected, (state) => {
         state.isLoading = false;
         state.productList = [];
       });

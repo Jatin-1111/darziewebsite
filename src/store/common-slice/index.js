@@ -1,5 +1,7 @@
+// src/store/common-slice/index.js - UPDATED
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import axios from "axios";
+import apiClient from "../../utils/apiClient";
+import { API_ENDPOINTS } from "../../config/api";
 
 const initialState = {
   isLoading: false,
@@ -9,10 +11,7 @@ const initialState = {
 export const getFeatureImages = createAsyncThunk(
   "/order/getFeatureImages",
   async () => {
-    const response = await axios.get(
-      `https://darziewebsite-backend.onrender.com/api/common/feature/get`
-    );
-
+    const response = await apiClient.get(API_ENDPOINTS.FEATURE_IMAGES_GET);
     return response.data;
   }
 );
@@ -20,11 +19,7 @@ export const getFeatureImages = createAsyncThunk(
 export const addFeatureImage = createAsyncThunk(
   "/order/addFeatureImage",
   async (image) => {
-    const response = await axios.post(
-      `https://darziewebsite-backend.onrender.com/api/common/feature/add`,
-      { image }
-    );
-
+    const response = await apiClient.post(API_ENDPOINTS.FEATURE_IMAGES_ADD, { image });
     return response.data;
   }
 );

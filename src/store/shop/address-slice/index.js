@@ -1,5 +1,7 @@
+// src/store/shop/address-slice/index.js - UPDATED
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import axios from "axios";
+import apiClient from "../../../utils/apiClient";
+import { API_ENDPOINTS } from "../../../config/api";
 
 const initialState = {
   isLoading: false,
@@ -9,11 +11,7 @@ const initialState = {
 export const addNewAddress = createAsyncThunk(
   "/addresses/addNewAddress",
   async (formData) => {
-    const response = await axios.post(
-      "https://darziewebsite-backend.onrender.com/api/shop/address/add",
-      formData
-    );
-
+    const response = await apiClient.post(API_ENDPOINTS.SHOP_ADDRESS_ADD, formData);
     return response.data;
   }
 );
@@ -21,10 +19,7 @@ export const addNewAddress = createAsyncThunk(
 export const fetchAllAddresses = createAsyncThunk(
   "/addresses/fetchAllAddresses",
   async (userId) => {
-    const response = await axios.get(
-      `https://darziewebsite-backend.onrender.com/api/shop/address/get/${userId}`
-    );
-
+    const response = await apiClient.get(API_ENDPOINTS.SHOP_ADDRESS_GET(userId));
     return response.data;
   }
 );
@@ -32,11 +27,10 @@ export const fetchAllAddresses = createAsyncThunk(
 export const editaAddress = createAsyncThunk(
   "/addresses/editaAddress",
   async ({ userId, addressId, formData }) => {
-    const response = await axios.put(
-      `https://darziewebsite-backend.onrender.com/api/shop/address/update/${userId}/${addressId}`,
+    const response = await apiClient.put(
+      API_ENDPOINTS.SHOP_ADDRESS_UPDATE(userId, addressId),
       formData
     );
-
     return response.data;
   }
 );
@@ -44,10 +38,9 @@ export const editaAddress = createAsyncThunk(
 export const deleteAddress = createAsyncThunk(
   "/addresses/deleteAddress",
   async ({ userId, addressId }) => {
-    const response = await axios.delete(
-      `https://darziewebsite-backend.onrender.com/api/shop/address/delete/${userId}/${addressId}`
+    const response = await apiClient.delete(
+      API_ENDPOINTS.SHOP_ADDRESS_DELETE(userId, addressId)
     );
-
     return response.data;
   }
 );
@@ -61,7 +54,7 @@ const addressSlice = createSlice({
       .addCase(addNewAddress.pending, (state) => {
         state.isLoading = true;
       })
-      .addCase(addNewAddress.fulfilled, (state, action) => {
+      .addCase(addNewAddress.fulfilled, (state) => {
         state.isLoading = false;
       })
       .addCase(addNewAddress.rejected, (state) => {

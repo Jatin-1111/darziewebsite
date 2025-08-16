@@ -1,34 +1,66 @@
-import React, { useEffect } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { openLoginModal } from '../../store/auth-slice/modal-slice.js'; 
-const CheckAuth = ({ children, isAuthenticated, user }) => {
+import React, { useEffect } from "react";
+import { useDispatch } from "react-redux";
+import { useNavigate, useLocation } from "react-router-dom";
+import { openLoginModal } from "../../store/auth-slice/modal-slice.js";
+
+const CheckAuth = ({
+  children,
+  isAuthenticated,
+  user,
+  requiredRole = null,
+  allowGuests = false, // 🔥 NEW PROP
+}) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
 
   useEffect(() => {
-    const isPublicOrAuthRoute = location.pathname === '/' || location.pathname.startsWith('/auth');
-    if (!isAuthenticated && !isPublicOrAuthRoute) {
-      dispatch(openLoginModal());
-    }
-    if (isAuthenticated && (location.pathname.includes("/login") || location.pathname.includes("/register"))) {
-      if (user?.role === "admin") {
-        navigate("/admin/dashboard");
-      } else {
-        navigate("/shop/home");
-      }
-    }
-    if (isAuthenticated) {
-      if (user?.role !== "admin" && location.pathname.includes("admin")) {
-        navigate("/unauth-page"); 
-      }
-      if (user?.role === "admin" && location.pathname.includes("shop")) {
-        navigate("/admin/dashboard");
-      }
+    // 🚀 NEW: Allow guests to browse if allowGuests is true
+    if (allowGuests && !isAuthenticated) {
+      // Guest can access this route
+      return;
     }
 
-  }, [isAuthenticated, dispatch, location.pathname, navigate, user]);
+    // If not authenticated and guests not allowed, show login modal
+    if (!isAuthenticated) {
+      dispatch(openLoginModal());
+      setTimeout(() => {
+        navigate("/auth/login", { replace: true });
+      }, 1000);
+      return;
+    }
+
+    // Role-based access control (existing logic)
+    if (isAuthenticated && user && requiredRole) {
+      if (requiredRole === "admin" && user.role !== "admin") {
+        navigate("/shop/home", { replace: true });
+        return;
+      }
+
+      if (requiredRole === "user" && user.role === "admin") {
+        navigate("/admin/dashboard", { replace: true });
+        return;
+      }
+    }
+  }, [isAuthenticated, user, requiredRole, allowGuests, dispatch, navigate]);
+
+  // 🔥 NEW: Don't render loading for guests on allowed routes
+  if (!isAuthenticated && allowGuests) {
+    return <>{children}</>;
+  }
+
+  // Don't render children if not authenticated (existing logic)
+  if (!isAuthenticated) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Authenticating...</p>
+        </div>
+      </div>
+    );
+  }
+
   return <>{children}</>;
 };
 

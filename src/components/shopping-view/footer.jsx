@@ -6,7 +6,14 @@ function ShoppingFooter() {
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4">
         {/* Logo & Social Icons */}
         <div>
-          <img src='https://res.cloudinary.com/dpxiwelxk/image/upload/v1754385089/Logo_lzbe32.svg' alt="logo" className="h-22 w-22" />
+          <img
+            src="https://res.cloudinary.com/dpxiwelxk/image/upload/v1754385089/Logo_lzbe32.svg"
+            alt="Logo"
+            width="88"
+            height="88"
+            className="h-52 w-52"
+            loading="lazy"
+          />
           <div className="flex gap-4 mt-4 text-white text-xl">
             <a href="https://facebook.com" target="_blank" rel="noreferrer">
               <i className="fab fa-facebook-f hover:text-[#CBB47B]"></i>
@@ -17,7 +24,11 @@ function ShoppingFooter() {
             <a href="https://tumblr.com" target="_blank" rel="noreferrer">
               <i className="fab fa-tumblr hover:text-[#CBB47B]"></i>
             </a>
-            <a href="https://wa.me/919872591994" target="_blank" rel="noreferrer">
+            <a
+              href="https://wa.me/919872591994"
+              target="_blank"
+              rel="noreferrer"
+            >
               <i className="fab fa-whatsapp hover:text-[#CBB47B]"></i>
             </a>
             <a href="https://pinterest.com" target="_blank" rel="noreferrer">
@@ -31,16 +42,24 @@ function ShoppingFooter() {
           <h4 className="font-semibold text-lg mb-4">Important Stops</h4>
           <ul className="space-y-2 text-sm">
             <li>
-              <Link to="/" className="hover:text-[#CBB47B]">Home</Link>
+              <Link to="/" className="hover:text-[#CBB47B]">
+                Home
+              </Link>
             </li>
             <li>
-              <Link to="/shop/about" className="hover:text-[#CBB47B]">About Us</Link>
+              <Link to="/shop/about" className="hover:text-[#CBB47B]">
+                About Us
+              </Link>
             </li>
             <li>
-              <Link to="/shop/listing" className="hover:text-[#CBB47B]">Categories</Link>
+              <Link to="/shop/listing" className="hover:text-[#CBB47B]">
+                Categories
+              </Link>
             </li>
             <li>
-              <Link to="/shop/account" className="hover:text-[#CBB47B]">Account</Link>
+              <Link to="/shop/account" className="hover:text-[#CBB47B]">
+                Account
+              </Link>
             </li>
           </ul>
         </div>
@@ -50,7 +69,9 @@ function ShoppingFooter() {
           <h4 className="font-semibold text-lg mb-4">Useful Links</h4>
           <ul className="space-y-2 text-sm">
             <li>
-              <Link to="/privacypolicy" className="hover:text-[#CBB47B]">Privacy Policy</Link>
+              <Link to="/privacypolicy" className="hover:text-[#CBB47B]">
+                Privacy Policy
+              </Link>
             </li>
             <li>
               <Link to="/refund-policy" className="hover:text-[#CBB47B]">
@@ -58,7 +79,9 @@ function ShoppingFooter() {
               </Link>
             </li>
             <li>
-              <Link to="/shop/account" className="hover:text-[#CBB47B]">Track your Order</Link>
+              <Link to="/shop/account" className="hover:text-[#CBB47B]">
+                Track your Order
+              </Link>
             </li>
           </ul>
         </div>
@@ -73,7 +96,10 @@ function ShoppingFooter() {
             </li>
             <li className="flex gap-2">
               <span className="text-[#CBB47B]">✉️</span>
-              <a href="mailto:rajnigupta655@gmail.com" className="hover:text-[#CBB47B]">
+              <a
+                href="mailto:rajnigupta655@gmail.com"
+                className="hover:text-[#CBB47B]"
+              >
                 rajnigupta655@gmail.com
               </a>
             </li>
@@ -91,4 +117,3 @@ function ShoppingFooter() {
 }
 
 export default ShoppingFooter;
-

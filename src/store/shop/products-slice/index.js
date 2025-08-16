@@ -1,5 +1,7 @@
+// src/store/shop/products-slice/index.js - UPDATED
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import axios from "axios";
+import apiClient from "../../../utils/apiClient";
+import { API_ENDPOINTS } from "../../../config/api";
 
 const initialState = {
   isLoading: false,
@@ -10,31 +12,23 @@ const initialState = {
 export const fetchAllFilteredProducts = createAsyncThunk(
   "/products/fetchAllProducts",
   async ({ filterParams, sortParams }) => {
-    console.log(fetchAllFilteredProducts, "fetchAllFilteredProducts");
-
     const query = new URLSearchParams({
       ...filterParams,
       sortBy: sortParams,
     });
 
-    const result = await axios.get(
-      `https://darziewebsite-backend.onrender.com/api/shop/products/get?${query}`
+    const response = await apiClient.get(
+      `${API_ENDPOINTS.SHOP_PRODUCTS_GET}?${query}`
     );
-
-    console.log(result);
-
-    return result?.data;
+    return response.data;
   }
 );
 
 export const fetchProductDetails = createAsyncThunk(
   "/products/fetchProductDetails",
   async (id) => {
-    const result = await axios.get(
-      `https://darziewebsite-backend.onrender.com/api/shop/products/get/${id}`
-    );
-
-    return result?.data;
+    const response = await apiClient.get(API_ENDPOINTS.SHOP_PRODUCT_DETAILS(id));
+    return response.data;
   }
 );
 
@@ -48,25 +42,25 @@ const shoppingProductSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      .addCase(fetchAllFilteredProducts.pending, (state, action) => {
+      .addCase(fetchAllFilteredProducts.pending, (state) => {
         state.isLoading = true;
       })
       .addCase(fetchAllFilteredProducts.fulfilled, (state, action) => {
         state.isLoading = false;
         state.productList = action.payload.data;
       })
-      .addCase(fetchAllFilteredProducts.rejected, (state, action) => {
+      .addCase(fetchAllFilteredProducts.rejected, (state) => {
         state.isLoading = false;
         state.productList = [];
       })
-      .addCase(fetchProductDetails.pending, (state, action) => {
+      .addCase(fetchProductDetails.pending, (state) => {
         state.isLoading = true;
       })
       .addCase(fetchProductDetails.fulfilled, (state, action) => {
         state.isLoading = false;
         state.productDetails = action.payload.data;
       })
-      .addCase(fetchProductDetails.rejected, (state, action) => {
+      .addCase(fetchProductDetails.rejected, (state) => {
         state.isLoading = false;
         state.productDetails = null;
       });
@@ -74,5 +68,4 @@ const shoppingProductSlice = createSlice({
 });
 
 export const { setProductDetails } = shoppingProductSlice.actions;
-
 export default shoppingProductSlice.reducer;

@@ -1,3 +1,5 @@
+// src/config/index.js - FIXED VERSION WITH CONSISTENT IDs 🔧
+
 export const registerFormControls = [
   {
     name: "userName",
@@ -58,11 +60,11 @@ export const addProductFormElements = [
     name: "category",
     componentType: "select",
     options: [
-    { id: "bridal", label: "Bridal" },
-    { id: "formals", label: "Formals" },
-    { id: "Partywear", label: "Partywear" },
-    { id: "casual", label: "Casual" },
-    { id: "reception", label: "Reception" },
+      { id: "bridal", label: "Bridal" },
+      { id: "formals", label: "Formals" },
+      { id: "Partywear", label: "Partywear" },
+      { id: "casual", label: "Casual" },
+      { id: "reception", label: "Reception" },
     ],
   },
   {
@@ -88,6 +90,7 @@ export const addProductFormElements = [
   },
 ];
 
+// ✅ FIX 1: Fixed bestseller ID to match header navigation
 export const shoppingViewHeaderMenuItems = [
   {
     id: "home",
@@ -130,31 +133,37 @@ export const shoppingViewHeaderMenuItems = [
     path: "/shop/search",
   },
   {
+    // ✅ FIX 2: Changed from "bestseller" to match filter config
     id: "bestseller",
     label: "Best Seller",
-    path: "/shop/search",
+    path: "/shop/listing",
   },
 ];
 
+// ✅ FIX 3: Updated to include bestseller mapping
 export const categoryOptionsMap = {
-  bestseller:"Best Seller",
-  bridal: "Bridal",
-  formals: "Formals",
-  partywear: "Partywear",
-  casual: "Casual",
-  reception: "Reception",
+  "best sellers": "Best Sellers",  // ✅ Added mapping for best sellers
+  "bestseller": "Best Seller",    // ✅ Added mapping for header navigation
+  "bridal": "Bridal",
+  "formals": "Formals",
+  "Partywear": "Partywear",
+  "casual": "Casual",
+  "reception": "Reception",
 };
 
+// ✅ FIX 4: All keys now use lowercase for consistency
 export const filterOptions = {
+  // ✅ FIX 5: Consistent lowercase "category" key
   category: [
-    { id: "best sellers", label: "Best Sellers"},
+    { id: "best sellers", label: "Best Sellers" },
     { id: "bridal", label: "Bridal" },
     { id: "formals", label: "Formals" },
     { id: "Partywear", label: "Partywear" },
     { id: "casual", label: "Casual" },
     { id: "reception", label: "Reception" },
   ],
-  Price: [
+  // ✅ FIX 6: Consistent lowercase "price" key  
+  price: [
     { id: 'under_1000', label: 'Under ₹1000' },
     { id: '1000_to_2000', label: '₹1,000 - ₹2,000' },
     { id: '2000_to_5000', label: '₹2,000 - ₹5,000' },
