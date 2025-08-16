@@ -1,4 +1,4 @@
-// src/pages/shopping-view/product-detail.jsx - DEDICATED PRODUCT PAGE
+// src/pages/shopping-view/product-detail.jsx - UPDATED FOR MULTI-IMAGE SUPPORT 🔥
 import { useEffect, useState, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
@@ -11,6 +11,9 @@ import {
   Truck,
   Shield,
   RotateCcw,
+  ChevronLeft,
+  ChevronRight,
+  ZoomIn,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -38,6 +41,7 @@ const ProductDetailPage = () => {
   const [rating, setRating] = useState(0);
   const [isSubmittingReview, setIsSubmittingReview] = useState(false);
   const [isFavorite, setIsFavorite] = useState(false);
+  const [isImageModalOpen, setIsImageModalOpen] = useState(false);
 
   // Redux state
   const { productDetails, isLoading } = useSelector(
@@ -61,6 +65,57 @@ const ProductDetailPage = () => {
       ? reviews.reduce((sum, reviewItem) => sum + reviewItem.reviewValue, 0) /
         reviews.length
       : 0;
+
+  // ✅ FIXED: Handle multiple images properly
+  const productImages = (() => {
+    if (!productDetails?.image) return [];
+
+    // Handle both array and string formats
+    if (Array.isArray(productDetails.image)) {
+      return productDetails.image.filter((img) => img && img.trim() !== "");
+    } else if (
+      typeof productDetails.image === "string" &&
+      productDetails.image.trim() !== ""
+    ) {
+      return [productDetails.image];
+    }
+    return [];
+  })();
+
+  const hasMultipleImages = productImages.length > 1;
+  const currentImage =
+    productImages[selectedImage] ||
+    productImages[0] ||
+    "/placeholder-image.jpg";
+
+  // Navigation handlers for image gallery
+  const nextImage = useCallback(() => {
+    if (productImages.length > 0) {
+      setSelectedImage((prev) => (prev + 1) % productImages.length);
+    }
+  }, [productImages.length]);
+
+  const prevImage = useCallback(() => {
+    if (productImages.length > 0) {
+      setSelectedImage(
+        (prev) => (prev - 1 + productImages.length) % productImages.length
+      );
+    }
+  }, [productImages.length]);
+
+  // Keyboard navigation for images
+  useEffect(() => {
+    const handleKeyPress = (e) => {
+      if (e.key === "ArrowLeft") prevImage();
+      if (e.key === "ArrowRight") nextImage();
+      if (e.key === "Escape") setIsImageModalOpen(false);
+    };
+
+    if (isImageModalOpen) {
+      window.addEventListener("keydown", handleKeyPress);
+      return () => window.removeEventListener("keydown", handleKeyPress);
+    }
+  }, [isImageModalOpen, nextImage, prevImage]);
 
   // Handle add to cart
   const handleAddToCart = useCallback(async () => {
@@ -253,11 +308,6 @@ const ProductDetailPage = () => {
       )
     : 0;
 
-  // Handle case where image might be a string or array
-  const productImages = Array.isArray(productDetails.image)
-    ? productDetails.image
-    : [productDetails.image].filter(Boolean);
-
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Navigation */}
@@ -304,19 +354,40 @@ const ProductDetailPage = () => {
       {/* Product Details */}
       <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-          {/* Product Images */}
+          {/* ✅ ENHANCED: Product Images Gallery */}
           <div className="space-y-4">
-            {/* Main Image */}
-            <div className="relative bg-white rounded-lg shadow-sm overflow-hidden">
-              <img
-                src={
-                  productImages[selectedImage] ||
-                  productImages[0] ||
-                  "/placeholder-image.jpg"
-                }
-                alt={productDetails.title}
-                className="w-full h-full object-cover"
-              />
+            {/* Main Image Display */}
+            <div className="relative bg-white rounded-lg shadow-sm overflow-hidden group">
+              <div
+                className="aspect-square cursor-zoom-in"
+                onClick={() => setIsImageModalOpen(true)}
+              >
+                <img
+                  src={currentImage}
+                  alt={`${productDetails.title} - Image ${selectedImage + 1}`}
+                  className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                />
+              </div>
+
+              {/* Image Navigation Arrows - Only show if multiple images */}
+              {hasMultipleImages && (
+                <>
+                  <button
+                    onClick={prevImage}
+                    className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full p-2 transition-all duration-200 opacity-0 group-hover:opacity-100"
+                    aria-label="Previous image"
+                  >
+                    <ChevronLeft className="w-5 h-5" />
+                  </button>
+                  <button
+                    onClick={nextImage}
+                    className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full p-2 transition-all duration-200 opacity-0 group-hover:opacity-100"
+                    aria-label="Next image"
+                  >
+                    <ChevronRight className="w-5 h-5" />
+                  </button>
+                </>
+              )}
 
               {/* Badges */}
               <div className="absolute top-4 left-4 space-y-2">
@@ -331,6 +402,11 @@ const ProductDetailPage = () => {
                 {isLowStock && !isOutOfStock && (
                   <Badge className="bg-orange-500 text-white">
                     Only {productDetails.totalStock} left
+                  </Badge>
+                )}
+                {hasMultipleImages && (
+                  <Badge className="bg-blue-500 text-white">
+                    {selectedImage + 1} / {productImages.length}
                   </Badge>
                 )}
               </div>
@@ -357,25 +433,51 @@ const ProductDetailPage = () => {
                 >
                   <Share className="w-4 h-4" />
                 </Button>
+                <Button
+                  variant="secondary"
+                  size="icon"
+                  onClick={() => setIsImageModalOpen(true)}
+                  className="bg-white/90 backdrop-blur-sm"
+                >
+                  <ZoomIn className="w-4 h-4" />
+                </Button>
               </div>
+
+              {/* Image indicator dots */}
+              {hasMultipleImages && (
+                <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-2">
+                  {productImages.map((_, index) => (
+                    <button
+                      key={index}
+                      onClick={() => setSelectedImage(index)}
+                      className={`w-2 h-2 rounded-full transition-all duration-200 ${
+                        index === selectedImage
+                          ? "bg-white"
+                          : "bg-white/50 hover:bg-white/75"
+                      }`}
+                      aria-label={`View image ${index + 1}`}
+                    />
+                  ))}
+                </div>
+              )}
             </div>
 
-            {/* Thumbnail Images */}
-            {productImages.length > 1 && (
-              <div className="flex gap-2 overflow-x-auto">
+            {/* Thumbnail Images - Only show if multiple images */}
+            {hasMultipleImages && (
+              <div className="flex gap-3 overflow-x-auto pb-2">
                 {productImages.map((image, index) => (
                   <button
                     key={index}
                     onClick={() => setSelectedImage(index)}
-                    className={`flex-shrink-0 w-20 h-20 rounded-lg border-2 overflow-hidden ${
+                    className={`flex-shrink-0 w-20 h-20 rounded-lg border-2 overflow-hidden transition-all duration-200 ${
                       selectedImage === index
-                        ? "border-primary"
-                        : "border-gray-200"
+                        ? "border-primary shadow-lg"
+                        : "border-gray-200 hover:border-gray-400"
                     }`}
                   >
                     <img
                       src={image}
-                      alt={`${productDetails.title} ${index + 1}`}
+                      alt={`${productDetails.title} thumbnail ${index + 1}`}
                       className="w-full h-full object-cover"
                     />
                   </button>
@@ -462,6 +564,17 @@ const ProductDetailPage = () => {
               </span>
             </div>
 
+            {/* Image Gallery Info */}
+            {hasMultipleImages && (
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <h4 className="font-medium text-blue-900 mb-2">Gallery</h4>
+                <p className="text-blue-800 text-sm">
+                  This product has {productImages.length} images. Use the
+                  thumbnails below or click the main image to view all angles.
+                </p>
+              </div>
+            )}
+
             {/* Quantity and Add to Cart */}
             {!isOutOfStock && (
               <div className="space-y-4">
@@ -530,6 +643,62 @@ const ProductDetailPage = () => {
             </div>
           </div>
         </div>
+
+        {/* ✅ Image Modal for Full-Screen View */}
+        {isImageModalOpen && (
+          <div
+            className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4"
+            onClick={() => setIsImageModalOpen(false)}
+          >
+            <div className="relative max-w-6xl max-h-full">
+              <img
+                src={currentImage}
+                alt={`${productDetails.title} - Full view`}
+                className="max-w-full max-h-full object-contain"
+                onClick={(e) => e.stopPropagation()}
+              />
+
+              {/* Close button */}
+              <button
+                onClick={() => setIsImageModalOpen(false)}
+                className="absolute top-4 right-4 bg-black/50 hover:bg-black/70 text-white rounded-full p-2 transition-all duration-200"
+              >
+                <ChevronLeft className="w-6 h-6 rotate-45" />
+              </button>
+
+              {/* Navigation in modal */}
+              {hasMultipleImages && (
+                <>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      prevImage();
+                    }}
+                    className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full p-3 transition-all duration-200"
+                  >
+                    <ChevronLeft className="w-6 h-6" />
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      nextImage();
+                    }}
+                    className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full p-3 transition-all duration-200"
+                  >
+                    <ChevronRight className="w-6 h-6" />
+                  </button>
+                </>
+              )}
+
+              {/* Image counter */}
+              {hasMultipleImages && (
+                <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black/50 text-white px-4 py-2 rounded-full">
+                  {selectedImage + 1} / {productImages.length}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Reviews Section */}
         <div className="mt-16">

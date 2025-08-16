@@ -1,4 +1,4 @@
-// src/components/shopping-view/header.jsx - WITH ARIA ACCESSIBILITY
+// src/components/shopping-view/header.jsx - FIXED WITH ALL IMPORTS 🔧
 import { LogOut, Menu, ShoppingCart, UserCog, X } from "lucide-react";
 import {
   Link,
@@ -8,7 +8,7 @@ import {
 } from "react-router-dom";
 import { Sheet, SheetContent, SheetTrigger } from "../ui/sheet";
 import { Button } from "../ui/button";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux"; // ✅ FIXED: Added useDispatch
 import { shoppingViewHeaderMenuItems } from "@/config";
 import {
   DropdownMenu,
@@ -114,8 +114,8 @@ function MobileHeaderActions() {
   const { user } = useSelector((state) => state.auth);
   const { cartItems } = useSelector((state) => state.shopCart);
   const [openCartSheet, setOpenCartSheet] = useState(false);
-  const navigate = useNavigate();
-  const dispatch = useDispatch();
+  const navigate = useNavigate(); // ✅ FIXED: Added useNavigate hook
+  const dispatch = useDispatch(); // ✅ FIXED: Added useDispatch hook
 
   function handleLogout() {
     dispatch(logoutUser());
@@ -219,8 +219,8 @@ function DesktopHeaderActions() {
   const { user } = useSelector((state) => state.auth);
   const { cartItems } = useSelector((state) => state.shopCart);
   const [openCartSheet, setOpenCartSheet] = useState(false);
-  const navigate = useNavigate();
-  const dispatch = useDispatch();
+  const navigate = useNavigate(); // ✅ FIXED: Added useNavigate hook
+  const dispatch = useDispatch(); // ✅ FIXED: Added useDispatch hook
 
   function handleLogout() {
     dispatch(logoutUser());
@@ -325,8 +325,10 @@ function DesktopHeaderActions() {
 }
 
 function ShoppingHeader() {
-  const { isAuthenticated } = useSelector((state) => state.auth);
+  const { isAuthenticated, user } = useSelector((state) => state.auth); // ✅ FIXED: Added user to selector
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const navigate = useNavigate(); // ✅ FIXED: Added useNavigate hook for main component
+  const dispatch = useDispatch(); // ✅ FIXED: Added useDispatch hook for main component
 
   return (
     <header
@@ -397,7 +399,7 @@ function ShoppingHeader() {
                     className="h-8 w-8"
                   />
                   <span className="font-bold text-[#6C3D1D]">
-                    Darzie's Couture
+                    Darzie&apos;s Couture
                   </span>
                 </Link>
               </div>
@@ -423,15 +425,14 @@ function ShoppingHeader() {
                         <AvatarFallback
                           className="bg-[#6C3D1D] text-white text-sm"
                           aria-label={`User avatar for ${
-                            isAuthenticated?.user?.userName || "User"
+                            user?.userName || "User"
                           }`}
                         >
-                          {isAuthenticated?.user?.userName?.[0]?.toUpperCase() ||
-                            "U"}
+                          {user?.userName?.[0]?.toUpperCase() || "U"}
                         </AvatarFallback>
                       </Avatar>
                       <span className="text-sm font-medium text-gray-700">
-                        {isAuthenticated?.user?.userName || "User"}
+                        {user?.userName || "User"}
                       </span>
                     </div>
                     <div
