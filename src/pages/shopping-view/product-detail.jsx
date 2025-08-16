@@ -74,17 +74,28 @@ const ProductDetailPage = () => {
   const productImages = (() => {
     if (!productDetails?.image) return [];
 
-    // Handle both array and string formats
+    // If it's already an array, filter out empty strings
     if (Array.isArray(productDetails.image)) {
       return productDetails.image.filter((img) => img && img.trim() !== "");
-    } else if (
+    }
+
+    // If it's a string, convert to array
+    if (
       typeof productDetails.image === "string" &&
       productDetails.image.trim() !== ""
     ) {
-      return [productDetails.image];
+      return [productDetails.image.trim()];
     }
+
+    // Fallback to empty array
     return [];
   })();
+
+  useEffect(() => {
+    if (selectedImage >= productImages.length && productImages.length > 0) {
+      setSelectedImage(0);
+    }
+  }, [productImages.length, selectedImage]);
 
   const hasMultipleImages = productImages.length > 1;
   const currentImage =
@@ -94,13 +105,13 @@ const ProductDetailPage = () => {
 
   // Navigation handlers for image gallery
   const nextImage = useCallback(() => {
-    if (productImages.length > 0) {
+    if (productImages.length > 1) {
       setSelectedImage((prev) => (prev + 1) % productImages.length);
     }
   }, [productImages.length]);
 
   const prevImage = useCallback(() => {
-    if (productImages.length > 0) {
+    if (productImages.length > 1) {
       setSelectedImage(
         (prev) => (prev - 1 + productImages.length) % productImages.length
       );
@@ -357,6 +368,21 @@ const ProductDetailPage = () => {
           </nav>
         </div>
       </div>
+      
+      {productDetails && (
+        <div className="fixed top-20 right-4 bg-red-100 p-4 rounded text-xs max-w-xs z-50">
+          <h4>🔍 DEBUG:</h4>
+          <p>Type: {typeof productDetails.image}</p>
+          <p>IsArray: {Array.isArray(productDetails.image).toString()}</p>
+          <p>
+            Length:{" "}
+            {Array.isArray(productDetails.image)
+              ? productDetails.image.length
+              : "N/A"}
+          </p>
+          <p>Value: {JSON.stringify(productDetails.image)}</p>
+        </div>
+      )}
 
       {/* Product Details */}
       <div className="max-w-7xl mx-auto px-4 py-8">

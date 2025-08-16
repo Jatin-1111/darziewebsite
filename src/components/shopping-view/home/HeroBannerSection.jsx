@@ -25,7 +25,7 @@ const HeroBannerSection = memo(() => {
 
   return (
     <div
-      className="relative w-full h-screen overflow-hidden font-josefin"
+      className="relative w-screen h-screen overflow-hidden font-josefin"
       role="banner"
       aria-label="Darzie's Couture hero section"
     >
