@@ -52,9 +52,12 @@ const ProductDetailPage = () => {
   const { cartItems } = useSelector((state) => state.shopCart);
   const { reviews } = useSelector((state) => state.shopReview);
 
-  // Fetch product details on mount
+  // Fetch product details on mount and scroll to top
   useEffect(() => {
     if (productId) {
+      // ✅ FIX: Scroll to top when product detail page loads
+      window.scrollTo(0, 0);
+
       dispatch(fetchProductDetails(productId));
       dispatch(getReviews(productId));
     }
@@ -104,7 +107,7 @@ const ProductDetailPage = () => {
     }
   }, [productImages.length]);
 
-  // Keyboard navigation for images
+  // Keyboard navigation for images and body scroll lock
   useEffect(() => {
     const handleKeyPress = (e) => {
       if (e.key === "ArrowLeft") prevImage();
@@ -113,8 +116,15 @@ const ProductDetailPage = () => {
     };
 
     if (isImageModalOpen) {
+      // ✅ FIX: Prevent body scroll when modal is open
+      document.body.style.overflow = "hidden";
+
       window.addEventListener("keydown", handleKeyPress);
-      return () => window.removeEventListener("keydown", handleKeyPress);
+      return () => {
+        window.removeEventListener("keydown", handleKeyPress);
+        // ✅ FIX: Restore body scroll when modal closes
+        document.body.style.overflow = "unset";
+      };
     }
   }, [isImageModalOpen, nextImage, prevImage]);
 
@@ -641,29 +651,61 @@ const ProductDetailPage = () => {
           </div>
         </div>
 
-        {/* ✅ Image Modal for Full-Screen View */}
+        {/* ✅ FIXED: Enhanced Image Modal for Better Desktop Experience */}
         {isImageModalOpen && (
           <div
-            className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4"
+            className="fixed inset-0 bg-black/95 z-50 flex items-center justify-center"
             onClick={() => setIsImageModalOpen(false)}
+            style={{
+              // Prevent body scroll when modal is open
+              position: "fixed",
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+            }}
           >
-            <div className="relative max-w-6xl max-h-full">
-              <img
-                src={currentImage}
-                alt={`${productDetails.title} - Full view`}
-                className="max-w-full max-h-full object-contain"
-                onClick={(e) => e.stopPropagation()}
-              />
+            {/* Modal Container */}
+            <div
+              className="relative w-full h-full flex items-center justify-center p-4 md:p-8"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Main Image Container */}
+              <div className="relative max-w-7xl max-h-full flex items-center justify-center">
+                <img
+                  src={currentImage}
+                  alt={`${productDetails.title} - Full view`}
+                  className="max-w-full max-h-full object-contain cursor-zoom-out"
+                  onClick={() => setIsImageModalOpen(false)}
+                  style={{
+                    maxHeight: "90vh",
+                    maxWidth: "90vw",
+                  }}
+                />
+              </div>
 
-              {/* Close button */}
+              {/* Close button - Fixed position */}
               <button
                 onClick={() => setIsImageModalOpen(false)}
-                className="absolute top-4 right-4 bg-black/50 hover:bg-black/70 text-white rounded-full p-2 transition-all duration-200"
+                className="fixed top-4 right-4 md:top-8 md:right-8 bg-black/70 hover:bg-black/90 text-white rounded-full p-3 md:p-4 transition-all duration-200 z-10"
+                aria-label="Close image viewer"
               >
-                <ChevronLeft className="w-6 h-6 rotate-45" />
+                <svg
+                  className="w-5 h-5 md:w-6 md:h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
               </button>
 
-              {/* Navigation in modal */}
+              {/* Navigation arrows - Only show if multiple images */}
               {hasMultipleImages && (
                 <>
                   <button
@@ -671,28 +713,35 @@ const ProductDetailPage = () => {
                       e.stopPropagation();
                       prevImage();
                     }}
-                    className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full p-3 transition-all duration-200"
+                    className="fixed left-4 md:left-8 top-1/2 transform -translate-y-1/2 bg-black/70 hover:bg-black/90 text-white rounded-full p-3 md:p-4 transition-all duration-200 z-10"
+                    aria-label="Previous image"
                   >
-                    <ChevronLeft className="w-6 h-6" />
+                    <ChevronLeft className="w-5 h-5 md:w-6 md:h-6" />
                   </button>
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
                       nextImage();
                     }}
-                    className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full p-3 transition-all duration-200"
+                    className="fixed right-4 md:right-8 top-1/2 transform -translate-y-1/2 bg-black/70 hover:bg-black/90 text-white rounded-full p-3 md:p-4 transition-all duration-200 z-10"
+                    aria-label="Next image"
                   >
-                    <ChevronRight className="w-6 h-6" />
+                    <ChevronRight className="w-5 h-5 md:w-6 md:h-6" />
                   </button>
                 </>
               )}
 
-              {/* Image counter */}
+              {/* Image counter - Fixed position */}
               {hasMultipleImages && (
-                <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black/50 text-white px-4 py-2 rounded-full">
+                <div className="fixed bottom-4 md:bottom-8 left-1/2 transform -translate-x-1/2 bg-black/70 text-white px-4 py-2 md:px-6 md:py-3 rounded-full text-sm md:text-base font-medium z-10">
                   {selectedImage + 1} / {productImages.length}
                 </div>
               )}
+
+              {/* Instructions for desktop users */}
+              <div className="hidden md:block fixed bottom-4 right-4 bg-black/70 text-white px-4 py-2 rounded-lg text-sm z-10">
+                <p>Press ESC to close • Click image to close</p>
+              </div>
             </div>
           </div>
         )}
