@@ -128,31 +128,63 @@ function App() {
           </Route>
 
           {/* Shop Routes */}
-          <Route
-            path="/shop"
-            element={
-              <CheckAuth
-                isAuthenticated={isAuthenticated}
-                user={user}
-                requiredRole="user"
-              >
-                <ShoppingLayout />
-              </CheckAuth>
-            }
-          >
+          <Route path="/shop" element={<ShoppingLayout />}>
+            {/* 🚀 PUBLIC ROUTES - No authentication required */}
             <Route path="home" element={<ShoppingHome />} />
             <Route path="listing" element={<ShoppingListing />} />
-            <Route
-              path="product/:productId"
-              element={<ProductDetailPage />}
-            />{" "}
-            {/* NEW ROUTE */}
-            <Route path="checkout" element={<ShoppingCheckout />} />
-            <Route path="account" element={<ShoppingAccount />} />
-            <Route path="paypal-return" element={<PaypalReturnPage />} />
-            <Route path="payment-success" element={<PaymentSuccessPage />} />
+            <Route path="product/:productId" element={<ProductDetailPage />} />
             <Route path="search" element={<SearchProducts />} />
             <Route path="about" element={<AboutUs />} />
+
+            {/* 🔒 PROTECTED ROUTES - Authentication required */}
+            <Route
+              path="checkout"
+              element={
+                <CheckAuth
+                  isAuthenticated={isAuthenticated}
+                  user={user}
+                  requiredRole="user"
+                >
+                  <ShoppingCheckout />
+                </CheckAuth>
+              }
+            />
+            <Route
+              path="account"
+              element={
+                <CheckAuth
+                  isAuthenticated={isAuthenticated}
+                  user={user}
+                  requiredRole="user"
+                >
+                  <ShoppingAccount />
+                </CheckAuth>
+              }
+            />
+            <Route
+              path="paypal-return"
+              element={
+                <CheckAuth
+                  isAuthenticated={isAuthenticated}
+                  user={user}
+                  requiredRole="user"
+                >
+                  <PaypalReturnPage />
+                </CheckAuth>
+              }
+            />
+            <Route
+              path="payment-success"
+              element={
+                <CheckAuth
+                  isAuthenticated={isAuthenticated}
+                  user={user}
+                  requiredRole="user"
+                >
+                  <PaymentSuccessPage />
+                </CheckAuth>
+              }
+            />
           </Route>
 
           <Route path="*" element={<NotFound />} />

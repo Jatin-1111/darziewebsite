@@ -8,23 +8,29 @@ const CheckAuth = ({
   isAuthenticated,
   user,
   requiredRole = null,
+  allowGuests = false, // 🔥 NEW PROP
 }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
 
   useEffect(() => {
-    // If not authenticated, show login modal and redirect
+    // 🚀 NEW: Allow guests to browse if allowGuests is true
+    if (allowGuests && !isAuthenticated) {
+      // Guest can access this route
+      return;
+    }
+
+    // If not authenticated and guests not allowed, show login modal
     if (!isAuthenticated) {
       dispatch(openLoginModal());
-      // Small delay to show modal before redirect
       setTimeout(() => {
         navigate("/auth/login", { replace: true });
       }, 1000);
       return;
     }
 
-    // If authenticated but wrong role
+    // Role-based access control (existing logic)
     if (isAuthenticated && user && requiredRole) {
       if (requiredRole === "admin" && user.role !== "admin") {
         navigate("/shop/home", { replace: true });
@@ -36,9 +42,14 @@ const CheckAuth = ({
         return;
       }
     }
-  }, [isAuthenticated, user, requiredRole, dispatch, navigate]);
+  }, [isAuthenticated, user, requiredRole, allowGuests, dispatch, navigate]);
 
-  // Don't render children if not authenticated
+  // 🔥 NEW: Don't render loading for guests on allowed routes
+  if (!isAuthenticated && allowGuests) {
+    return <>{children}</>;
+  }
+
+  // Don't render children if not authenticated (existing logic)
   if (!isAuthenticated) {
     return (
       <div className="flex items-center justify-center min-h-screen">

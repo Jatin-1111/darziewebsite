@@ -1,4 +1,6 @@
 // src/components/shopping-view/product-tile.jsx - UPDATED FOR NAVIGATION
+import store from "@/store/store";
+import { openLoginModal } from "@/store/auth-slice/modal-slice";
 import { memo, useState, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom"; // NEW
 import { Card, CardContent, CardFooter } from "../ui/card";
@@ -123,7 +125,15 @@ const ShoppingProductTile = memo(({ product, handleAddtoCart }) => {
 
   const handleCartClick = useCallback(
     (e) => {
-      e.stopPropagation(); // Prevent triggering product navigation
+      e.stopPropagation();
+
+      const { isAuthenticated } = store.getState().auth;
+
+      if (!isAuthenticated) {
+        store.dispatch(openLoginModal());
+        return;
+      }
+
       if (product?._id && product?.totalStock) {
         handleAddtoCart(product._id, product.totalStock);
       }

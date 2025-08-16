@@ -27,6 +27,7 @@ import { fetchProductDetails } from "@/store/shop/products-slice";
 import { addToCart, fetchCartItems } from "@/store/shop/cart-slice";
 import { addReview, getReviews } from "@/store/shop/review-slice";
 import StarRatingComponent from "@/components/common/star-rating";
+import { openLoginModal } from "@/store/auth-slice/modal-slice";
 
 const ProductDetailPage = () => {
   const { productId } = useParams();
@@ -119,13 +120,9 @@ const ProductDetailPage = () => {
 
   // Handle add to cart
   const handleAddToCart = useCallback(async () => {
+    // 🔥 NEW: Show login modal instead of toast + navigate
     if (!user) {
-      toast({
-        title: "Please log in",
-        description: "You need to log in to add items to cart",
-        variant: "destructive",
-      });
-      navigate("/auth/login");
+      dispatch(openLoginModal());
       return;
     }
 
@@ -174,7 +171,7 @@ const ProductDetailPage = () => {
         variant: "destructive",
       });
     }
-  }, [user, productDetails, cartItems, quantity, dispatch, toast, navigate]);
+  }, [user, productDetails, cartItems, quantity, dispatch, toast]);
 
   // Handle review submission
   const handleAddReview = useCallback(async () => {
