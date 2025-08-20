@@ -90,9 +90,6 @@ const TestimonialsSection = memo(() => {
 
   return (
     <section ref={ref} className="relative">
-      {/* Enhanced Visual Separation Border */}
-      <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-[#6C3D1D] via-[#C4BA97] to-[#6C3D1D]" />
-
       <motion.div
         className="py-16 md:py-24 lg:py-32 bg-gradient-to-br from-[#f9f6ef] via-[#f4efd6] to-[#ded6c1] relative overflow-hidden"
         variants={containerVariants}
