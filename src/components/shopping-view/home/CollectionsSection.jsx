@@ -1,4 +1,4 @@
-// src/components/shopping-view/home/CollectionsSection.jsx - ENHANCED WITH FRAMER MOTION 🎨
+// src/components/shopping-view/home/CollectionsSection.jsx - FIXED WITH PROPER DIMENSIONS 🎨
 import { memo, useState, useEffect, useRef } from "react";
 import { motion, useInView, AnimatePresence } from "framer-motion";
 
@@ -73,8 +73,19 @@ const collectionCategories = [
 
 const CollectionsSection = memo(() => {
   const [currentCategoryIndex, setCurrentCategoryIndex] = useState(0);
+  const [imageLoaded, setImageLoaded] = useState(false);
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: "-50px" });
+
+  // Preload the collections background image
+  useEffect(() => {
+    const collectionsImage = new Image();
+    collectionsImage.src =
+      "https://res.cloudinary.com/dpxiwelxk/image/upload/f_auto,q_auto,w_740,h_493,c_fill,fl_progressive/v1754384807/banner_zj4u8n.png";
+    collectionsImage.onload = () => {
+      setImageLoaded(true);
+    };
+  }, []);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -194,30 +205,16 @@ const CollectionsSection = memo(() => {
     },
   };
 
-  // Progress dots variants
-  const dotVariants = {
-    inactive: {
-      scale: 1,
-      opacity: 0.5,
-      backgroundColor: "rgba(255, 255, 255, 0.3)",
-    },
-    active: {
-      scale: 1.3,
-      opacity: 1,
-      backgroundColor: "rgba(196, 186, 151, 1)",
-      transition: {
-        duration: 0.3,
-        ease: "easeInOut",
-      },
-    },
-  };
-
   return (
-    <section ref={ref}>
+    <section ref={ref} className="relative">
+      {/* ✅ FIXED: Proper background with correct dimensions and clear visual separation */}
       <motion.div
         className="relative w-full min-h-screen bg-cover bg-center overflow-hidden"
         style={{
-          backgroundImage: `url(https://res.cloudinary.com/dpxiwelxk/image/upload/v1754384807/banner_zj4u8n.png)`,
+          backgroundImage: imageLoaded
+            ? `url(https://res.cloudinary.com/dpxiwelxk/image/upload/f_auto,q_auto,w_740,h_493,c_fill,fl_progressive/v1754384807/banner_zj4u8n.png)`
+            : "none",
+          backgroundColor: imageLoaded ? "transparent" : "#F4EFD6", // Fallback color while loading
           backgroundSize: "cover",
           backgroundPosition: "center center",
           backgroundRepeat: "no-repeat",
@@ -226,13 +223,23 @@ const CollectionsSection = memo(() => {
         initial="hidden"
         animate={isInView ? "visible" : "hidden"}
       >
-        {/* Static Overlay */}
+        {/* ✅ Enhanced Overlay for Better Visual Separation */}
         <div
-          className="absolute inset-0 opacity-70"
+          className="absolute inset-0 opacity-75"
           style={{
-            background: "linear-gradient(to bottom, #F4EFD6 59%, #8E8B7D 100%)",
+            background:
+              "linear-gradient(135deg, #F4EFD6 0%, #E5D5A3 35%, #8E8B7D 100%)",
           }}
         />
+
+        {/* Loading state for background */}
+        {!imageLoaded && (
+          <div className="absolute inset-0 bg-gradient-to-br from-[#F4EFD6] to-[#8E8B7D] animate-pulse" />
+        )}
+
+        {/* ✅ Enhanced Visual Separation Border */}
+        <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-[#6C3D1D] via-[#C4BA97] to-[#6C3D1D]" />
+        <div className="absolute bottom-0 left-0 right-0 h-2 bg-gradient-to-r from-[#6C3D1D] via-[#C4BA97] to-[#6C3D1D]" />
 
         {/* Floating decorative elements - Made Responsive */}
         <motion.div
@@ -266,7 +273,7 @@ const CollectionsSection = memo(() => {
         <div className="relative z-10 flex flex-col min-h-screen w-full px-4 sm:px-6 md:px-8">
           {/* Animated Main Title - Mobile-First Responsive */}
           <motion.h1
-            className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-9xl font-faux text-[#6C3D1D] mt-3 sm:mt-5 text-center relative"
+            className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-9xl font-faux text-[#6C3D1D] mt-8 sm:mt-12 md:mt-16 text-center relative"
             variants={titleVariants}
           >
             <span className="relative inline-block">
@@ -295,7 +302,8 @@ const CollectionsSection = memo(() => {
                        ml-2 sm:ml-6 md:ml-10 lg:ml-10 
                        p-4 sm:p-6 
                        rounded-md w-full 
-                       max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg xl:max-w-xl"
+                       max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg xl:max-w-xl
+                       bg-black/10 border border-white/20"
             variants={contentVariants}
           >
             <AnimatePresence mode="wait">
@@ -309,7 +317,7 @@ const CollectionsSection = memo(() => {
                 {/* Category Title - Mobile-First Text */}
                 <motion.h2
                   className="text-4xl sm:text-5xl md:text-6xl lg:text-6xl xl:text-7xl 
-                           font-faux text-white mb-4 sm:mb-6 relative leading-tight"
+                           font-faux text-white mb-4 sm:mb-6 relative leading-tight drop-shadow-lg"
                   initial={{ opacity: 0, scale: 0.8 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ duration: 0.6, ease: "easeOut" }}
@@ -335,7 +343,7 @@ const CollectionsSection = memo(() => {
                 {/* Category Items - Bigger Mobile Text */}
                 <motion.ul
                   className="font-josefin list-disc list-inside space-y-2 sm:space-y-2.5 
-                           text-black text-base sm:text-lg md:text-xl"
+                           text-white text-base sm:text-lg md:text-xl drop-shadow-md"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ delay: 0.3, staggerChildren: 0.1 }}
@@ -348,7 +356,7 @@ const CollectionsSection = memo(() => {
                       custom={index}
                       whileHover={{
                         x: 5,
-                        color: "#6C3D1D",
+                        color: "#C4BA97",
                         transition: { duration: 0.2 },
                       }}
                     >
@@ -362,7 +370,7 @@ const CollectionsSection = memo(() => {
 
                       {/* Hover underline effect */}
                       <motion.div
-                        className="absolute bottom-0 left-0 h-0.5 bg-[#6C3D1D]"
+                        className="absolute bottom-0 left-0 h-0.5 bg-[#C4BA97]"
                         initial={{ width: 0 }}
                         whileHover={{ width: "100%" }}
                         transition={{ duration: 0.3 }}
@@ -376,14 +384,14 @@ const CollectionsSection = memo(() => {
 
           {/* Enhanced Brand Footer - Bigger Mobile Text */}
           <motion.div
-            className="absolute bottom-2 sm:bottom-4 
+            className="absolute bottom-4 sm:bottom-6 md:bottom-8
                        left-2 sm:left-4 md:left-8 lg:ml-[5.75rem] 
                        font-faux text-white 
                        text-base sm:text-lg md:text-xl"
             variants={brandVariants}
           >
             <motion.span
-              className="relative"
+              className="relative drop-shadow-lg"
               whileHover={{
                 scale: 1.05,
                 color: "#C4BA97",
@@ -405,8 +413,8 @@ const CollectionsSection = memo(() => {
 
         {/* Corner decorative elements - Fully Responsive */}
         <motion.div
-          className="absolute top-2 sm:top-4 md:top-8 
-                     left-2 sm:left-4 md:left-8 
+          className="absolute top-4 sm:top-6 md:top-8 
+                     left-4 sm:left-6 md:left-8 
                      w-8 h-8 sm:w-12 sm:h-12 md:w-16 md:h-16 lg:w-20 lg:h-20 
                      border-l-2 border-t-2 border-white/40 rounded-tl-lg"
           initial={{ opacity: 0, scale: 0, rotate: -45 }}
@@ -414,8 +422,8 @@ const CollectionsSection = memo(() => {
           transition={{ delay: 1.8, duration: 0.8, ease: "easeOut" }}
         />
         <motion.div
-          className="absolute bottom-2 sm:bottom-4 md:bottom-8 
-                     right-2 sm:right-4 md:right-8 
+          className="absolute bottom-4 sm:bottom-6 md:bottom-8 
+                     right-4 sm:right-6 md:right-8 
                      w-8 h-8 sm:w-12 sm:h-12 md:w-16 md:h-16 lg:w-20 lg:h-20 
                      border-r-2 border-b-2 border-white/40 rounded-br-lg"
           initial={{ opacity: 0, scale: 0, rotate: 45 }}

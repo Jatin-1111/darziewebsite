@@ -1,4 +1,4 @@
-// src/components/shopping-view/home/BestSellersSection.jsx - ENHANCED WITH FRAMER MOTION 🎨
+// src/components/shopping-view/home/BestSellersSection.jsx - ENHANCED WITH SEPARATORS 🎨
 import { memo, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, useInView, useScroll, useTransform } from "framer-motion";
@@ -182,7 +182,7 @@ const BestSellersSection = memo(({ bestSellers = [] }) => {
   return (
     <motion.div
       ref={ref}
-      className="min-h-screen w-full bg-gradient-to-b from-white to-gray-50"
+      className="min-h-screen w-full bg-gradient-to-b from-white to-gray-50 relative"
     >
       {/* Enhanced Section Header */}
       <motion.div
@@ -355,6 +355,8 @@ const BestSellersSection = memo(({ bestSellers = [] }) => {
         </motion.div>
       )}
 
+      <div className="h-2 bg-gradient-to-r from-[#6C3D1D] via-[#C4BA97] to-[#6C3D1D]" />
+
       {/* Enhanced Seller Links Section */}
       <motion.div
         className="bg-[#6C3D1D] text-white py-8 sm:py-12 md:py-16 relative overflow-hidden"
@@ -371,125 +373,131 @@ const BestSellersSection = memo(({ bestSellers = [] }) => {
           {/* Enhanced Section Header */}
           <motion.div
             className="text-center mb-8 sm:mb-12"
-            variants={containerVariants}
+            variants={titleVariants}
           >
             <motion.h3
               className="
-                font-bold text-xl sm:text-2xl md:text-3xl mb-4
-                text-[#C4BA97] relative
+                font-faux text-white font-bold
+                text-2xl sm:text-3xl md:text-4xl lg:text-5xl
+                mb-4 relative
               "
               variants={titleVariants}
             >
-              Shop by Style
-              {/* Animated accent */}
-              <motion.div
-                className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-16 h-0.5 bg-[#C4BA97]"
-                initial={{ scaleX: 0 }}
-                animate={isInView ? { scaleX: 1 } : { scaleX: 0 }}
-                transition={{ duration: 0.8, delay: 0.3 }}
-              />
+              <span className="relative">
+                explore collections
+                {/* Decorative underline animation */}
+                <motion.div
+                  className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 h-1 bg-gradient-to-r from-[#C4BA97] to-white rounded-full"
+                  initial={{ width: 0 }}
+                  animate={isInView ? { width: "50%" } : { width: 0 }}
+                  transition={{ duration: 1, delay: 0.8, ease: "easeOut" }}
+                />
+              </span>
             </motion.h3>
 
             <motion.p
-              className="text-gray-300 text-sm sm:text-base max-w-2xl mx-auto"
+              className="
+                text-gray-300 font-medium max-w-2xl mx-auto
+                text-sm sm:text-base md:text-lg
+                leading-relaxed
+              "
               variants={titleVariants}
             >
-              Browse our complete collection of traditional and contemporary
-              designs
+              Browse through our curated categories and find your perfect ethnic
+              wear
             </motion.p>
           </motion.div>
 
-          {/* Enhanced Grid Layout */}
+          {/* Enhanced Categories Grid */}
           <motion.div
             className="
-              grid gap-3 sm:gap-4 md:gap-6
-              grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5
-              max-w-6xl mx-auto
+              grid gap-3 sm:gap-4
+              grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6
+              max-w-7xl mx-auto
             "
             variants={gridVariants}
           >
             {sellerLinks.map((label, index) => (
               <motion.button
                 key={index}
-                onClick={() => handleCategoryClick(label)}
                 className="
-                  group flex items-center gap-3 p-3 sm:p-4
-                  bg-white/10 backdrop-blur-sm rounded-lg border border-white/20
-                  text-left w-full relative overflow-hidden
+                  text-left p-3 sm:p-4 rounded-lg
+                  bg-white/5 hover:bg-white/10
+                  border border-white/10 hover:border-[#C4BA97]/30
+                  transition-all duration-300 ease-in-out
+                  backdrop-blur-sm
+                  group relative overflow-hidden
                 "
                 variants={linkVariants}
                 custom={index}
                 whileHover="hover"
                 whileTap="tap"
-                aria-label={`Shop ${label} collection`}
+                onClick={() => handleCategoryClick(label)}
               >
-                {/* Background glow effect */}
+                {/* Background shimmer effect */}
                 <motion.div
-                  className="absolute inset-0 bg-gradient-to-r from-white/5 to-[#C4BA97]/10 opacity-0"
-                  whileHover={{ opacity: 1 }}
-                  transition={{ duration: 0.3 }}
+                  className="absolute inset-0 bg-gradient-to-r from-transparent via-[#C4BA97]/10 to-transparent"
+                  initial={{ x: "-100%" }}
+                  whileHover={{
+                    x: "100%",
+                    transition: { duration: 0.6, ease: "easeInOut" },
+                  }}
                 />
 
-                {/* Animated icon */}
-                <motion.span
-                  className="text-[#C4BA97] text-lg sm:text-xl z-10"
-                  whileHover={{
-                    scale: 1.2,
-                    rotate: 180,
-                  }}
-                  transition={{ duration: 0.3 }}
-                >
-                  ⬖
-                </motion.span>
-
-                {/* Animated text */}
                 <motion.span
                   className="
-                    text-white font-medium
-                    text-xs sm:text-sm md:text-base
-                    line-clamp-2 leading-tight z-10
+                    relative z-10 block text-white font-medium
+                    text-xs sm:text-sm
+                    leading-tight
+                    group-hover:text-[#C4BA97]
+                    transition-colors duration-300
                   "
-                  whileHover={{ color: "#C4BA97" }}
+                  whileHover={{ scale: 1.02 }}
                   transition={{ duration: 0.2 }}
                 >
                   {label}
                 </motion.span>
 
-                {/* Sliding accent border */}
+                {/* Hover border glow */}
                 <motion.div
-                  className="absolute bottom-0 left-0 h-0.5 bg-[#C4BA97]"
-                  initial={{ width: 0 }}
-                  whileHover={{ width: "100%" }}
-                  transition={{ duration: 0.3 }}
+                  className="absolute inset-0 border-2 border-transparent rounded-lg"
+                  whileHover={{
+                    borderColor: "#C4BA97",
+                    boxShadow: "0 0 20px rgba(196, 186, 151, 0.3)",
+                    transition: { duration: 0.3 },
+                  }}
                 />
               </motion.button>
             ))}
           </motion.div>
 
-          {/* Enhanced CTA Button */}
+          {/* Enhanced Call to Action */}
           <motion.div
             className="text-center mt-8 sm:mt-12"
-            variants={titleVariants}
+            initial={{ opacity: 0, y: 30 }}
+            animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
+            transition={{ delay: 2, duration: 0.8, ease: "easeOut" }}
           >
             <motion.button
-              onClick={handleNavigate}
               className="
-                bg-[#C4BA97] text-[#6C3D1D] font-bold
-                px-6 sm:px-8 py-3 sm:py-4 rounded-full
-                text-sm sm:text-base md:text-lg
-                shadow-lg relative overflow-hidden
-                group
+                inline-flex items-center px-6 sm:px-8 py-3 sm:py-4
+                bg-[#C4BA97] hover:bg-white
+                text-[#6C3D1D] font-bold
+                text-sm sm:text-base
+                rounded-full transition-all duration-300
+                shadow-lg hover:shadow-xl
+                group relative overflow-hidden
               "
               whileHover={{
                 scale: 1.05,
-                boxShadow: "0 20px 40px rgba(196, 186, 151, 0.3)",
+                transition: { duration: 0.2 },
               }}
               whileTap={{ scale: 0.95 }}
-              transition={{ duration: 0.3 }}
+              onClick={handleNavigate}
             >
               {/* Button shimmer effect */}
               <motion.div
-                className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent"
+                className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
                 initial={{ x: "-100%" }}
                 whileHover={{
                   x: "100%",
@@ -497,22 +505,54 @@ const BestSellersSection = memo(({ bestSellers = [] }) => {
                 }}
               />
 
-              <span className="relative z-10">View All Collections</span>
+              <span className="relative z-10 mr-2">View All Categories</span>
 
-              {/* Pulsing ring */}
-              <motion.div
-                className="absolute inset-0 rounded-full border-2 border-white/30"
-                initial={{ scale: 1, opacity: 0 }}
-                whileHover={{
-                  scale: 1.2,
-                  opacity: 1,
-                  transition: { duration: 0.4 },
+              <motion.span
+                className="relative z-10"
+                animate={{ x: [0, 5, 0] }}
+                transition={{
+                  duration: 2,
+                  repeat: Infinity,
+                  ease: "easeInOut",
                 }}
-              />
+              >
+                →
+              </motion.span>
             </motion.button>
           </motion.div>
+
+          {/* Floating decorative elements */}
+          <motion.div
+            className="absolute top-10 left-10 w-4 h-4 bg-[#C4BA97]/20 rounded-full"
+            animate={{
+              y: [0, -25, 0],
+              opacity: [0.2, 0.6, 0.2],
+              scale: [1, 1.3, 1],
+            }}
+            transition={{
+              duration: 5,
+              repeat: Infinity,
+              ease: "easeInOut",
+            }}
+          />
+          <motion.div
+            className="absolute bottom-16 right-16 w-3 h-3 bg-white/15 rounded-full"
+            animate={{
+              y: [0, -20, 0],
+              opacity: [0.3, 0.7, 0.3],
+            }}
+            transition={{
+              duration: 4,
+              repeat: Infinity,
+              ease: "easeInOut",
+              delay: 2,
+            }}
+          />
         </div>
       </motion.div>
+
+      {/* Bottom separator */}
+      <div className="absolute bottom-0 left-0 right-0 h-2 bg-gradient-to-r from-[#6C3D1D] via-[#C4BA97] to-[#6C3D1D]" />
     </motion.div>
   );
 });
