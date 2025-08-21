@@ -1,5 +1,13 @@
-// src/components/shopping-view/header.jsx - FIXED VERSION 🔧
-import { LogOut, Menu, ShoppingCart, UserCog, X } from "lucide-react";
+// src/components/shopping-view/header.jsx - UPDATED WITH LOGIN/SIGNUP 🔧
+import {
+  LogOut,
+  Menu,
+  ShoppingCart,
+  UserCog,
+  X,
+  User,
+  UserPlus,
+} from "lucide-react";
 import {
   Link,
   useLocation,
@@ -187,7 +195,7 @@ function MenuItems({ onItemClick, isMobile = false }) {
   );
 }
 
-// Mobile header right content (cart and account buttons)
+// Mobile header right content (cart and account buttons) - AUTHENTICATED USERS
 function MobileHeaderActions() {
   const { user } = useSelector((state) => state.auth);
   const { cartItems } = useSelector((state) => state.shopCart);
@@ -292,7 +300,41 @@ function MobileHeaderActions() {
   );
 }
 
-// Desktop header right content
+// NEW: Mobile header for non-authenticated users (Login/Signup buttons)
+function MobileGuestActions() {
+  const navigate = useNavigate();
+
+  return (
+    <div
+      className="flex items-center gap-2"
+      role="group"
+      aria-label="Mobile guest actions"
+    >
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={() => navigate("/auth/login")}
+        className="text-xs px-3 py-2 h-8 hover:scale-105 transition-transform"
+        aria-label="Go to login page"
+      >
+        <User className="w-3 h-3 mr-1" aria-hidden="true" />
+        Login
+      </Button>
+      <Button
+        variant="default"
+        size="sm"
+        onClick={() => navigate("/auth/register")}
+        className="text-xs px-3 py-2 h-8 bg-[#6C3D1D] hover:bg-[#5A321A] hover:scale-105 transition-transform"
+        aria-label="Go to signup page"
+      >
+        <UserPlus className="w-3 h-3 mr-1" aria-hidden="true" />
+        Sign Up
+      </Button>
+    </div>
+  );
+}
+
+// Desktop header right content - AUTHENTICATED USERS
 function DesktopHeaderActions() {
   const { user } = useSelector((state) => state.auth);
   const { cartItems } = useSelector((state) => state.shopCart);
@@ -402,6 +444,38 @@ function DesktopHeaderActions() {
   );
 }
 
+// NEW: Desktop header for non-authenticated users (Login/Signup buttons)
+function DesktopGuestActions() {
+  const navigate = useNavigate();
+
+  return (
+    <div
+      className="flex items-center gap-3"
+      role="group"
+      aria-label="Desktop guest actions"
+    >
+      <Button
+        variant="ghost"
+        onClick={() => navigate("/auth/login")}
+        className="text-gray-700 hover:text-[#6C3D1D] hover:scale-105 transition-all duration-200"
+        aria-label="Go to login page"
+      >
+        <User className="w-4 h-4 mr-2" aria-hidden="true" />
+        Login
+      </Button>
+      <Button
+        variant="default"
+        onClick={() => navigate("/auth/register")}
+        className="bg-[#6C3D1D] hover:bg-[#5A321A] hover:scale-105 transition-all duration-200 shadow-sm"
+        aria-label="Go to signup page"
+      >
+        <UserPlus className="w-4 h-4 mr-2" aria-hidden="true" />
+        Sign Up
+      </Button>
+    </div>
+  );
+}
+
 function ShoppingHeader() {
   const { isAuthenticated, user } = useSelector((state) => state.auth);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -441,14 +515,14 @@ function ShoppingHeader() {
           <MenuItems />
         </div>
 
-        {/* Desktop Actions */}
+        {/* Desktop Actions - Show different content based on auth state */}
         <div className="hidden lg:block">
-          {isAuthenticated ? <DesktopHeaderActions /> : null}
+          {isAuthenticated ? <DesktopHeaderActions /> : <DesktopGuestActions />}
         </div>
 
-        {/* Mobile Actions - Cart & Account */}
+        {/* Mobile Actions - Show different content based on auth state */}
         <div className="flex items-center gap-2 lg:hidden">
-          {isAuthenticated && <MobileHeaderActions />}
+          {isAuthenticated ? <MobileHeaderActions /> : <MobileGuestActions />}
 
           {/* Mobile Menu Button */}
           <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
@@ -498,8 +572,9 @@ function ShoppingHeader() {
                 />
               </div>
 
-              {/* Mobile Menu Footer with User Info */}
-              {isAuthenticated && (
+              {/* Mobile Menu Footer - Different content based on auth state */}
+              {isAuthenticated ? (
+                /* Authenticated User Footer */
                 <div
                   className="p-4 border-t bg-gray-50"
                   role="region"
@@ -553,6 +628,54 @@ function ShoppingHeader() {
                         Logout
                       </Button>
                     </div>
+                  </div>
+                </div>
+              ) : (
+                /* Guest User Footer */
+                <div
+                  className="p-4 border-t bg-gray-50"
+                  role="region"
+                  aria-label="Guest account actions"
+                >
+                  <div className="text-center space-y-3">
+                    <p className="text-sm text-gray-600 font-medium">
+                      Join Darzie&apos;s Couture Family
+                    </p>
+                    <div
+                      className="flex gap-2 justify-center"
+                      role="group"
+                      aria-label="Authentication actions"
+                    >
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setIsMobileMenuOpen(false);
+                          setTimeout(() => navigate("/auth/login"), 100);
+                        }}
+                        className="flex-1"
+                        aria-label="Go to login page"
+                      >
+                        <User className="w-4 h-4 mr-1" aria-hidden="true" />
+                        Login
+                      </Button>
+                      <Button
+                        variant="default"
+                        size="sm"
+                        onClick={() => {
+                          setIsMobileMenuOpen(false);
+                          setTimeout(() => navigate("/auth/register"), 100);
+                        }}
+                        className="flex-1 bg-[#6C3D1D] hover:bg-[#5A321A]"
+                        aria-label="Go to signup page"
+                      >
+                        <UserPlus className="w-4 h-4 mr-1" aria-hidden="true" />
+                        Sign Up
+                      </Button>
+                    </div>
+                    <p className="text-xs text-gray-500">
+                      Get access to exclusive deals and track your orders
+                    </p>
                   </div>
                 </div>
               )}

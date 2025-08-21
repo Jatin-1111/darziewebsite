@@ -1,4 +1,4 @@
-// src/components/shopping-view/home/BestSellersSection.jsx - ENHANCED WITH SEPARATORS 🎨
+// src/components/shopping-view/home/BestSellersSection.jsx - CLEAN MINIMAL DESIGN 🔥
 import { memo, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, useInView, useScroll, useTransform } from "framer-motion";
@@ -43,7 +43,7 @@ const BestSellersSection = memo(({ bestSellers = [] }) => {
     offset: ["start end", "end start"],
   });
 
-  // Parallax effects (removed opacity fade-out)
+  // Parallax effects for the Explore Collections section (unchanged)
   const y = useTransform(scrollYProgress, [0, 1], [100, -100]);
 
   const handleNavigate = useCallback(() => {
@@ -66,7 +66,7 @@ const BestSellersSection = memo(({ bestSellers = [] }) => {
     [handleNavigate]
   );
 
-  // Animation variants
+  // Clean, minimal animation variants for Best Sellers
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -81,13 +81,11 @@ const BestSellersSection = memo(({ bestSellers = [] }) => {
   const titleVariants = {
     hidden: {
       opacity: 0,
-      y: 50,
-      scale: 0.9,
+      y: 30,
     },
     visible: {
       opacity: 1,
       y: 0,
-      scale: 1,
       transition: {
         duration: 0.8,
         ease: "easeOut",
@@ -98,29 +96,20 @@ const BestSellersSection = memo(({ bestSellers = [] }) => {
   const productVariants = {
     hidden: {
       opacity: 0,
-      y: 60,
-      scale: 0.8,
+      y: 40,
     },
     visible: (index) => ({
       opacity: 1,
       y: 0,
-      scale: 1,
       transition: {
         duration: 0.6,
         delay: index * 0.1,
         ease: "easeOut",
       },
     }),
-    hover: {
-      y: -10,
-      scale: 1.05,
-      transition: {
-        duration: 0.3,
-        ease: "easeInOut",
-      },
-    },
   };
 
+  // Keep existing animations for Explore Collections section (unchanged)
   const linkVariants = {
     hidden: {
       opacity: 0,
@@ -180,181 +169,152 @@ const BestSellersSection = memo(({ bestSellers = [] }) => {
   };
 
   return (
-    <motion.div
-      ref={ref}
-      className="min-h-screen w-full bg-gradient-to-b from-white to-gray-50 relative"
-    >
-      {/* Enhanced Section Header */}
-      <motion.div
-        className="text-center py-8 sm:py-12 md:py-16 px-4"
+    <motion.div ref={ref} className="w-full">
+      {/* REFACTORED: Clean, Minimal Best Sellers Section */}
+      <motion.section
+        className="bg-white min-h-screen flex flex-col justify-center py-16 sm:py-20 md:py-24 lg:py-32"
         variants={containerVariants}
         initial="hidden"
         animate={isInView ? "visible" : "hidden"}
       >
-        <motion.h2
-          className="
-            font-faux text-[#6C3D1D] font-bold
-            text-3xl sm:text-4xl md:text-5xl lg:text-6xl
-            mb-4 sm:mb-6 relative
-          "
-          variants={titleVariants}
-        >
-          <span className="relative">
-            best sellers
-            {/* Decorative underline animation */}
-            <motion.div
-              className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 h-1 bg-gradient-to-r from-[#6C3D1D] to-[#C4BA97] rounded-full"
-              initial={{ width: 0 }}
-              animate={isInView ? { width: "60%" } : { width: 0 }}
-              transition={{ duration: 1, delay: 0.5, ease: "easeOut" }}
-            />
-          </span>
-        </motion.h2>
-
-        <motion.p
-          className="
-            text-gray-600 font-medium max-w-2xl mx-auto
-            text-sm sm:text-base md:text-lg
-            leading-relaxed
-          "
-          variants={titleVariants}
-        >
-          Discover our most loved pieces, crafted with precision and worn with
-          pride
-        </motion.p>
-
-        {/* Floating decorative elements */}
-        <motion.div
-          className="absolute top-8 left-8 w-3 h-3 bg-[#C4BA97]/30 rounded-full"
-          animate={{
-            y: [0, -20, 0],
-            opacity: [0.3, 0.7, 0.3],
-          }}
-          transition={{
-            duration: 4,
-            repeat: Infinity,
-            ease: "easeInOut",
-          }}
-        />
-        <motion.div
-          className="absolute top-16 right-12 w-2 h-2 bg-[#6C3D1D]/20 rounded-full"
-          animate={{
-            y: [0, -15, 0],
-            opacity: [0.4, 0.8, 0.4],
-          }}
-          transition={{
-            duration: 3.5,
-            repeat: Infinity,
-            ease: "easeInOut",
-            delay: 1,
-          }}
-        />
-      </motion.div>
-
-      {/* Enhanced Product Grid */}
-      {bestSellers && bestSellers.length > 0 && (
-        <motion.div
-          className="px-4 sm:px-6 md:px-8 lg:px-12 mb-12 sm:mb-16"
-          variants={containerVariants}
-          initial="hidden"
-          animate={isInView ? "visible" : "hidden"}
-        >
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Clean Section Header */}
           <motion.div
-            className="
-              grid gap-4 sm:gap-6 md:gap-8
-              grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4
-              max-w-7xl mx-auto
-            "
-            variants={gridVariants}
+            className="text-center mb-12 sm:mb-16 md:mb-20"
+            variants={titleVariants}
           >
-            {bestSellers.map((product, index) => (
-              <motion.div
-                key={product._id || index}
-                className="
-                  group relative overflow-hidden rounded-xl shadow-md
-                  transition-all duration-300 ease-in-out
-                  bg-white cursor-pointer
-                "
-                variants={productVariants}
-                custom={index}
-                whileHover="hover"
-                onClick={() => handleProductClick(product)}
-              >
-                {/* Enhanced Image Container */}
+            <motion.h2
+              className="
+                text-2xl sm:text-3xl md:text-4xl lg:text-5xl
+                font-josefin font-light
+                text-gray-900
+                tracking-[0.2em]
+                uppercase
+                mb-4
+              "
+              variants={titleVariants}
+            >
+              Best Sellers
+            </motion.h2>
+            <motion.div
+              className="w-16 sm:w-20 md:w-24 h-0.5 bg-gray-900 mx-auto"
+              initial={{ width: 0 }}
+              animate={isInView ? { width: "6rem" } : { width: 0 }}
+              transition={{ duration: 0.8, delay: 0.5, ease: "easeOut" }}
+            />
+          </motion.div>
+
+          {/* Clean Product Grid */}
+          {bestSellers && bestSellers.length > 0 && (
+            <motion.div
+              className="
+                grid gap-8 sm:gap-10 md:gap-12
+                grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4
+                max-w-[1600px] mx-auto
+              "
+              variants={gridVariants}
+            >
+              {bestSellers.map((product, index) => (
                 <motion.div
-                  className="aspect-[3/4] overflow-hidden relative"
-                  whileHover={{ scale: 1.02 }}
-                  transition={{ duration: 0.4, ease: "easeOut" }}
+                  key={product._id || index}
+                  className="group cursor-pointer"
+                  variants={productVariants}
+                  custom={index}
+                  onClick={() => handleProductClick(product)}
+                  whileHover={{
+                    scale: 1.02,
+                    transition: { duration: 0.3, ease: "easeOut" },
+                  }}
+                  whileTap={{ scale: 0.98 }}
                 >
-                  <motion.img
-                    src={product.image}
-                    alt={product.title || `Best seller ${index + 1}`}
-                    loading="lazy"
-                    className="
-                      w-full h-full object-cover
-                      transition-transform duration-700 ease-out
-                    "
-                    whileHover={{ scale: 1.1 }}
-                  />
+                  {/* Minimal Product Card */}
+                  <div className="bg-white overflow-hidden">
+                    {/* Edge-to-edge Product Image */}
+                    <div className="aspect-[3/4] h-80 sm:h-96 md:h-[420px] lg:h-[480px] overflow-hidden bg-gray-50">
+                      <motion.img
+                        src={product.image}
+                        alt={product.title || `Best seller ${index + 1}`}
+                        loading="lazy"
+                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                      />
+                    </div>
 
-                  {/* Shimmer overlay on hover */}
-                  <motion.div
-                    className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent"
-                    initial={{ x: "-100%" }}
-                    whileHover={{
-                      x: "100%",
-                      transition: { duration: 0.8, ease: "easeInOut" },
-                    }}
-                  />
-
-                  {/* Enhanced Product Overlay */}
-                  <motion.div
-                    className="
-                      absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent
-                      flex items-end p-4
-                    "
-                    initial={{ opacity: 0 }}
-                    whileHover={{ opacity: 1 }}
-                    transition={{ duration: 0.3 }}
-                  >
-                    <motion.div
-                      className="text-white"
-                      initial={{ y: 20, opacity: 0 }}
-                      whileHover={{ y: 0, opacity: 1 }}
-                      transition={{ duration: 0.3, delay: 0.1 }}
-                    >
-                      <h3 className="font-bold text-sm sm:text-base mb-1 line-clamp-2">
+                    {/* Minimal Product Info */}
+                    <div className="p-6 sm:p-7 md:p-8">
+                      <h3
+                        className="
+                        font-josefin font-medium
+                        text-sm sm:text-base md:text-lg
+                        text-gray-900
+                        tracking-wide
+                        mb-2
+                        line-clamp-2
+                      "
+                      >
                         {product.title}
                       </h3>
-                      <p className="text-xs sm:text-sm text-gray-200">
-                        ₹{product.price?.toLocaleString("en-IN")}
-                      </p>
-                      <motion.p
-                        className="text-xs text-gray-300 mt-1"
-                        initial={{ opacity: 0 }}
-                        whileHover={{ opacity: 1 }}
-                        transition={{ delay: 0.2 }}
-                      >
-                        Click to view details
-                      </motion.p>
-                    </motion.div>
-                  </motion.div>
 
-                  {/* Pulsing border effect */}
-                  <motion.div
-                    className="absolute inset-0 border-2 border-transparent rounded-xl"
-                    whileHover={{
-                      borderColor: "#C4BA97",
-                      transition: { duration: 0.3 },
-                    }}
-                  />
+                      <div className="flex items-center justify-between">
+                        <span
+                          className="
+                          font-josefin font-light
+                          text-sm sm:text-base
+                          text-gray-600
+                          tracking-wide
+                        "
+                        >
+                          ₹{product.price?.toLocaleString("en-IN")}
+                        </span>
+
+                        {product.salePrice &&
+                          product.salePrice < product.price && (
+                            <span
+                              className="
+                            font-josefin font-light
+                            text-xs sm:text-sm
+                            text-gray-400
+                            line-through
+                          "
+                            >
+                              ₹{product.salePrice?.toLocaleString("en-IN")}
+                            </span>
+                          )}
+                      </div>
+                    </div>
+                  </div>
                 </motion.div>
-              </motion.div>
-            ))}
-          </motion.div>
-        </motion.div>
-      )}
+              ))}
+            </motion.div>
+          )}
 
+          {/* Clean View All Button */}
+          <motion.div
+            className="text-center mt-12 sm:mt-16 md:mt-20"
+            initial={{ opacity: 0, y: 30 }}
+            animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
+            transition={{ delay: 1, duration: 0.8, ease: "easeOut" }}
+          >
+            <motion.button
+              className="
+                inline-flex items-center px-8 sm:px-10 py-3 sm:py-4
+                border border-gray-900
+                text-gray-900 font-josefin font-medium
+                text-sm sm:text-base
+                tracking-wide uppercase
+                transition-all duration-300
+                hover:bg-gray-900 hover:text-white
+              "
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={handleNavigate}
+            >
+              View All Best Sellers
+            </motion.button>
+          </motion.div>
+        </div>
+      </motion.section>
+
+      {/* UNCHANGED: Original Explore Collections Section */}
       <div className="h-2 bg-gradient-to-r from-[#6C3D1D] via-[#C4BA97] to-[#6C3D1D]" />
 
       {/* Enhanced Seller Links Section */}
@@ -550,9 +510,6 @@ const BestSellersSection = memo(({ bestSellers = [] }) => {
           />
         </div>
       </motion.div>
-
-      {/* Bottom separator */}
-      <div className="absolute bottom-0 left-0 right-0 h-2 bg-gradient-to-r from-[#6C3D1D] via-[#C4BA97] to-[#6C3D1D]" />
     </motion.div>
   );
 });

@@ -1,436 +1,320 @@
-// src/components/shopping-view/home/CollectionsSection.jsx - FIXED WITH PROPER DIMENSIONS 🎨
-import { memo, useState, useEffect, useRef } from "react";
-import { motion, useInView, AnimatePresence } from "framer-motion";
+// src/components/shopping-view/home/CollectionsSection.jsx
+import { memo, useState, useEffect, useRef, useCallback } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 
-const collectionCategories = [
+const collections = [
   {
-    title: "Festive Wear",
-    items: [
-      "Anarkali Suits",
-      "Lehenga Sets",
-      "Sarees",
-      "Dupattas",
-      "Kurta Sets",
-      "Ethnic Jackets",
-    ],
+    name: "Festive Wear",
+    image:
+      "https://res.cloudinary.com/dpxiwelxk/image/upload/f_auto,q_auto,w_600,h_800,c_fill/v1754384807/banner_zj4u8n.png",
   },
   {
-    title: "Wedding Collection",
-    items: [
-      "Bridal Lehengas",
-      "Heavy Embroidered Sarees",
-      "Groomswear",
-      "Sherwanis",
-      "Reception Gowns",
-      "Designer Blouses",
-    ],
+    name: "Wedding Collection",
+    image:
+      "https://res.cloudinary.com/dpxiwelxk/image/upload/f_auto,q_auto,w_600,h_800,c_fill/v1754384807/banner_zj4u8n.png",
   },
   {
-    title: "Indo Western",
-    items: [
-      "Fusion Gowns",
-      "Cape Sets",
-      "Draped Skirts",
-      "Asymmetrical Kurtas",
-      "Tunics",
-      "Jumpsuits",
-    ],
+    name: "Indo Western",
+    image:
+      "https://res.cloudinary.com/dpxiwelxk/image/upload/f_auto,q_auto,w_600,h_800,c_fill/v1754384807/banner_zj4u8n.png",
   },
   {
-    title: "Casual Ethnic",
-    items: [
-      "Cotton Kurtis",
-      "Straight Pants",
-      "Boho Tunics",
-      "Casual Dupattas",
-      "Printed Kurtas",
-      "Everyday Sarees",
-    ],
+    name: "Casual Ethnic",
+    image:
+      "https://res.cloudinary.com/dpxiwelxk/image/upload/f_auto,q_auto,w_600,h_800,c_fill/v1754384807/banner_zj4u8n.png",
   },
   {
-    title: "Heritage Craft",
-    items: [
-      "Banarasi Sarees",
-      "Chikankari Sets",
-      "Ajrakh Prints",
-      "Phulkari Dupattas",
-      "Handloom Kurtas",
-      "Kalamkari Dresses",
-    ],
+    name: "Heritage Craft",
+    image:
+      "https://res.cloudinary.com/dpxiwelxk/image/upload/f_auto,q_auto,w_600,h_800,c_fill/v1754384807/banner_zj4u8n.png",
   },
   {
-    title: "Seasonal Trends",
-    items: [
-      "Summer Linen Sets",
-      "Monsoon Kurtis",
-      "Festive Jackets",
-      "Layered Outfits",
-      "Winter Shawls",
-      "Pastel Sets",
-    ],
+    name: "Seasonal Trends",
+    image:
+      "https://res.cloudinary.com/dpxiwelxk/image/upload/f_auto,q_auto,w_600,h_800,c_fill/v1754384807/banner_zj4u8n.png",
   },
 ];
 
 const CollectionsSection = memo(() => {
-  const [currentCategoryIndex, setCurrentCategoryIndex] = useState(0);
-  const [imageLoaded, setImageLoaded] = useState(false);
-  const ref = useRef(null);
-  const isInView = useInView(ref, { once: true, margin: "-50px" });
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [isAutoPlaying, setIsAutoPlaying] = useState(true);
+  const intervalRef = useRef(null);
 
-  // Preload the collections background image
-  useEffect(() => {
-    const collectionsImage = new Image();
-    collectionsImage.src =
-      "https://res.cloudinary.com/dpxiwelxk/image/upload/f_auto,q_auto,w_740,h_493,c_fill,fl_progressive/v1754384807/banner_zj4u8n.png";
-    collectionsImage.onload = () => {
-      setImageLoaded(true);
-    };
+  // Autoplay functionality
+  const startAutoPlay = useCallback(() => {
+    if (intervalRef.current) clearInterval(intervalRef.current);
+    intervalRef.current = setInterval(() => {
+      setCurrentIndex((prev) => (prev + 1) % collections.length);
+    }, 3000);
   }, []);
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentCategoryIndex(
-        (prevIndex) => (prevIndex + 1) % collectionCategories.length
-      );
-    }, 5000);
-    return () => clearInterval(interval);
+  const stopAutoPlay = useCallback(() => {
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
   }, []);
 
-  const currentCategory = collectionCategories[currentCategoryIndex];
+  // Initialize autoplay
+  useEffect(() => {
+    if (isAutoPlaying) {
+      startAutoPlay();
+    } else {
+      stopAutoPlay();
+    }
 
-  // Animation variants
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        duration: 0.8,
-        staggerChildren: 0.2,
-      },
-    },
-  };
+    return () => stopAutoPlay();
+  }, [isAutoPlaying, startAutoPlay, stopAutoPlay]);
 
-  const titleVariants = {
-    hidden: {
-      opacity: 0,
-      y: 100,
-      scale: 0.8,
-      rotateX: 45,
-    },
-    visible: {
-      opacity: 1,
-      y: 0,
-      scale: 1,
-      rotateX: 0,
-      transition: {
-        duration: 1.2,
-        ease: "easeOut",
-        type: "spring",
-        stiffness: 100,
-      },
-    },
-  };
+  // Pause on hover/focus
+  const handleMouseEnter = useCallback(() => {
+    setIsAutoPlaying(false);
+  }, []);
 
-  const contentVariants = {
-    hidden: {
-      opacity: 0,
-      x: -50,
-      scale: 0.9,
-    },
-    visible: {
-      opacity: 1,
+  const handleMouseLeave = useCallback(() => {
+    setIsAutoPlaying(true);
+  }, []);
+
+  // Get visible slides for coverflow effect
+  const getVisibleSlides = useCallback(() => {
+    const slides = [];
+    const totalSlides = collections.length;
+
+    // Calculate positions: prev2, prev1, current, next1, next2
+    for (let i = -2; i <= 2; i++) {
+      const index = (currentIndex + i + totalSlides) % totalSlides;
+      slides.push({
+        ...collections[index],
+        position: i,
+        index: index,
+      });
+    }
+
+    return slides;
+  }, [currentIndex]);
+
+  // Animation variants for coverflow effect
+  const slideVariants = {
+    center: {
       x: 0,
       scale: 1,
+      opacity: 1,
+      zIndex: 5,
+      rotateY: 0,
       transition: {
-        duration: 0.8,
-        ease: "easeOut",
-        delay: 0.3,
+        duration: 0.6,
+        ease: [0.25, 0.1, 0.25, 1],
+      },
+    },
+    left1: {
+      x: "-60%",
+      scale: 0.8,
+      opacity: 0.7,
+      zIndex: 3,
+      rotateY: 25,
+      transition: {
+        duration: 0.6,
+        ease: [0.25, 0.1, 0.25, 1],
+      },
+    },
+    right1: {
+      x: "60%",
+      scale: 0.8,
+      opacity: 0.7,
+      zIndex: 3,
+      rotateY: -25,
+      transition: {
+        duration: 0.6,
+        ease: [0.25, 0.1, 0.25, 1],
+      },
+    },
+    left2: {
+      x: "-120%",
+      scale: 0.6,
+      opacity: 0.4,
+      zIndex: 1,
+      rotateY: 45,
+      transition: {
+        duration: 0.6,
+        ease: [0.25, 0.1, 0.25, 1],
+      },
+    },
+    right2: {
+      x: "120%",
+      scale: 0.6,
+      opacity: 0.4,
+      zIndex: 1,
+      rotateY: -45,
+      transition: {
+        duration: 0.6,
+        ease: [0.25, 0.1, 0.25, 1],
       },
     },
   };
 
-  const categoryVariants = {
-    enter: {
+  // Get variant name based on position
+  const getVariant = (position) => {
+    switch (position) {
+      case -2:
+        return "left2";
+      case -1:
+        return "left1";
+      case 0:
+        return "center";
+      case 1:
+        return "right1";
+      case 2:
+        return "right2";
+      default:
+        return "center";
+    }
+  };
+
+  // Text animation variants
+  const textVariants = {
+    hidden: {
+      opacity: 0,
+      y: 20,
+    },
+    visible: {
       opacity: 1,
       y: 0,
-      scale: 1,
       transition: {
-        duration: 0.6,
+        duration: 0.5,
         ease: "easeOut",
-        staggerChildren: 0.1,
       },
     },
     exit: {
       opacity: 0,
-      y: -30,
-      scale: 0.95,
+      y: -20,
       transition: {
-        duration: 0.4,
+        duration: 0.3,
         ease: "easeIn",
       },
     },
   };
 
-  const itemVariants = {
-    hidden: {
-      opacity: 0,
-      x: -20,
-      scale: 0.9,
-    },
-    visible: (index) => ({
-      opacity: 1,
-      x: 0,
-      scale: 1,
-      transition: {
-        duration: 0.5,
-        delay: index * 0.1,
-        ease: "easeOut",
-      },
-    }),
-  };
-
-  const brandVariants = {
-    hidden: {
-      opacity: 0,
-      y: 30,
-    },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: {
-        duration: 0.8,
-        delay: 1,
-        ease: "easeOut",
-      },
-    },
-  };
+  const visibleSlides = getVisibleSlides();
+  const currentCollection = collections[currentIndex];
 
   return (
-    <section ref={ref} className="relative">
-      {/* ✅ FIXED: Proper background with correct dimensions and clear visual separation */}
-      <motion.div
-        className="relative w-full min-h-screen bg-cover bg-center overflow-hidden"
-        style={{
-          backgroundImage: imageLoaded
-            ? `url(https://res.cloudinary.com/dpxiwelxk/image/upload/f_auto,q_auto,w_740,h_493,c_fill,fl_progressive/v1754384807/banner_zj4u8n.png)`
-            : "none",
-          backgroundColor: imageLoaded ? "transparent" : "#F4EFD6", // Fallback color while loading
-          backgroundSize: "cover",
-          backgroundPosition: "center center",
-          backgroundRepeat: "no-repeat",
-        }}
-        variants={containerVariants}
-        initial="hidden"
-        animate={isInView ? "visible" : "hidden"}
-      >
-        {/* ✅ Enhanced Overlay for Better Visual Separation */}
-        <div
-          className="absolute inset-0 opacity-75"
-          style={{
-            background:
-              "linear-gradient(135deg, #F4EFD6 0%, #E5D5A3 35%, #8E8B7D 100%)",
-          }}
-        />
-
-        {/* Loading state for background */}
-        {!imageLoaded && (
-          <div className="absolute inset-0 bg-gradient-to-br from-[#F4EFD6] to-[#8E8B7D] animate-pulse" />
-        )}
-
-        {/* ✅ Enhanced Visual Separation Border */}
-        <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-[#6C3D1D] via-[#C4BA97] to-[#6C3D1D]" />
-        <div className="absolute bottom-0 left-0 right-0 h-2 bg-gradient-to-r from-[#6C3D1D] via-[#C4BA97] to-[#6C3D1D]" />
-
-        {/* Floating decorative elements - Made Responsive */}
-        <motion.div
-          className="absolute top-1/4 right-1/4 w-3 h-3 sm:w-4 sm:h-4 bg-white/20 rounded-full"
-          animate={{
-            y: [0, -30, 0],
-            opacity: [0.2, 0.6, 0.2],
-            scale: [1, 1.2, 1],
-          }}
-          transition={{
-            duration: 6,
-            repeat: Infinity,
-            ease: "easeInOut",
-          }}
-        />
-        <motion.div
-          className="absolute top-1/3 left-1/5 w-1.5 h-1.5 sm:w-2 sm:h-2 bg-[#C4BA97]/40 rounded-full"
-          animate={{
-            y: [0, -20, 0],
-            opacity: [0.3, 0.8, 0.3],
-          }}
-          transition={{
-            duration: 4,
-            repeat: Infinity,
-            ease: "easeInOut",
-            delay: 2,
-          }}
-        />
-
-        {/* Enhanced Content */}
-        <div className="relative z-10 flex flex-col min-h-screen w-full px-4 sm:px-6 md:px-8">
-          {/* Animated Main Title - Mobile-First Responsive */}
+    <section className="bg-white min-h-screen flex flex-col">
+      {/* Top Section - Static Heading + Dynamic Collection Name */}
+      <div className="flex-none pt-8 sm:pt-12 md:pt-16 lg:pt-20 pb-8 sm:pb-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          {/* Static 'Collections' heading */}
           <motion.h1
-            className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-9xl font-faux text-[#6C3D1D] mt-8 sm:mt-12 md:mt-16 text-center relative"
-            variants={titleVariants}
+            className="
+              text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl
+              font-faux font-light text-gray-900
+              tracking-wide leading-none mb-4 sm:mb-6 md:mb-8
+            "
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, ease: "easeOut" }}
           >
-            <span className="relative inline-block">
-              collections
-              {/* Animated text shadow effect */}
-              <motion.span
-                className="absolute inset-0 text-[#C4BA97]/30"
-                animate={{
-                  x: [0, 2, 0],
-                  y: [0, 2, 0],
-                }}
-                transition={{
-                  duration: 3,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                }}
-              >
-                collections
-              </motion.span>
-            </span>
+            Collections
           </motion.h1>
 
-          {/* Enhanced Category Content - Fully Responsive */}
-          <motion.div
-            className="backdrop-blur-sm mt-12 sm:mt-16 md:mt-20 lg:mt-[8rem] 
-                       ml-2 sm:ml-6 md:ml-10 lg:ml-10 
-                       p-4 sm:p-6 
-                       rounded-md w-full 
-                       max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg xl:max-w-xl
-                       bg-black/10 border border-white/20"
-            variants={contentVariants}
-          >
+          {/* Dynamic collection name */}
+          <div className="h-12 sm:h-16 md:h-20 flex items-center justify-center">
             <AnimatePresence mode="wait">
-              <motion.div
-                key={currentCategoryIndex}
-                variants={categoryVariants}
-                initial="exit"
-                animate="enter"
+              <motion.h2
+                key={currentIndex}
+                className="
+                  text-xl sm:text-2xl md:text-3xl lg:text-4xl
+                  font-josefin font-medium text-gray-600
+                  tracking-wide
+                "
+                variants={textVariants}
+                initial="hidden"
+                animate="visible"
                 exit="exit"
               >
-                {/* Category Title - Mobile-First Text */}
-                <motion.h2
-                  className="text-4xl sm:text-5xl md:text-6xl lg:text-6xl xl:text-7xl 
-                           font-faux text-white mb-4 sm:mb-6 relative leading-tight drop-shadow-lg"
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ duration: 0.6, ease: "easeOut" }}
-                >
-                  {currentCategory.title}
-
-                  {/* Glowing text effect */}
-                  <motion.div
-                    className="absolute inset-0 text-white/50 blur-sm"
-                    animate={{
-                      opacity: [0.5, 1, 0.5],
-                    }}
-                    transition={{
-                      duration: 2,
-                      repeat: Infinity,
-                      ease: "easeInOut",
-                    }}
-                  >
-                    {currentCategory.title}
-                  </motion.div>
-                </motion.h2>
-
-                {/* Category Items - Bigger Mobile Text */}
-                <motion.ul
-                  className="font-josefin list-disc list-inside space-y-2 sm:space-y-2.5 
-                           text-white text-base sm:text-lg md:text-xl drop-shadow-md"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.3, staggerChildren: 0.1 }}
-                >
-                  {currentCategory.items.map((item, index) => (
-                    <motion.li
-                      key={item}
-                      className="relative overflow-hidden py-1"
-                      variants={itemVariants}
-                      custom={index}
-                      whileHover={{
-                        x: 5,
-                        color: "#C4BA97",
-                        transition: { duration: 0.2 },
-                      }}
-                    >
-                      <motion.span
-                        className="relative z-10"
-                        initial={{ opacity: 0.8 }}
-                        whileHover={{ opacity: 1 }}
-                      >
-                        {item}
-                      </motion.span>
-
-                      {/* Hover underline effect */}
-                      <motion.div
-                        className="absolute bottom-0 left-0 h-0.5 bg-[#C4BA97]"
-                        initial={{ width: 0 }}
-                        whileHover={{ width: "100%" }}
-                        transition={{ duration: 0.3 }}
-                      />
-                    </motion.li>
-                  ))}
-                </motion.ul>
-              </motion.div>
+                {currentCollection.name}
+              </motion.h2>
             </AnimatePresence>
-          </motion.div>
-
-          {/* Enhanced Brand Footer - Bigger Mobile Text */}
-          <motion.div
-            className="absolute bottom-4 sm:bottom-6 md:bottom-8
-                       left-2 sm:left-4 md:left-8 lg:ml-[5.75rem] 
-                       font-faux text-white 
-                       text-base sm:text-lg md:text-xl"
-            variants={brandVariants}
-          >
-            <motion.span
-              className="relative drop-shadow-lg"
-              whileHover={{
-                scale: 1.05,
-                color: "#C4BA97",
-                transition: { duration: 0.3 },
-              }}
-            >
-              darzie's couture
-              {/* Subtle glow effect */}
-              <motion.div
-                className="absolute inset-0 text-[#C4BA97]/50 blur-sm opacity-0"
-                whileHover={{ opacity: 1 }}
-                transition={{ duration: 0.3 }}
-              >
-                darzie's couture
-              </motion.div>
-            </motion.span>
-          </motion.div>
+          </div>
         </div>
+      </div>
 
-        {/* Corner decorative elements - Fully Responsive */}
-        <motion.div
-          className="absolute top-4 sm:top-6 md:top-8 
-                     left-4 sm:left-6 md:left-8 
-                     w-8 h-8 sm:w-12 sm:h-12 md:w-16 md:h-16 lg:w-20 lg:h-20 
-                     border-l-2 border-t-2 border-white/40 rounded-tl-lg"
-          initial={{ opacity: 0, scale: 0, rotate: -45 }}
-          animate={{ opacity: 1, scale: 1, rotate: 0 }}
-          transition={{ delay: 1.8, duration: 0.8, ease: "easeOut" }}
-        />
-        <motion.div
-          className="absolute bottom-4 sm:bottom-6 md:bottom-8 
-                     right-4 sm:right-6 md:right-8 
-                     w-8 h-8 sm:w-12 sm:h-12 md:w-16 md:h-16 lg:w-20 lg:h-20 
-                     border-r-2 border-b-2 border-white/40 rounded-br-lg"
-          initial={{ opacity: 0, scale: 0, rotate: 45 }}
-          animate={{ opacity: 1, scale: 1, rotate: 0 }}
-          transition={{ delay: 2, duration: 0.8, ease: "easeOut" }}
-        />
-      </motion.div>
+      {/* Bottom Section - Coverflow Carousel */}
+      <div
+        className="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-8 pb-12 sm:pb-16 md:pb-20"
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+        role="region"
+        aria-label="Collections carousel"
+        aria-live="polite"
+      >
+        <div className="relative w-full max-w-6xl h-64 sm:h-80 md:h-96 lg:h-[500px]">
+          {/* Carousel Container */}
+          <div className="relative w-full h-full flex items-center justify-center perspective-1000">
+            {visibleSlides.map((slide) => (
+              <motion.div
+                key={`${slide.index}-${slide.position}`}
+                className="absolute w-52 sm:w-60 md:w-72 lg:w-96 h-full"
+                variants={slideVariants}
+                animate={getVariant(slide.position)}
+                style={{
+                  transformStyle: "preserve-3d",
+                  perspective: "1000px",
+                }}
+              >
+                {/* Image Container */}
+                <div
+                  className="
+                  relative w-full h-full
+                  bg-white rounded-2xl shadow-lg
+                  overflow-hidden
+                  border border-gray-100
+                "
+                >
+                  <img
+                    src={slide.image}
+                    alt={`${slide.name} collection`}
+                    className="w-full h-full object-cover"
+                    loading="lazy"
+                    draggable={false}
+                  />
+
+                  {/* Overlay for non-center images */}
+                  {slide.position !== 0 && (
+                    <div className="absolute inset-0 bg-black/10" />
+                  )}
+
+                  {/* Collection name overlay (visible only on center image) */}
+                  {slide.position === 0 && (
+                    <motion.div
+                      className="
+                        absolute bottom-0 left-0 right-0
+                        bg-gradient-to-t from-black/60 to-transparent
+                        p-4 sm:p-6
+                      "
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ delay: 0.3, duration: 0.5 }}
+                    >
+                      <h3
+                        className="
+                        text-white font-josefin font-medium
+                        text-sm sm:text-base md:text-lg
+                        text-center tracking-wide
+                      "
+                      >
+                        {slide.name}
+                      </h3>
+                    </motion.div>
+                  )}
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Bottom separator */}
+      <div className="absolute bottom-0 top-0 h-2 bg-gradient-to-r from-[#6C3D1D] via-[#C4BA97] to-[#6C3D1D]" />
     </section>
   );
 });
