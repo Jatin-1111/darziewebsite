@@ -1,22 +1,18 @@
-// src/pages/shopping-view/home.jsx - UPDATED WITHOUT MODAL
-import { Suspense, lazy, useEffect, useState, useMemo } from "react";
+// src/pages/shopping-view/home.jsx - UPDATED WITH NEW COMPONENTS
+import { Suspense, lazy, useEffect, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import {
-  fetchAllFilteredProducts,
-  // REMOVED fetchProductDetails
-} from "@/store/shop/products-slice";
+import { fetchAllFilteredProducts } from "@/store/shop/products-slice";
 import { getFeatureImages } from "@/store/common-slice";
-// REMOVED ProductDetailsDialog import
 
-// Lazy load section components
+// Lazy load section components - UPDATED IMPORTS
 const HeroBannerSection = lazy(() =>
   import("../../components/shopping-view/home/HeroBannerSection")
 );
-const CollectionsSection = lazy(() =>
-  import("../../components/shopping-view/home/CollectionsSection")
-);
 const BestSellersSection = lazy(() =>
   import("../../components/shopping-view/home/BestSellersSection")
+);
+const CollectionsSection = lazy(() =>
+  import("../../components/shopping-view/home/CollectionsSection")
 );
 const TestimonialsSection = lazy(() =>
   import("../../components/shopping-view/home/TestimonialsSection")
@@ -32,21 +28,14 @@ const SectionSkeleton = ({ height = "h-screen" }) => (
 );
 
 function ShoppingHome() {
-  // REMOVED openDetailsDialog state
-
   const dispatch = useDispatch();
-  const { productList } = useSelector(
-    // REMOVED productDetails
-    (state) => state.shopProducts
-  );
+  const { productList } = useSelector((state) => state.shopProducts);
   const { featureImageList } = useSelector((state) => state.commonFeature);
 
   // Memoize best sellers to prevent unnecessary re-calculations
   const bestSellers = useMemo(() => {
     return productList && productList.length > 0 ? productList.slice(0, 4) : [];
   }, [productList]);
-
-  // REMOVED useEffect for product details modal
 
   // Initial data fetching
   useEffect(() => {
@@ -71,11 +60,10 @@ function ShoppingHome() {
         <HeroBannerSection />
       </Suspense>
 
-      {/* Collections Section */}
       <Suspense fallback={<SectionSkeleton />}>
         <CollectionsSection />
       </Suspense>
-
+      
       {/* Best Sellers Section */}
       <Suspense fallback={<SectionSkeleton height="h-96" />}>
         <BestSellersSection bestSellers={bestSellers} />
