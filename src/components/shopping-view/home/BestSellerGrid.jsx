@@ -3,35 +3,33 @@ import { memo, useCallback } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 
-// Sample featured collections data
+// Featured collections data with actual product images
 const featuredCollections = [
   {
     id: 1,
     title: "ANARKALI SUITS",
     image:
-      "https://res.cloudinary.com/dpxiwelxk/image/upload/v1754384807/banner_zj4u8n.png",
+      "https://res.cloudinary.com/dz9ndmaa8/image/upload/v1753077457/dwuoa8niayk8stp7ulnl.jpg", // Green and Gold Tanchoi Silk Anarkali
   },
   {
     id: 2,
     title: "BRIDAL COLLECTION",
     image:
-      "https://res.cloudinary.com/dpxiwelxk/image/upload/v1754384807/banner_zj4u8n.png",
+      "https://res.cloudinary.com/dz9ndmaa8/image/upload/v1753077157/h27x3oinf2aqp9malokd.jpg", // Women's Mustard Handcrafted Zardozi Anarkali
   },
   {
     id: 3,
     title: "PARTY WEAR SUITS",
     image:
-      "https://res.cloudinary.com/dpxiwelxk/image/upload/v1754384807/banner_zj4u8n.png",
+      "https://res.cloudinary.com/dz9ndmaa8/image/upload/v1753078473/oyfcnpy3xeyza7xua1tj.jpg", // Grey floral pure crepe kurti set
   },
   {
     id: 4,
     title: "SILK SAREES",
     image:
-      "https://res.cloudinary.com/dpxiwelxk/image/upload/v1754384807/banner_zj4u8n.png",
+      "https://res.cloudinary.com/dz9ndmaa8/image/upload/v1753077588/by87brmvbblyhir4lrdt.jpg", // Green Tanchoi Silk straight suit
   },
 ];
-
-const sortingOptions = [];
 
 // Product Card Component
 const ProductCard = memo(({ collection, index, onCardClick }) => {
@@ -173,7 +171,7 @@ const BestSellersSection = memo(() => {
         >
           {/* Subtitle */}
           <motion.p
-            className="text-xs sm:text-sm md:text-base font-light tracking-[0.4em] text-gray-500 uppercase mb-4"
+            className="text-xs sm:text-sm md:text-base font-faux font-light tracking-[0.4em] text-gray-500 uppercase mb-4"
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
@@ -183,7 +181,7 @@ const BestSellersSection = memo(() => {
 
           {/* Main Title */}
           <motion.h1
-            className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-light tracking-[0.15em] text-gray-800 uppercase relative"
+            className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-faux font-light tracking-[0.15em] text-gray-800 uppercase relative"
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.4 }}
@@ -226,7 +224,7 @@ const BestSellersSection = memo(() => {
           transition={{ delay: 1.2, duration: 0.8, ease: "easeOut" }}
         >
           <motion.button
-            className="group inline-flex items-center px-12 py-4 bg-transparent border-2 border-gray-300 text-gray-700 font-light text-sm tracking-[0.2em] uppercase hover:border-gray-800 hover:text-gray-900 transition-all duration-500 relative overflow-hidden"
+            className="group inline-flex items-center px-12 py-4 bg-transparent border-2 border-gray-300 text-gray-700 font-light font-faux text-sm tracking-[0.2em] uppercase hover:border-gray-800 hover:text-gray-900 transition-all duration-500 relative overflow-hidden"
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={handleNavigateToBestSellers}

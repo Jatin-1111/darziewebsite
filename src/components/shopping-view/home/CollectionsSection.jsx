@@ -6,32 +6,32 @@ const collections = [
   {
     name: "Festive Wear",
     image:
-      "https://res.cloudinary.com/dpxiwelxk/image/upload/f_auto,q_auto,w_600,h_800,c_fill/v1754384807/banner_zj4u8n.png",
+      "https://res.cloudinary.com/dz9ndmaa8/image/upload/v1753080684/bhzrzsu4mbkeqb4fiq87.jpg", // Shibori Hand-Dyed Chinon Chiffon Kaftan
   },
   {
     name: "Wedding Collection",
     image:
-      "https://res.cloudinary.com/dpxiwelxk/image/upload/f_auto,q_auto,w_600,h_800,c_fill/v1754384807/banner_zj4u8n.png",
+      "https://res.cloudinary.com/dz9ndmaa8/image/upload/v1753077457/dwuoa8niayk8stp7ulnl.jpg", // Green and Gold Tanchoi Silk Anarkali
   },
   {
-    name: "Indo Western",
+    name: "Party Wear",
     image:
-      "https://res.cloudinary.com/dpxiwelxk/image/upload/f_auto,q_auto,w_600,h_800,c_fill/v1754384807/banner_zj4u8n.png",
+      "https://res.cloudinary.com/dz9ndmaa8/image/upload/v1753078473/oyfcnpy3xeyza7xua1tj.jpg", // Grey floral pure crepe kurti set
   },
   {
     name: "Casual Ethnic",
     image:
-      "https://res.cloudinary.com/dpxiwelxk/image/upload/f_auto,q_auto,w_600,h_800,c_fill/v1754384807/banner_zj4u8n.png",
+      "https://res.cloudinary.com/dz9ndmaa8/image/upload/v1753078648/iulr0bvk0t3markjjhg1.jpg", // Red dabka zardozi embroidered chiffon kaftan
   },
   {
-    name: "Heritage Craft",
+    name: "Formal Wear",
     image:
-      "https://res.cloudinary.com/dpxiwelxk/image/upload/f_auto,q_auto,w_600,h_800,c_fill/v1754384807/banner_zj4u8n.png",
+      "https://res.cloudinary.com/dz9ndmaa8/image/upload/v1753080637/jbrmd5ogy33i2iswm6hp.jpg", // Beige and Golden Tanchoi Silk Embroidered Suit
   },
   {
-    name: "Seasonal Trends",
+    name: "Bridal Collection",
     image:
-      "https://res.cloudinary.com/dpxiwelxk/image/upload/f_auto,q_auto,w_600,h_800,c_fill/v1754384807/banner_zj4u8n.png",
+      "https://res.cloudinary.com/dz9ndmaa8/image/upload/v1753077157/h27x3oinf2aqp9malokd.jpg", // Women's Mustard Handcrafted Zardozi Anarkali
   },
 ];
 
