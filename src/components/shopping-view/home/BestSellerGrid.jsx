@@ -169,16 +169,6 @@ const BestSellersSection = memo(() => {
           whileInView="visible"
           viewport={{ once: true }}
         >
-          {/* Subtitle */}
-          <motion.p
-            className="text-xs sm:text-sm md:text-base font-faux font-light tracking-[0.4em] text-gray-500 uppercase mb-4"
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-          >
-            Featured Product
-          </motion.p>
-
           {/* Main Title */}
           <motion.h1
             className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-faux font-light tracking-[0.15em] text-gray-800 uppercase relative"
@@ -186,7 +176,7 @@ const BestSellersSection = memo(() => {
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.4 }}
           >
-            Featured Collections
+            Best Sellers
             {/* Elegant underline */}
             <motion.div
               className="absolute -bottom-3 left-1/2 transform -translate-x-1/2 w-24 h-0.5 bg-gradient-to-r from-transparent via-gray-400 to-transparent"
