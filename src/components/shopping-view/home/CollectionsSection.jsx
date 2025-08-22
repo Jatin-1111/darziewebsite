@@ -1,89 +1,123 @@
 "use client";
 import { memo, useState, useEffect, useRef, useCallback, useMemo } from "react";
-import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 
-const collections = [
+// Cloudinary CDN optimized images with responsive sizing
+const getOptimizedImage = (url, width = 800) => {
+  // Extract the base URL and image ID
+  const parts = url.split("/upload/");
+  if (parts.length !== 2) return url;
+
+  // Add Cloudinary transformations for optimization - increased height ratio to 1.5
+  const transformations = `w_${width},h_${Math.round(
+    width * 1.5
+  )},c_fill,q_auto:good,f_auto,dpr_auto`;
+  return `${parts[0]}/upload/${transformations}/${parts[1]}`;
+};
+
+const baseImages = [
   {
     name: "Festive Wear",
-    image:
-      "https://res.cloudinary.com/dz9ndmaa8/image/upload/v1753080684/bhzrzsu4mbkeqb4fiq87.jpg",
+    imageId: "v1753080684/bhzrzsu4mbkeqb4fiq87.jpg",
   },
   {
     name: "Wedding Collection",
-    image:
-      "https://res.cloudinary.com/dz9ndmaa8/image/upload/v1753077457/dwuoa8niayk8stp7ulnl.jpg",
+    imageId: "v1753077457/dwuoa8niayk8stp7ulnl.jpg",
   },
   {
     name: "Party Wear",
-    image:
-      "https://res.cloudinary.com/dz9ndmaa8/image/upload/v1753078473/oyfcnpy3xeyza7xua1tj.jpg",
+    imageId: "v1753078473/oyfcnpy3xeyza7xua1tj.jpg",
   },
   {
     name: "Casual Ethnic",
-    image:
-      "https://res.cloudinary.com/dz9ndmaa8/image/upload/v1753078648/iulr0bvk0t3markjjhg1.jpg",
+    imageId: "v1753078648/iulr0bvk0t3markjjhg1.jpg",
   },
   {
     name: "Formal Wear",
-    image:
-      "https://res.cloudinary.com/dz9ndmaa8/image/upload/v1753080637/jbrmd5ogy33i2iswm6hp.jpg",
+    imageId: "v1753080637/jbrmd5ogy33i2iswm6hp.jpg",
   },
   {
     name: "Bridal Collection",
-    image:
-      "https://res.cloudinary.com/dz9ndmaa8/image/upload/v1753077157/h27x3oinf2aqp9malokd.jpg",
+    imageId: "v1753077157/h27x3oinf2aqp9malokd.jpg",
   },
 ];
 
-// Optimized Image component with intersection observer
+// Generate optimized collections based on device
+const collections = baseImages.map((item) => ({
+  name: item.name,
+  image: `https://res.cloudinary.com/dz9ndmaa8/image/upload/${item.imageId}`,
+  mobileImage: getOptimizedImage(
+    `https://res.cloudinary.com/dz9ndmaa8/image/upload/${item.imageId}`,
+    400
+  ),
+  desktopImage: getOptimizedImage(
+    `https://res.cloudinary.com/dz9ndmaa8/image/upload/${item.imageId}`,
+    800
+  ),
+}));
+
+// Image Preloader Hook
+const useImagePreloader = (images) => {
+  const [loadedImages, setLoadedImages] = useState({});
+
+  useEffect(() => {
+    const preloadImage = (src) => {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => resolve({ src, status: "loaded" });
+        img.onerror = () => reject({ src, status: "error" });
+        img.src = src;
+      });
+    };
+
+    const preloadAll = async () => {
+      const results = await Promise.allSettled(
+        images.map((src) => preloadImage(src))
+      );
+
+      const loaded = {};
+      results.forEach((result, index) => {
+        if (result.status === "fulfilled") {
+          loaded[images[index]] = true;
+        }
+      });
+      setLoadedImages(loaded);
+    };
+
+    preloadAll();
+  }, [images]);
+
+  return loadedImages;
+};
+
+// Optimized Image component with caching
 const OptimizedImage = memo(
-  ({ src, alt, className, priority = false, ...props }) => {
-    const [isLoaded, setIsLoaded] = useState(false);
-    const [hasError, setHasError] = useState(false);
+  ({ src, alt, className, priority = false, isPreloaded = false }) => {
+    const [isLoaded, setIsLoaded] = useState(isPreloaded);
     const imgRef = useRef(null);
 
     useEffect(() => {
-      if (priority && imgRef.current) {
-        // Preload priority images
-        const img = new Image();
-        img.src = src;
-        img.onload = () => setIsLoaded(true);
-        img.onerror = () => setHasError(true);
+      if (isPreloaded) {
+        setIsLoaded(true);
       }
-    }, [src, priority]);
-
-    const handleLoad = useCallback(() => {
-      setIsLoaded(true);
-    }, []);
-
-    const handleError = useCallback(() => {
-      setHasError(true);
-    }, []);
+    }, [isPreloaded]);
 
     return (
       <div className="relative w-full h-full">
-        {!isLoaded && !hasError && (
+        {!isLoaded && (
           <div className="absolute inset-0 bg-gray-100 animate-pulse rounded-2xl" />
         )}
-        {hasError ? (
-          <div className="absolute inset-0 bg-gray-200 flex items-center justify-center rounded-2xl">
-            <span className="text-gray-500 text-sm">Failed to load</span>
-          </div>
-        ) : (
-          <img
-            ref={imgRef}
-            src={src}
-            alt={alt}
-            className={`${className} ${
-              isLoaded ? "opacity-100" : "opacity-0"
-            } transition-opacity duration-300`}
-            onLoad={handleLoad}
-            onError={handleError}
-            loading={priority ? "eager" : "lazy"}
-            draggable={false}
-            {...props}
-          />
-        )}
+        <img
+          ref={imgRef}
+          src={src}
+          alt={alt}
+          className={`${className} ${
+            isLoaded ? "opacity-100" : "opacity-0"
+          } transition-opacity duration-500`}
+          onLoad={() => setIsLoaded(true)}
+          loading={priority ? "eager" : "lazy"}
+          draggable={false}
+        />
       </div>
     );
   }
@@ -91,152 +125,273 @@ const OptimizedImage = memo(
 
 OptimizedImage.displayName = "OptimizedImage";
 
+// Mobile carousel - All images kept in DOM for caching
+const MobileCarousel = memo(({ currentIndex, preloadedImages }) => {
+  return (
+    <div className="relative w-full h-full flex items-center justify-center px-4">
+      <div className="relative w-full max-w-md h-[550px] sm:h-[600px]">
+        {/* Render all images but only show current one */}
+        {collections.map((collection, index) => (
+          <div
+            key={index}
+            className={`absolute inset-0 transition-opacity duration-500 ${
+              index === currentIndex ? "opacity-100 z-10" : "opacity-0 z-0"
+            }`}
+          >
+            <div className="relative w-full h-full bg-white rounded-2xl shadow-xl overflow-hidden">
+              <OptimizedImage
+                src={collection.mobileImage}
+                alt={`${collection.name} collection`}
+                className="w-full h-full object-cover"
+                priority={true}
+                isPreloaded={preloadedImages[collection.mobileImage]}
+              />
+
+              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 via-black/40 to-transparent p-6">
+                <h3 className="text-white font-josefin font-medium text-xl text-center">
+                  {collection.name}
+                </h3>
+              </div>
+            </div>
+          </div>
+        ))}
+
+        {/* Simple dots indicator */}
+        <div className="absolute -bottom-8 left-0 right-0 flex justify-center gap-2">
+          {collections.map((_, index) => (
+            <div
+              key={index}
+              className={`h-1.5 rounded-full transition-all duration-300 ${
+                index === currentIndex ? "w-8 bg-gray-800" : "w-1.5 bg-gray-400"
+              }`}
+            />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+});
+
+MobileCarousel.displayName = "MobileCarousel";
+
+// Desktop carousel with 3D effects
+const DesktopCarousel = memo(
+  ({
+    currentIndex,
+    isAutoPlaying,
+    onMouseEnter,
+    onMouseLeave,
+    preloadedImages,
+  }) => {
+    const getSlidePosition = useCallback((slideIndex, currentIdx) => {
+      const diff = slideIndex - currentIdx;
+      const totalSlides = collections.length;
+
+      let position = diff;
+      if (diff > totalSlides / 2) {
+        position = diff - totalSlides;
+      } else if (diff < -totalSlides / 2) {
+        position = diff + totalSlides;
+      }
+
+      return position;
+    }, []);
+
+    const getSlideVariants = useCallback((position) => {
+      const configs = {
+        0: {
+          x: "0%",
+          scale: 1,
+          opacity: 1,
+          zIndex: 5,
+          rotateY: 0,
+          filter: "brightness(1)",
+        },
+        1: {
+          x: "85%",
+          scale: 0.85,
+          opacity: 0.85,
+          zIndex: 3,
+          rotateY: -15,
+          filter: "brightness(0.9)",
+        },
+        "-1": {
+          x: "-85%",
+          scale: 0.85,
+          opacity: 0.85,
+          zIndex: 3,
+          rotateY: 15,
+          filter: "brightness(0.9)",
+        },
+        2: {
+          x: "165%",
+          scale: 0.7,
+          opacity: 0.4,
+          zIndex: 1,
+          rotateY: -25,
+          filter: "brightness(0.8)",
+        },
+        "-2": {
+          x: "-165%",
+          scale: 0.7,
+          opacity: 0.4,
+          zIndex: 1,
+          rotateY: 25,
+          filter: "brightness(0.8)",
+        },
+      };
+
+      const config = configs[position] || {
+        x: position > 0 ? "250%" : "-250%",
+        scale: 0.6,
+        opacity: 0,
+        zIndex: 0,
+        rotateY: position > 0 ? -30 : 30,
+        filter: "brightness(0.7)",
+      };
+
+      return {
+        ...config,
+        transition: {
+          x: { type: "spring", stiffness: 300, damping: 30 },
+          scale: { duration: 0.5, ease: [0.32, 0.72, 0, 1] },
+          opacity: { duration: 0.4, ease: "easeInOut" },
+          rotateY: { duration: 0.6, ease: [0.32, 0.72, 0, 1] },
+        },
+      };
+    }, []);
+
+    return (
+      <div
+        className="relative w-full h-full flex items-center justify-center px-8"
+        onMouseEnter={onMouseEnter}
+        onMouseLeave={onMouseLeave}
+      >
+        <div className="relative w-full max-w-6xl h-[650px]">
+          <div className="relative w-full h-full flex items-center justify-center perspective-1000">
+            {collections.map((slide, slideIndex) => {
+              const position = getSlidePosition(slideIndex, currentIndex);
+              const isVisible = Math.abs(position) <= 2;
+
+              if (!isVisible) return null;
+
+              return (
+                <motion.div
+                  key={slideIndex}
+                  className="absolute w-96 h-full"
+                  animate={getSlideVariants(position)}
+                  style={{
+                    transformStyle: "preserve-3d",
+                    perspective: "1000px",
+                  }}
+                  whileHover={
+                    position === 0
+                      ? {
+                          scale: 1.03,
+                          transition: { duration: 0.3, ease: "easeOut" },
+                        }
+                      : {}
+                  }
+                >
+                  <div className="relative w-full h-full bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-100">
+                    <OptimizedImage
+                      src={slide.desktopImage}
+                      alt={`${slide.name} collection`}
+                      className="w-full h-full object-cover"
+                      priority={Math.abs(position) <= 1}
+                      isPreloaded={preloadedImages[slide.desktopImage]}
+                    />
+
+                    {position !== 0 && (
+                      <motion.div
+                        className="absolute inset-0 bg-black/10"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ duration: 0.3 }}
+                      />
+                    )}
+
+                    {position === 0 && (
+                      <motion.div
+                        className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-6"
+                        initial={{ opacity: 0, y: 15 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{
+                          delay: 0.2,
+                          duration: 0.6,
+                          ease: [0.32, 0.72, 0, 1],
+                        }}
+                      >
+                        <h3 className="text-white font-josefin font-medium text-xl text-center tracking-wide">
+                          {slide.name}
+                        </h3>
+                      </motion.div>
+                    )}
+                  </div>
+                </motion.div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    );
+  }
+);
+
+DesktopCarousel.displayName = "DesktopCarousel";
+
 const CollectionsSection = memo(() => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
+  const [isMobile, setIsMobile] = useState(false);
   const intervalRef = useRef(null);
-  const containerRef = useRef(null);
-  const shouldReduceMotion = useReducedMotion();
+  const touchStartX = useRef(0);
 
-  // Use CSS transforms instead of complex 3D for reduced motion
-  const useSimpleAnimation =
-    shouldReduceMotion ||
-    (typeof window !== "undefined" &&
-      window.matchMedia("(max-width: 768px)").matches);
-
-  // Simplified position calculation
-  const getSlidePosition = useCallback((slideIndex, currentIdx) => {
-    const diff = slideIndex - currentIdx;
-    const totalSlides = collections.length;
-
-    let position = diff;
-    if (diff > totalSlides / 2) {
-      position = diff - totalSlides;
-    } else if (diff < -totalSlides / 2) {
-      position = diff + totalSlides;
-    }
-
-    return position;
-  }, []);
-
-  // Optimized animation variants with GPU acceleration
-  const getSlideVariants = useCallback((position, simple = false) => {
-    if (simple) {
-      // Simplified animations for mobile/reduced motion
-      const baseX = position * 90;
-      return {
-        x: `${baseX}%`,
-        scale: position === 0 ? 1 : 0.85,
-        opacity: Math.abs(position) <= 1 ? 1 : 0,
-        zIndex: 5 - Math.abs(position),
-        transition: {
-          x: { type: "tween", duration: 0.4, ease: "easeInOut" },
-          scale: { type: "tween", duration: 0.4, ease: "easeInOut" },
-          opacity: { duration: 0.3 },
-        },
-      };
-    }
-
-    // Full animations with optimized GPU acceleration
-    const configs = {
-      0: {
-        x: 0,
-        scale: 1,
-        opacity: 1,
-        zIndex: 5,
-        rotateY: 0,
-        filter: "brightness(1)",
-      },
-      1: {
-        x: 85,
-        scale: 0.85,
-        opacity: 0.85,
-        zIndex: 3,
-        rotateY: -15,
-        filter: "brightness(0.9)",
-      },
-      "-1": {
-        x: -85,
-        scale: 0.85,
-        opacity: 0.85,
-        zIndex: 3,
-        rotateY: 15,
-        filter: "brightness(0.9)",
-      },
-      2: {
-        x: 165,
-        scale: 0.7,
-        opacity: 0.4,
-        zIndex: 1,
-        rotateY: -25,
-        filter: "brightness(0.8)",
-      },
-      "-2": {
-        x: -165,
-        scale: 0.7,
-        opacity: 0.4,
-        zIndex: 1,
-        rotateY: 25,
-        filter: "brightness(0.8)",
-      },
-    };
-
-    const config = configs[position] || {
-      x: position > 0 ? 250 : -250,
-      scale: 0.6,
-      opacity: 0,
-      zIndex: 0,
-      rotateY: position > 0 ? -30 : 30,
-      filter: "brightness(0.7)",
-    };
-
-    return {
-      x: `${config.x}%`,
-      scale: config.scale,
-      opacity: config.opacity,
-      zIndex: config.zIndex,
-      rotateY: config.rotateY,
-      filter: config.filter,
-      transition: {
-        x: { type: "tween", duration: 0.5, ease: "easeInOut" },
-        scale: { type: "tween", duration: 0.5, ease: "easeInOut" },
-        opacity: { duration: 0.4 },
-        rotateY: { type: "tween", duration: 0.5, ease: "easeInOut" },
-      },
-    };
-  }, []);
-
-  // Text animation variants - simplified
-  const textVariants = useMemo(
-    () => ({
-      hidden: { opacity: 0, y: 10 },
-      visible: {
-        opacity: 1,
-        y: 0,
-        transition: { duration: 0.5, ease: "easeOut" },
-      },
-      exit: {
-        opacity: 0,
-        y: -10,
-        transition: { duration: 0.3, ease: "easeIn" },
-      },
-    }),
-    []
-  );
-
-  // Optimized navigation
-  const navigate = useCallback((newIndex) => {
-    setCurrentIndex(newIndex);
-  }, []);
-
-  const nextSlide = useCallback(() => {
-    navigate((currentIndex + 1) % collections.length);
-  }, [currentIndex, navigate]);
-
-  // Autoplay with cleanup
+  // Detect mobile on mount and resize
   useEffect(() => {
-    if (isAutoPlaying && !shouldReduceMotion) {
-      intervalRef.current = setInterval(nextSlide, 3500);
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768 || "ontouchstart" in window);
+    };
+
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
+
+  // Preload all images based on device type
+  const imagesToPreload = useMemo(() => {
+    return collections.map((c) => (isMobile ? c.mobileImage : c.desktopImage));
+  }, [isMobile]);
+
+  const preloadedImages = useImagePreloader(imagesToPreload);
+
+  // Also preload the next and previous images for smoother transitions
+  useEffect(() => {
+    const nextIndex = (currentIndex + 1) % collections.length;
+    const prevIndex =
+      (currentIndex - 1 + collections.length) % collections.length;
+
+    const preloadAdjacent = () => {
+      [nextIndex, prevIndex].forEach((idx) => {
+        const img = new Image();
+        img.src = isMobile
+          ? collections[idx].mobileImage
+          : collections[idx].desktopImage;
+      });
+    };
+
+    preloadAdjacent();
+  }, [currentIndex, isMobile]);
+
+  // Navigation
+  const nextSlide = useCallback(() => {
+    setCurrentIndex((prev) => (prev + 1) % collections.length);
+  }, []);
+
+  // Autoplay
+  useEffect(() => {
+    if (isAutoPlaying) {
+      intervalRef.current = setInterval(nextSlide, isMobile ? 4000 : 3500);
     } else {
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
@@ -249,53 +404,49 @@ const CollectionsSection = memo(() => {
         clearInterval(intervalRef.current);
       }
     };
-  }, [isAutoPlaying, nextSlide, shouldReduceMotion]);
+  }, [isAutoPlaying, nextSlide, isMobile]);
 
-  // Mouse handlers with proper cleanup
+  // Desktop mouse handlers
   const handleMouseEnter = useCallback(() => {
-    setIsAutoPlaying(false);
-  }, []);
+    if (!isMobile) setIsAutoPlaying(false);
+  }, [isMobile]);
 
   const handleMouseLeave = useCallback(() => {
-    setIsAutoPlaying(true);
-  }, []);
+    if (!isMobile) setIsAutoPlaying(true);
+  }, [isMobile]);
 
-  // Touch handlers for mobile
-  const touchStartX = useRef(0);
+  // Mobile touch handlers
   const handleTouchStart = useCallback((e) => {
     touchStartX.current = e.touches[0].clientX;
     setIsAutoPlaying(false);
   }, []);
 
-  const handleTouchEnd = useCallback(
-    (e) => {
-      const touchEndX = e.changedTouches[0].clientX;
-      const diff = touchStartX.current - touchEndX;
+  const handleTouchEnd = useCallback((e) => {
+    const touchEndX = e.changedTouches[0].clientX;
+    const diff = touchStartX.current - touchEndX;
 
-      if (Math.abs(diff) > 50) {
-        if (diff > 0) {
-          navigate((currentIndex + 1) % collections.length);
-        } else {
-          navigate(
-            (currentIndex - 1 + collections.length) % collections.length
-          );
-        }
+    if (Math.abs(diff) > 50) {
+      if (diff > 0) {
+        setCurrentIndex((prev) => (prev + 1) % collections.length);
+      } else {
+        setCurrentIndex(
+          (prev) => (prev - 1 + collections.length) % collections.length
+        );
       }
+    }
 
-      setTimeout(() => setIsAutoPlaying(true), 1000);
-    },
-    [currentIndex, navigate]
-  );
+    setTimeout(() => setIsAutoPlaying(true), 1000);
+  }, []);
 
   const currentCollection = collections[currentIndex];
 
   return (
     <section className="bg-white min-h-screen flex flex-col">
-      {/* Top Section - Optimized heading */}
-      <div className="flex-none pt-12 sm:pt-12 md:pt-16 lg:pt-20 pb-8 sm:pb-12">
+      {/* Header Section */}
+      <div className="flex-none pt-12 md:pt-20 pb-8 md:pb-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <motion.h1
-            className="text-6xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-faux font-light text-gray-900 tracking-wide leading-none mb-6 sm:mb-6 md:mb-8"
+            className="text-5xl md:text-7xl lg:text-8xl font-faux font-light text-gray-900 tracking-wide leading-none mb-6 md:mb-8"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, ease: "easeOut" }}
@@ -303,15 +454,15 @@ const CollectionsSection = memo(() => {
             Collections
           </motion.h1>
 
-          <div className="h-16 sm:h-16 md:h-20 flex items-center justify-center">
+          <div className="h-12 md:h-20 flex items-center justify-center">
             <AnimatePresence mode="wait">
               <motion.h2
                 key={currentIndex}
-                className="text-2xl sm:text-2xl md:text-3xl lg:text-4xl font-josefin font-medium text-gray-600 tracking-wide"
-                variants={textVariants}
-                initial="hidden"
-                animate="visible"
-                exit="exit"
+                className="text-2xl md:text-3xl lg:text-4xl font-josefin font-medium text-gray-600 tracking-wide"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.4, ease: "easeInOut" }}
               >
                 {currentCollection.name}
               </motion.h2>
@@ -320,72 +471,28 @@ const CollectionsSection = memo(() => {
         </div>
       </div>
 
-      {/* Carousel Section - Optimized */}
+      {/* Carousel Section */}
       <div
-        ref={containerRef}
-        className="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-8 pb-12 sm:pb-16 md:pb-20"
-        onMouseEnter={handleMouseEnter}
-        onMouseLeave={handleMouseLeave}
-        onTouchStart={handleTouchStart}
-        onTouchEnd={handleTouchEnd}
+        className="flex-1 flex items-center justify-center pb-16 md:pb-20"
+        onTouchStart={isMobile ? handleTouchStart : undefined}
+        onTouchEnd={isMobile ? handleTouchEnd : undefined}
         role="region"
         aria-label="Collections carousel"
-        aria-live="polite"
       >
-        <div className="relative w-full max-w-6xl h-[400px] sm:h-80 md:h-96 lg:h-[500px]">
-          <div className="relative w-full h-full flex items-center justify-center">
-            {collections.map((slide, slideIndex) => {
-              const position = getSlidePosition(slideIndex, currentIndex);
-              const isVisible = Math.abs(position) <= 2;
-              const isPriority = Math.abs(position) <= 1;
-
-              if (!isVisible) return null;
-
-              return (
-                <motion.div
-                  key={slideIndex}
-                  className="absolute w-64 sm:w-60 md:w-72 lg:w-96 h-full will-change-transform"
-                  animate={getSlideVariants(position, useSimpleAnimation)}
-                  style={{
-                    transformStyle: useSimpleAnimation ? "flat" : "preserve-3d",
-                  }}
-                  onClick={() => position !== 0 && navigate(slideIndex)}
-                  role={position === 0 ? "img" : "button"}
-                  tabIndex={position === 0 ? -1 : 0}
-                  aria-label={
-                    position !== 0 ? `Go to ${slide.name}` : undefined
-                  }
-                >
-                  <div className="relative w-full h-full bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-100">
-                    <OptimizedImage
-                      src={slide.image}
-                      alt={`${slide.name} collection`}
-                      className="w-full h-full object-cover"
-                      priority={isPriority}
-                    />
-
-                    {position !== 0 && (
-                      <div className="absolute inset-0 bg-black/10 pointer-events-none" />
-                    )}
-
-                    {position === 0 && (
-                      <motion.div
-                        className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-4 sm:p-6"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ delay: 0.2, duration: 0.4 }}
-                      >
-                        <h3 className="text-white font-josefin font-medium text-base sm:text-base md:text-lg lg:text-xl text-center tracking-wide">
-                          {slide.name}
-                        </h3>
-                      </motion.div>
-                    )}
-                  </div>
-                </motion.div>
-              );
-            })}
-          </div>
-        </div>
+        {isMobile ? (
+          <MobileCarousel
+            currentIndex={currentIndex}
+            preloadedImages={preloadedImages}
+          />
+        ) : (
+          <DesktopCarousel
+            currentIndex={currentIndex}
+            isAutoPlaying={isAutoPlaying}
+            onMouseEnter={handleMouseEnter}
+            onMouseLeave={handleMouseLeave}
+            preloadedImages={preloadedImages}
+          />
+        )}
       </div>
 
       {/* Bottom separator */}
