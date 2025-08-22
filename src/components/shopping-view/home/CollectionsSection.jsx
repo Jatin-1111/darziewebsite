@@ -1,5 +1,13 @@
 "use client";
-import { memo, useState, useEffect, useRef, useCallback, useMemo } from "react";
+import {
+  memo,
+  useState,
+  useEffect,
+  useRef,
+  useCallback,
+  useMemo,
+  useReducer,
+} from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 const collections = [
@@ -77,49 +85,49 @@ const OptimizedImage = memo(({ src, alt, className, ...props }) => {
 
 OptimizedImage.displayName = "OptimizedImage";
 
+// Carousel state reducer to minimize re-renders
+const carouselReducer = (state, action) => {
+  switch (action.type) {
+    case "SET_INDEX":
+      if (action.payload === "NEXT") {
+        return {
+          ...state,
+          currentIndex: (state.currentIndex + 1) % collections.length,
+          direction: action.direction || state.direction,
+        };
+      }
+      return {
+        ...state,
+        currentIndex: action.payload,
+        direction: action.direction || state.direction,
+      };
+    case "SET_AUTO_PLAY":
+      return {
+        ...state,
+        isAutoPlaying: action.payload,
+      };
+    case "SET_DIRECTION":
+      return {
+        ...state,
+        direction: action.payload,
+      };
+    default:
+      return state;
+  }
+};
+
 const CollectionsSection = memo(() => {
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [isAutoPlaying, setIsAutoPlaying] = useState(true);
-  const [direction, setDirection] = useState(1); // 1 for forward, -1 for backward
+  // Combined state using useReducer to reduce re-renders
+  const [state, dispatch] = useReducer(carouselReducer, {
+    currentIndex: 0,
+    isAutoPlaying: true,
+    direction: 1, // 1 for forward, -1 for backward
+  });
+
   const intervalRef = useRef(null);
+  const mouseTimeoutRef = useRef(null);
 
-  // Autoplay functionality
-  const startAutoPlay = useCallback(() => {
-    if (intervalRef.current) clearInterval(intervalRef.current);
-    intervalRef.current = setInterval(() => {
-      setDirection(1);
-      setCurrentIndex((prev) => (prev + 1) % collections.length);
-    }, 3000);
-  }, []);
-
-  const stopAutoPlay = useCallback(() => {
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current);
-      intervalRef.current = null;
-    }
-  }, []);
-
-  // Initialize autoplay
-  useEffect(() => {
-    if (isAutoPlaying) {
-      startAutoPlay();
-    } else {
-      stopAutoPlay();
-    }
-
-    return () => stopAutoPlay();
-  }, [isAutoPlaying, startAutoPlay, stopAutoPlay]);
-
-  // Pause on hover/focus
-  const handleMouseEnter = useCallback(() => {
-    setIsAutoPlaying(false);
-  }, []);
-
-  const handleMouseLeave = useCallback(() => {
-    setIsAutoPlaying(true);
-  }, []);
-
-  // Calculate positions for all slides
+  // Memoized position calculation function
   const getSlidePosition = useCallback((slideIndex, currentIdx) => {
     const diff = slideIndex - currentIdx;
     const totalSlides = collections.length;
@@ -135,8 +143,8 @@ const CollectionsSection = memo(() => {
     return position;
   }, []);
 
-  // Enhanced animation variants with smoother transitions
-  const getSlideVariants = useCallback((position) => {
+  // Memoized animation variants - cached per position
+  const slideVariantsCache = useMemo(() => {
     const baseTransition = {
       x: {
         type: "spring",
@@ -158,83 +166,95 @@ const CollectionsSection = memo(() => {
       },
     };
 
-    // Position-based styling
-    if (position === 0) {
-      return {
-        x: "0%",
-        scale: 1,
-        opacity: 1,
-        zIndex: 5,
-        rotateY: 0,
-        filter: "brightness(1)",
-        transition: baseTransition,
-      };
-    } else if (position === -1) {
-      return {
-        x: "-85%",
-        scale: 0.85,
-        opacity: 0.85,
-        zIndex: 3,
-        rotateY: 15,
-        filter: "brightness(0.9)",
-        transition: baseTransition,
-      };
-    } else if (position === 1) {
-      return {
-        x: "85%",
-        scale: 0.85,
-        opacity: 0.85,
-        zIndex: 3,
-        rotateY: -15,
-        filter: "brightness(0.9)",
-        transition: baseTransition,
-      };
-    } else if (position === -2) {
-      return {
-        x: "-165%",
-        scale: 0.7,
-        opacity: 0.4,
-        zIndex: 1,
-        rotateY: 25,
-        filter: "brightness(0.8)",
-        transition: baseTransition,
-      };
-    } else if (position === 2) {
-      return {
-        x: "165%",
-        scale: 0.7,
-        opacity: 0.4,
-        zIndex: 1,
-        rotateY: -25,
-        filter: "brightness(0.8)",
-        transition: baseTransition,
-      };
-    } else if (position < -2) {
-      // Cards moving from right to left (entering from right)
-      return {
-        x: "250%",
-        scale: 0.6,
-        opacity: 0,
-        zIndex: 0,
-        rotateY: -30,
-        filter: "brightness(0.7)",
-        transition: baseTransition,
-      };
-    } else {
-      // Cards moving from left to right (entering from left)
-      return {
-        x: "-250%",
-        scale: 0.6,
-        opacity: 0,
-        zIndex: 0,
-        rotateY: 30,
-        filter: "brightness(0.7)",
-        transition: baseTransition,
-      };
+    const variants = {};
+
+    // Pre-calculate variants for all possible positions
+    for (let pos = -3; pos <= 3; pos++) {
+      if (pos === 0) {
+        variants[pos] = {
+          x: "0%",
+          scale: 1,
+          opacity: 1,
+          zIndex: 5,
+          rotateY: 0,
+          filter: "brightness(1)",
+          transition: baseTransition,
+        };
+      } else if (pos === -1) {
+        variants[pos] = {
+          x: "-85%",
+          scale: 0.85,
+          opacity: 0.85,
+          zIndex: 3,
+          rotateY: 15,
+          filter: "brightness(0.9)",
+          transition: baseTransition,
+        };
+      } else if (pos === 1) {
+        variants[pos] = {
+          x: "85%",
+          scale: 0.85,
+          opacity: 0.85,
+          zIndex: 3,
+          rotateY: -15,
+          filter: "brightness(0.9)",
+          transition: baseTransition,
+        };
+      } else if (pos === -2) {
+        variants[pos] = {
+          x: "-165%",
+          scale: 0.7,
+          opacity: 0.4,
+          zIndex: 1,
+          rotateY: 25,
+          filter: "brightness(0.8)",
+          transition: baseTransition,
+        };
+      } else if (pos === 2) {
+        variants[pos] = {
+          x: "165%",
+          scale: 0.7,
+          opacity: 0.4,
+          zIndex: 1,
+          rotateY: -25,
+          filter: "brightness(0.8)",
+          transition: baseTransition,
+        };
+      } else if (pos < -2) {
+        variants[pos] = {
+          x: "250%",
+          scale: 0.6,
+          opacity: 0,
+          zIndex: 0,
+          rotateY: -30,
+          filter: "brightness(0.7)",
+          transition: baseTransition,
+        };
+      } else {
+        variants[pos] = {
+          x: "-250%",
+          scale: 0.6,
+          opacity: 0,
+          zIndex: 0,
+          rotateY: 30,
+          filter: "brightness(0.7)",
+          transition: baseTransition,
+        };
+      }
     }
+
+    return variants;
   }, []);
 
-  // Text animation variants
+  // Memoized function to get slide variants
+  const getSlideVariants = useCallback(
+    (position) => {
+      return slideVariantsCache[position] || slideVariantsCache[3];
+    },
+    [slideVariantsCache]
+  );
+
+  // Memoized text animation variants
   const textVariants = useMemo(
     () => ({
       hidden: {
@@ -266,7 +286,60 @@ const CollectionsSection = memo(() => {
     []
   );
 
-  const currentCollection = collections[currentIndex];
+  // Autoplay functionality using ref to avoid state dependencies
+  const startAutoPlay = useCallback(() => {
+    if (intervalRef.current) clearInterval(intervalRef.current);
+    intervalRef.current = setInterval(() => {
+      dispatch({
+        type: "SET_INDEX",
+        payload: "NEXT",
+        direction: 1,
+      });
+    }, 3000);
+  }, []);
+
+  const stopAutoPlay = useCallback(() => {
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+  }, []);
+
+  // Initialize autoplay with ref-based state management
+  useEffect(() => {
+    if (state.isAutoPlaying) {
+      startAutoPlay();
+    } else {
+      stopAutoPlay();
+    }
+
+    return () => stopAutoPlay();
+  }, [state.isAutoPlaying, startAutoPlay, stopAutoPlay]);
+
+  // Debounced mouse handlers to reduce state updates
+  const handleMouseEnter = useCallback(() => {
+    if (mouseTimeoutRef.current) clearTimeout(mouseTimeoutRef.current);
+    dispatch({ type: "SET_AUTO_PLAY", payload: false });
+  }, []);
+
+  const handleMouseLeave = useCallback(() => {
+    if (mouseTimeoutRef.current) clearTimeout(mouseTimeoutRef.current);
+    mouseTimeoutRef.current = setTimeout(() => {
+      dispatch({ type: "SET_AUTO_PLAY", payload: true });
+    }, 100); // Small debounce to prevent rapid toggling
+  }, []);
+
+  // Memoized current collection to prevent recalculation
+  const currentCollection = useMemo(() => {
+    return collections[state.currentIndex];
+  }, [state.currentIndex]);
+
+  // Memoized slide positions to prevent recalculation on every render
+  const slidePositions = useMemo(() => {
+    return collections.map((_, index) =>
+      getSlidePosition(index, state.currentIndex)
+    );
+  }, [state.currentIndex, getSlidePosition]);
 
   return (
     <section className="bg-white min-h-screen flex flex-col">
@@ -295,7 +368,7 @@ const CollectionsSection = memo(() => {
           <div className="h-16 sm:h-16 md:h-20 flex items-center justify-center">
             <AnimatePresence mode="wait">
               <motion.h2
-                key={currentIndex}
+                key={state.currentIndex}
                 className="
                   text-2xl sm:text-2xl md:text-3xl lg:text-4xl
                   font-josefin font-medium text-gray-600
@@ -327,7 +400,7 @@ const CollectionsSection = memo(() => {
           <div className="relative w-full h-full flex items-center justify-center perspective-1000">
             <AnimatePresence initial={false}>
               {collections.map((slide, slideIndex) => {
-                const position = getSlidePosition(slideIndex, currentIndex);
+                const position = slidePositions[slideIndex];
                 const isVisible = Math.abs(position) <= 2;
 
                 if (!isVisible) return null;
@@ -338,12 +411,12 @@ const CollectionsSection = memo(() => {
                     className="absolute w-64 sm:w-60 md:w-72 lg:w-96 h-full"
                     animate={getSlideVariants(position)}
                     initial={
-                      direction === 1
+                      state.direction === 1
                         ? getSlideVariants(3)
                         : getSlideVariants(-3)
                     }
                     exit={
-                      direction === 1
+                      state.direction === 1
                         ? getSlideVariants(-3)
                         : getSlideVariants(3)
                     }
