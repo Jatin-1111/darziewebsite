@@ -494,9 +494,6 @@ const CollectionsSection = memo(() => {
           />
         )}
       </div>
-
-      {/* Bottom separator */}
-      <div className="absolute bottom-0 left-0 right-0 h-2 bg-gradient-to-r from-[#6C3D1D] via-[#C4BA97] to-[#6C3D1D]" />
     </section>
   );
 });
