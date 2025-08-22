@@ -1,4 +1,4 @@
-// src/components/shopping-view/header.jsx - UPDATED WITH LOGIN/SIGNUP 🔧
+// src/components/shopping-view/header.jsx - FIXED LOGO POSITIONING 🔧
 import {
   LogOut,
   Menu,
@@ -300,40 +300,6 @@ function MobileHeaderActions() {
   );
 }
 
-// NEW: Mobile header for non-authenticated users (Login/Signup buttons)
-function MobileGuestActions() {
-  const navigate = useNavigate();
-
-  return (
-    <div
-      className="flex items-center gap-2"
-      role="group"
-      aria-label="Mobile guest actions"
-    >
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={() => navigate("/auth/login")}
-        className="text-xs px-3 py-2 h-8 hover:scale-105 transition-transform"
-        aria-label="Go to login page"
-      >
-        <User className="w-3 h-3 mr-1" aria-hidden="true" />
-        Login
-      </Button>
-      <Button
-        variant="default"
-        size="sm"
-        onClick={() => navigate("/auth/register")}
-        className="text-xs px-3 py-2 h-8 bg-[#6C3D1D] hover:bg-[#5A321A] hover:scale-105 transition-transform"
-        aria-label="Go to signup page"
-      >
-        <UserPlus className="w-3 h-3 mr-1" aria-hidden="true" />
-        Sign Up
-      </Button>
-    </div>
-  );
-}
-
 // Desktop header right content - AUTHENTICATED USERS
 function DesktopHeaderActions() {
   const { user } = useSelector((state) => state.auth);
@@ -489,16 +455,15 @@ function ShoppingHeader() {
       }`}
     >
       <div className="flex h-16 md:h-20 items-center justify-between px-4 md:px-6">
-        {/* Logo */}
         <Link
           to="/shop/home"
-          className="flex items-center gap-2 flex-shrink-0 relative"
+          className="flex items-center justify-center flex-shrink-0"
           aria-label="Darzie's Couture - Go to homepage"
         >
           <img
-            src="https://res.cloudinary.com/dpxiwelxk/image/upload/v1754385089/Logo_lzbe32.svg"
+            src="https://res.cloudinary.com/dz9ndmaa8/image/upload/v1755884639/logos/wsm14if05hzitoktrunf.png"
             alt="Darzie's Couture Logo"
-            className="h-32 w-32 md:h-40 md:w-40 lg:h-44 lg:w-44 object-contain"
+            className="h-10 w-10 md:h-12 md:w-12 lg:h-16 lg:w-16 object-contain"
             loading="eager"
           />
         </Link>
@@ -520,9 +485,9 @@ function ShoppingHeader() {
           {isAuthenticated ? <DesktopHeaderActions /> : <DesktopGuestActions />}
         </div>
 
-        {/* Mobile Actions - Show different content based on auth state */}
+        {/* Mobile Actions - Only show for authenticated users */}
         <div className="flex items-center gap-2 lg:hidden">
-          {isAuthenticated ? <MobileHeaderActions /> : <MobileGuestActions />}
+          {isAuthenticated && <MobileHeaderActions />}
 
           {/* Mobile Menu Button */}
           <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
@@ -545,7 +510,6 @@ function ShoppingHeader() {
               id="mobile-navigation"
               aria-label="Mobile navigation menu"
             >
-              {/* Mobile Menu Header */}
               <div className="flex items-center justify-between p-4 border-b bg-gray-50">
                 <Link
                   to="/shop/home"
@@ -554,11 +518,11 @@ function ShoppingHeader() {
                   aria-label="Darzie's Couture - Go to homepage"
                 >
                   <img
-                    src="https://res.cloudinary.com/dpxiwelxk/image/upload/v1754385089/Logo_lzbe32.svg"
+                    src="https://res.cloudinary.com/dz9ndmaa8/image/upload/v1755884639/logos/wsm14if05hzitoktrunf.png"
                     alt="Darzie's Couture"
-                    className="h-8 w-8"
+                    className="h-14 w-14 object-contain"
                   />
-                  <span className="font-bold text-[#6C3D1D]">
+                  <span className="font-bold text-[#6C3D1D] text-sm">
                     Darzie&apos;s Couture
                   </span>
                 </Link>

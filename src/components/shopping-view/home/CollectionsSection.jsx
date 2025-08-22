@@ -1,14 +1,6 @@
 "use client";
-import {
-  memo,
-  useState,
-  useEffect,
-  useRef,
-  useCallback,
-  useMemo,
-  useReducer,
-} from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { memo, useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 
 const collections = [
   {
@@ -43,96 +35,80 @@ const collections = [
   },
 ];
 
-// Memoized Image component to prevent re-rendering
-const OptimizedImage = memo(({ src, alt, className, ...props }) => {
-  const [isLoaded, setIsLoaded] = useState(false);
-  const [hasError, setHasError] = useState(false);
+// Optimized Image component with intersection observer
+const OptimizedImage = memo(
+  ({ src, alt, className, priority = false, ...props }) => {
+    const [isLoaded, setIsLoaded] = useState(false);
+    const [hasError, setHasError] = useState(false);
+    const imgRef = useRef(null);
 
-  const handleLoad = useCallback(() => {
-    setIsLoaded(true);
-  }, []);
+    useEffect(() => {
+      if (priority && imgRef.current) {
+        // Preload priority images
+        const img = new Image();
+        img.src = src;
+        img.onload = () => setIsLoaded(true);
+        img.onerror = () => setHasError(true);
+      }
+    }, [src, priority]);
 
-  const handleError = useCallback(() => {
-    setHasError(true);
-  }, []);
+    const handleLoad = useCallback(() => {
+      setIsLoaded(true);
+    }, []);
 
-  return (
-    <div className="relative w-full h-full">
-      {!isLoaded && !hasError && (
-        <div className="absolute inset-0 bg-gray-100 animate-pulse rounded-2xl" />
-      )}
-      {hasError ? (
-        <div className="absolute inset-0 bg-gray-200 flex items-center justify-center rounded-2xl">
-          <span className="text-gray-500 text-sm">Failed to load</span>
-        </div>
-      ) : (
-        <img
-          src={src}
-          alt={alt}
-          className={`${className} ${
-            isLoaded ? "opacity-100" : "opacity-0"
-          } transition-opacity duration-300`}
-          onLoad={handleLoad}
-          onError={handleError}
-          loading="lazy"
-          draggable={false}
-          {...props}
-        />
-      )}
-    </div>
-  );
-});
+    const handleError = useCallback(() => {
+      setHasError(true);
+    }, []);
+
+    return (
+      <div className="relative w-full h-full">
+        {!isLoaded && !hasError && (
+          <div className="absolute inset-0 bg-gray-100 animate-pulse rounded-2xl" />
+        )}
+        {hasError ? (
+          <div className="absolute inset-0 bg-gray-200 flex items-center justify-center rounded-2xl">
+            <span className="text-gray-500 text-sm">Failed to load</span>
+          </div>
+        ) : (
+          <img
+            ref={imgRef}
+            src={src}
+            alt={alt}
+            className={`${className} ${
+              isLoaded ? "opacity-100" : "opacity-0"
+            } transition-opacity duration-300`}
+            onLoad={handleLoad}
+            onError={handleError}
+            loading={priority ? "eager" : "lazy"}
+            draggable={false}
+            {...props}
+          />
+        )}
+      </div>
+    );
+  }
+);
 
 OptimizedImage.displayName = "OptimizedImage";
 
-// Carousel state reducer to minimize re-renders
-const carouselReducer = (state, action) => {
-  switch (action.type) {
-    case "SET_INDEX":
-      if (action.payload === "NEXT") {
-        return {
-          ...state,
-          currentIndex: (state.currentIndex + 1) % collections.length,
-          direction: action.direction || state.direction,
-        };
-      }
-      return {
-        ...state,
-        currentIndex: action.payload,
-        direction: action.direction || state.direction,
-      };
-    case "SET_AUTO_PLAY":
-      return {
-        ...state,
-        isAutoPlaying: action.payload,
-      };
-    case "SET_DIRECTION":
-      return {
-        ...state,
-        direction: action.payload,
-      };
-    default:
-      return state;
-  }
-};
-
 const CollectionsSection = memo(() => {
-  // Combined state using useReducer to reduce re-renders
-  const [state, dispatch] = useReducer(carouselReducer, {
-    currentIndex: 0,
-    isAutoPlaying: true,
-    direction: 1, // 1 for forward, -1 for backward
-  });
-
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [isAutoPlaying, setIsAutoPlaying] = useState(true);
   const intervalRef = useRef(null);
-  const mouseTimeoutRef = useRef(null);
+  const containerRef = useRef(null);
+  const shouldReduceMotion = useReducedMotion();
 
-  // Memoized position calculation function
+  // Use CSS transforms instead of complex 3D for reduced motion
+  const useSimpleAnimation =
+    shouldReduceMotion ||
+    (typeof window !== "undefined" &&
+      window.matchMedia("(max-width: 768px)").matches);
+
+  // Simplified position calculation
   const getSlidePosition = useCallback((slideIndex, currentIdx) => {
     const diff = slideIndex - currentIdx;
     const totalSlides = collections.length;
 
-    // Handle wrap-around cases
     let position = diff;
     if (diff > totalSlides / 2) {
       position = diff - totalSlides;
@@ -143,237 +119,195 @@ const CollectionsSection = memo(() => {
     return position;
   }, []);
 
-  // Memoized animation variants - cached per position
-  const slideVariantsCache = useMemo(() => {
-    const baseTransition = {
-      x: {
-        type: "spring",
-        stiffness: 300,
-        damping: 30,
-        mass: 1,
+  // Optimized animation variants with GPU acceleration
+  const getSlideVariants = useCallback((position, simple = false) => {
+    if (simple) {
+      // Simplified animations for mobile/reduced motion
+      const baseX = position * 90;
+      return {
+        x: `${baseX}%`,
+        scale: position === 0 ? 1 : 0.85,
+        opacity: Math.abs(position) <= 1 ? 1 : 0,
+        zIndex: 5 - Math.abs(position),
+        transition: {
+          x: { type: "tween", duration: 0.4, ease: "easeInOut" },
+          scale: { type: "tween", duration: 0.4, ease: "easeInOut" },
+          opacity: { duration: 0.3 },
+        },
+      };
+    }
+
+    // Full animations with optimized GPU acceleration
+    const configs = {
+      0: {
+        x: 0,
+        scale: 1,
+        opacity: 1,
+        zIndex: 5,
+        rotateY: 0,
+        filter: "brightness(1)",
       },
-      opacity: {
-        duration: 0.4,
-        ease: "easeInOut",
+      1: {
+        x: 85,
+        scale: 0.85,
+        opacity: 0.85,
+        zIndex: 3,
+        rotateY: -15,
+        filter: "brightness(0.9)",
       },
-      scale: {
-        duration: 0.5,
-        ease: [0.32, 0.72, 0, 1],
+      "-1": {
+        x: -85,
+        scale: 0.85,
+        opacity: 0.85,
+        zIndex: 3,
+        rotateY: 15,
+        filter: "brightness(0.9)",
       },
-      rotateY: {
-        duration: 0.6,
-        ease: [0.32, 0.72, 0, 1],
+      2: {
+        x: 165,
+        scale: 0.7,
+        opacity: 0.4,
+        zIndex: 1,
+        rotateY: -25,
+        filter: "brightness(0.8)",
+      },
+      "-2": {
+        x: -165,
+        scale: 0.7,
+        opacity: 0.4,
+        zIndex: 1,
+        rotateY: 25,
+        filter: "brightness(0.8)",
       },
     };
 
-    const variants = {};
+    const config = configs[position] || {
+      x: position > 0 ? 250 : -250,
+      scale: 0.6,
+      opacity: 0,
+      zIndex: 0,
+      rotateY: position > 0 ? -30 : 30,
+      filter: "brightness(0.7)",
+    };
 
-    // Pre-calculate variants for all possible positions
-    for (let pos = -3; pos <= 3; pos++) {
-      if (pos === 0) {
-        variants[pos] = {
-          x: "0%",
-          scale: 1,
-          opacity: 1,
-          zIndex: 5,
-          rotateY: 0,
-          filter: "brightness(1)",
-          transition: baseTransition,
-        };
-      } else if (pos === -1) {
-        variants[pos] = {
-          x: "-85%",
-          scale: 0.85,
-          opacity: 0.85,
-          zIndex: 3,
-          rotateY: 15,
-          filter: "brightness(0.9)",
-          transition: baseTransition,
-        };
-      } else if (pos === 1) {
-        variants[pos] = {
-          x: "85%",
-          scale: 0.85,
-          opacity: 0.85,
-          zIndex: 3,
-          rotateY: -15,
-          filter: "brightness(0.9)",
-          transition: baseTransition,
-        };
-      } else if (pos === -2) {
-        variants[pos] = {
-          x: "-165%",
-          scale: 0.7,
-          opacity: 0.4,
-          zIndex: 1,
-          rotateY: 25,
-          filter: "brightness(0.8)",
-          transition: baseTransition,
-        };
-      } else if (pos === 2) {
-        variants[pos] = {
-          x: "165%",
-          scale: 0.7,
-          opacity: 0.4,
-          zIndex: 1,
-          rotateY: -25,
-          filter: "brightness(0.8)",
-          transition: baseTransition,
-        };
-      } else if (pos < -2) {
-        variants[pos] = {
-          x: "250%",
-          scale: 0.6,
-          opacity: 0,
-          zIndex: 0,
-          rotateY: -30,
-          filter: "brightness(0.7)",
-          transition: baseTransition,
-        };
-      } else {
-        variants[pos] = {
-          x: "-250%",
-          scale: 0.6,
-          opacity: 0,
-          zIndex: 0,
-          rotateY: 30,
-          filter: "brightness(0.7)",
-          transition: baseTransition,
-        };
-      }
-    }
-
-    return variants;
+    return {
+      x: `${config.x}%`,
+      scale: config.scale,
+      opacity: config.opacity,
+      zIndex: config.zIndex,
+      rotateY: config.rotateY,
+      filter: config.filter,
+      transition: {
+        x: { type: "tween", duration: 0.5, ease: "easeInOut" },
+        scale: { type: "tween", duration: 0.5, ease: "easeInOut" },
+        opacity: { duration: 0.4 },
+        rotateY: { type: "tween", duration: 0.5, ease: "easeInOut" },
+      },
+    };
   }, []);
 
-  // Memoized function to get slide variants
-  const getSlideVariants = useCallback(
-    (position) => {
-      return slideVariantsCache[position] || slideVariantsCache[3];
-    },
-    [slideVariantsCache]
-  );
-
-  // Memoized text animation variants
+  // Text animation variants - simplified
   const textVariants = useMemo(
     () => ({
-      hidden: {
-        opacity: 0,
-        y: 20,
-        scale: 0.98,
-      },
+      hidden: { opacity: 0, y: 10 },
       visible: {
         opacity: 1,
         y: 0,
-        scale: 1,
-        transition: {
-          duration: 0.8,
-          ease: [0.32, 0.72, 0, 1],
-          type: "tween",
-        },
+        transition: { duration: 0.5, ease: "easeOut" },
       },
       exit: {
         opacity: 0,
-        y: -20,
-        scale: 0.98,
-        transition: {
-          duration: 0.5,
-          ease: [0.32, 0.72, 0, 1],
-          type: "tween",
-        },
+        y: -10,
+        transition: { duration: 0.3, ease: "easeIn" },
       },
     }),
     []
   );
 
-  // Autoplay functionality using ref to avoid state dependencies
-  const startAutoPlay = useCallback(() => {
-    if (intervalRef.current) clearInterval(intervalRef.current);
-    intervalRef.current = setInterval(() => {
-      dispatch({
-        type: "SET_INDEX",
-        payload: "NEXT",
-        direction: 1,
-      });
-    }, 3000);
+  // Optimized navigation
+  const navigate = useCallback((newIndex) => {
+    setCurrentIndex(newIndex);
   }, []);
 
-  const stopAutoPlay = useCallback(() => {
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current);
-      intervalRef.current = null;
-    }
-  }, []);
+  const nextSlide = useCallback(() => {
+    navigate((currentIndex + 1) % collections.length);
+  }, [currentIndex, navigate]);
 
-  // Initialize autoplay with ref-based state management
+  // Autoplay with cleanup
   useEffect(() => {
-    if (state.isAutoPlaying) {
-      startAutoPlay();
+    if (isAutoPlaying && !shouldReduceMotion) {
+      intervalRef.current = setInterval(nextSlide, 3500);
     } else {
-      stopAutoPlay();
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
     }
 
-    return () => stopAutoPlay();
-  }, [state.isAutoPlaying, startAutoPlay, stopAutoPlay]);
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
+    };
+  }, [isAutoPlaying, nextSlide, shouldReduceMotion]);
 
-  // Debounced mouse handlers to reduce state updates
+  // Mouse handlers with proper cleanup
   const handleMouseEnter = useCallback(() => {
-    if (mouseTimeoutRef.current) clearTimeout(mouseTimeoutRef.current);
-    dispatch({ type: "SET_AUTO_PLAY", payload: false });
+    setIsAutoPlaying(false);
   }, []);
 
   const handleMouseLeave = useCallback(() => {
-    if (mouseTimeoutRef.current) clearTimeout(mouseTimeoutRef.current);
-    mouseTimeoutRef.current = setTimeout(() => {
-      dispatch({ type: "SET_AUTO_PLAY", payload: true });
-    }, 100); // Small debounce to prevent rapid toggling
+    setIsAutoPlaying(true);
   }, []);
 
-  // Memoized current collection to prevent recalculation
-  const currentCollection = useMemo(() => {
-    return collections[state.currentIndex];
-  }, [state.currentIndex]);
+  // Touch handlers for mobile
+  const touchStartX = useRef(0);
+  const handleTouchStart = useCallback((e) => {
+    touchStartX.current = e.touches[0].clientX;
+    setIsAutoPlaying(false);
+  }, []);
 
-  // Memoized slide positions to prevent recalculation on every render
-  const slidePositions = useMemo(() => {
-    return collections.map((_, index) =>
-      getSlidePosition(index, state.currentIndex)
-    );
-  }, [state.currentIndex, getSlidePosition]);
+  const handleTouchEnd = useCallback(
+    (e) => {
+      const touchEndX = e.changedTouches[0].clientX;
+      const diff = touchStartX.current - touchEndX;
+
+      if (Math.abs(diff) > 50) {
+        if (diff > 0) {
+          navigate((currentIndex + 1) % collections.length);
+        } else {
+          navigate(
+            (currentIndex - 1 + collections.length) % collections.length
+          );
+        }
+      }
+
+      setTimeout(() => setIsAutoPlaying(true), 1000);
+    },
+    [currentIndex, navigate]
+  );
+
+  const currentCollection = collections[currentIndex];
 
   return (
     <section className="bg-white min-h-screen flex flex-col">
-      {/* Top Section - Static Heading + Dynamic Collection Name */}
+      {/* Top Section - Optimized heading */}
       <div className="flex-none pt-12 sm:pt-12 md:pt-16 lg:pt-20 pb-8 sm:pb-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          {/* Static 'Collections' heading */}
           <motion.h1
-            className="
-              text-6xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl
-              font-faux font-light text-gray-900
-              tracking-wide leading-none mb-6 sm:mb-6 md:mb-8
-            "
-            initial={{ opacity: 0, y: 30 }}
+            className="text-6xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-faux font-light text-gray-900 tracking-wide leading-none mb-6 sm:mb-6 md:mb-8"
+            initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{
-              duration: 1.0,
-              ease: [0.32, 0.72, 0, 1],
-              type: "tween",
-            }}
+            transition={{ duration: 0.6, ease: "easeOut" }}
           >
             Collections
           </motion.h1>
 
-          {/* Dynamic collection name */}
           <div className="h-16 sm:h-16 md:h-20 flex items-center justify-center">
             <AnimatePresence mode="wait">
               <motion.h2
-                key={state.currentIndex}
-                className="
-                  text-2xl sm:text-2xl md:text-3xl lg:text-4xl
-                  font-josefin font-medium text-gray-600
-                  tracking-wide
-                "
+                key={currentIndex}
+                className="text-2xl sm:text-2xl md:text-3xl lg:text-4xl font-josefin font-medium text-gray-600 tracking-wide"
                 variants={textVariants}
                 initial="hidden"
                 animate="visible"
@@ -386,128 +320,76 @@ const CollectionsSection = memo(() => {
         </div>
       </div>
 
-      {/* Bottom Section - Coverflow Carousel */}
+      {/* Carousel Section - Optimized */}
       <div
+        ref={containerRef}
         className="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-8 pb-12 sm:pb-16 md:pb-20"
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
         role="region"
         aria-label="Collections carousel"
         aria-live="polite"
       >
         <div className="relative w-full max-w-6xl h-[400px] sm:h-80 md:h-96 lg:h-[500px]">
-          {/* Carousel Container */}
-          <div className="relative w-full h-full flex items-center justify-center perspective-1000">
-            <AnimatePresence initial={false}>
-              {collections.map((slide, slideIndex) => {
-                const position = slidePositions[slideIndex];
-                const isVisible = Math.abs(position) <= 2;
+          <div className="relative w-full h-full flex items-center justify-center">
+            {collections.map((slide, slideIndex) => {
+              const position = getSlidePosition(slideIndex, currentIndex);
+              const isVisible = Math.abs(position) <= 2;
+              const isPriority = Math.abs(position) <= 1;
 
-                if (!isVisible) return null;
+              if (!isVisible) return null;
 
-                return (
-                  <motion.div
-                    key={slideIndex}
-                    className="absolute w-64 sm:w-60 md:w-72 lg:w-96 h-full"
-                    animate={getSlideVariants(position)}
-                    initial={
-                      state.direction === 1
-                        ? getSlideVariants(3)
-                        : getSlideVariants(-3)
-                    }
-                    exit={
-                      state.direction === 1
-                        ? getSlideVariants(-3)
-                        : getSlideVariants(3)
-                    }
-                    style={{
-                      transformStyle: "preserve-3d",
-                      perspective: "1000px",
-                    }}
-                    whileHover={
-                      position === 0
-                        ? {
-                            scale: 1.03,
-                            transition: {
-                              duration: 0.3,
-                              ease: "easeOut",
-                            },
-                          }
-                        : {}
-                    }
-                  >
-                    {/* Image Container */}
-                    <div
-                      className="
-                      relative w-full h-full
-                      bg-white rounded-2xl shadow-lg
-                      overflow-hidden
-                      border border-gray-100
-                    "
-                    >
-                      <OptimizedImage
-                        src={slide.image}
-                        alt={`${slide.name} collection`}
-                        className="w-full h-full object-cover"
-                      />
+              return (
+                <motion.div
+                  key={slideIndex}
+                  className="absolute w-64 sm:w-60 md:w-72 lg:w-96 h-full will-change-transform"
+                  animate={getSlideVariants(position, useSimpleAnimation)}
+                  style={{
+                    transformStyle: useSimpleAnimation ? "flat" : "preserve-3d",
+                  }}
+                  onClick={() => position !== 0 && navigate(slideIndex)}
+                  role={position === 0 ? "img" : "button"}
+                  tabIndex={position === 0 ? -1 : 0}
+                  aria-label={
+                    position !== 0 ? `Go to ${slide.name}` : undefined
+                  }
+                >
+                  <div className="relative w-full h-full bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-100">
+                    <OptimizedImage
+                      src={slide.image}
+                      alt={`${slide.name} collection`}
+                      className="w-full h-full object-cover"
+                      priority={isPriority}
+                    />
 
-                      {/* Overlay for non-center images */}
-                      {position !== 0 && (
-                        <motion.div
-                          className="absolute inset-0 bg-black/10"
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          transition={{ duration: 0.3 }}
-                        />
-                      )}
+                    {position !== 0 && (
+                      <div className="absolute inset-0 bg-black/10 pointer-events-none" />
+                    )}
 
-                      {/* Collection name overlay (visible only on center image) */}
-                      {position === 0 && (
-                        <motion.div
-                          className="
-                            absolute bottom-0 left-0 right-0
-                            bg-gradient-to-t from-black/60 to-transparent
-                            p-4 sm:p-6
-                          "
-                          initial={{ opacity: 0, y: 15 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{
-                            delay: 0.2,
-                            duration: 0.6,
-                            ease: [0.32, 0.72, 0, 1],
-                            type: "tween",
-                          }}
-                        >
-                          <motion.h3
-                            className="
-                            text-white font-josefin font-medium
-                            text-base sm:text-base md:text-lg lg:text-xl
-                            text-center tracking-wide
-                          "
-                            initial={{ opacity: 0, y: 8 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{
-                              delay: 0.4,
-                              duration: 0.5,
-                              ease: [0.32, 0.72, 0, 1],
-                              type: "tween",
-                            }}
-                          >
-                            {slide.name}
-                          </motion.h3>
-                        </motion.div>
-                      )}
-                    </div>
-                  </motion.div>
-                );
-              })}
-            </AnimatePresence>
+                    {position === 0 && (
+                      <motion.div
+                        className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-4 sm:p-6"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 0.2, duration: 0.4 }}
+                      >
+                        <h3 className="text-white font-josefin font-medium text-base sm:text-base md:text-lg lg:text-xl text-center tracking-wide">
+                          {slide.name}
+                        </h3>
+                      </motion.div>
+                    )}
+                  </div>
+                </motion.div>
+              );
+            })}
           </div>
         </div>
       </div>
 
       {/* Bottom separator */}
-      <div className="absolute bottom-0 top-0 h-2 bg-gradient-to-r from-[#6C3D1D] via-[#C4BA97] to-[#6C3D1D]" />
+      <div className="absolute bottom-0 left-0 right-0 h-2 bg-gradient-to-r from-[#6C3D1D] via-[#C4BA97] to-[#6C3D1D]" />
     </section>
   );
 });

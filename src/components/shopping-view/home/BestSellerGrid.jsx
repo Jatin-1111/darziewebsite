@@ -171,19 +171,14 @@ const BestSellersSection = memo(() => {
         >
           {/* Main Title */}
           <motion.h1
-            className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-faux font-light tracking-[0.15em] text-gray-800 uppercase relative"
+            className="text-6xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl
+              font-faux font-light text-gray-900
+              tracking-wide leading-none mb-6 sm:mb-6 md:mb-8"
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.4 }}
           >
             Best Sellers
-            {/* Elegant underline */}
-            <motion.div
-              className="absolute -bottom-3 left-1/2 transform -translate-x-1/2 w-24 h-0.5 bg-gradient-to-r from-transparent via-gray-400 to-transparent"
-              initial={{ width: 0 }}
-              whileInView={{ width: "6rem" }}
-              transition={{ duration: 1, delay: 1 }}
-            />
           </motion.h1>
         </motion.div>
 
