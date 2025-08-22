@@ -94,18 +94,6 @@ const ProductCard = memo(({ collection, index, onCardClick }) => {
           className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"
           variants={overlayVariants}
         />
-
-        {/* Collection Name Overlay */}
-        <motion.div
-          className="absolute bottom-0 left-0 right-0 p-6 sm:p-8 md:p-10"
-          initial={{ opacity: 0.95 }}
-          whileHover={{ opacity: 1 }}
-          transition={{ duration: 0.3 }}
-        >
-          <h3 className="text-white font-bold text-base sm:text-lg md:text-xl lg:text-2xl text-center tracking-wide leading-tight">
-            {collection.title}
-          </h3>
-        </motion.div>
       </div>
     </motion.div>
   );
@@ -223,7 +211,7 @@ const BestSellersSection = memo(() => {
                 transition: { duration: 0.5, ease: "easeInOut" },
               }}
             />
-            <span className="relative z-10">Explore All Collections</span>
+            <span className="relative z-10">Explore All Best Sellers</span>
           </motion.button>
         </motion.div>
       </div>
