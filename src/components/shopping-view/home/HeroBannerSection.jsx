@@ -1,4 +1,4 @@
-// src/components/shopping-view/home/HeroBannerSection.jsx - ENHANCED WITH FRAMER MOTION 🎨
+// src/components/shopping-view/home/HeroBannerSection.jsx - MOBILE OPTIMIZED 📱
 import { memo, useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { motion, useScroll, useTransform } from "framer-motion";
@@ -15,8 +15,9 @@ const HeroBannerSection = memo(() => {
   // Preload critical image as soon as component mounts
   useEffect(() => {
     const criticalImage = new Image();
+    // Updated mobile image dimensions for 390x844 viewport
     criticalImage.src =
-      "https://res.cloudinary.com/dpxiwelxk/image/upload/f_auto,q_auto,w_640,h_800,c_fill,fl_progressive/v1754392860/bannermobile_ml9vmo.svg";
+      "https://res.cloudinary.com/dpxiwelxk/image/upload/f_auto,q_auto,w_390,h_844,c_fill,fl_progressive/v1754392860/bannermobile_ml9vmo.svg";
 
     criticalImage.onload = () => {
       setCriticalImageLoaded(true);
@@ -128,17 +129,30 @@ const HeroBannerSection = memo(() => {
         }}
       />
 
-      {/* Enhanced Responsive Banner Image */}
+      {/* Enhanced Responsive Banner Image - Mobile Optimized */}
       <motion.div className="relative w-full h-full" variants={imageVariants}>
         <picture>
+          {/* Mobile - optimized for 390x844 */}
           <source
-            media="(max-width: 640px)"
-            srcSet="https://res.cloudinary.com/dpxiwelxk/image/upload/f_auto,q_auto,w_640,h_800,c_fill,fl_progressive:steep,q_80/v1754392860/bannermobile_ml9vmo.svg"
+            media="(max-width: 390px)"
+            srcSet="https://res.cloudinary.com/dpxiwelxk/image/upload/f_auto,q_auto,w_390,h_844,c_fill,fl_progressive:steep,q_80/v1754392860/bannermobile_ml9vmo.svg"
           />
+          {/* Small mobile devices up to 480px */}
+          <source
+            media="(max-width: 480px)"
+            srcSet="https://res.cloudinary.com/dpxiwelxk/image/upload/f_auto,q_auto,w_480,h_800,c_fill,fl_progressive:steep,q_80/v1754392860/bannermobile_ml9vmo.svg"
+          />
+          {/* Medium mobile devices and small tablets */}
+          <source
+            media="(max-width: 768px)"
+            srcSet="https://res.cloudinary.com/dpxiwelxk/image/upload/f_auto,q_auto,w_768,h_1024,c_fill,fl_progressive:steep,q_82/v1754392860/bannermobile_ml9vmo.svg"
+          />
+          {/* Tablets */}
           <source
             media="(max-width: 1024px)"
             srcSet="https://res.cloudinary.com/dpxiwelxk/image/upload/f_auto,q_auto,w_1024,h_768,c_fill,fl_progressive:steep,q_85/v1754393818/bannardestop_ri4m9p.svg"
           />
+          {/* Desktop - unchanged */}
           <source
             media="(min-width: 1025px)"
             srcSet="https://res.cloudinary.com/dpxiwelxk/image/upload/f_auto,q_auto,w_1920,h_1080,c_fill,fl_progressive:steep,q_90/v1754393818/bannardestop_ri4m9p.svg"
@@ -177,9 +191,9 @@ const HeroBannerSection = memo(() => {
         variants={overlayVariants}
       />
 
-      {/* Animated Content */}
+      {/* Animated Content - Mobile Optimized */}
       <motion.div
-        className="absolute inset-0 flex flex-col justify-end items-center p-4 sm:p-6 md:p-8"
+        className="absolute inset-0 flex flex-col justify-end items-center p-4 sm:p-6 md:p-8 pb-6 sm:pb-8"
         variants={containerVariants}
       >
         <motion.div
@@ -196,8 +210,8 @@ const HeroBannerSection = memo(() => {
           }}
         />
 
-        {/* Enhanced CTA Button */}
-        <div className="w-full max-w-xs sm:max-w-sm">
+        {/* Enhanced CTA Button - Mobile Optimized */}
+        <div className="w-full max-w-xs sm:max-w-sm mb-4 sm:mb-6">
           <Link
             to="/shop/listing"
             className="block"
@@ -219,6 +233,7 @@ const HeroBannerSection = memo(() => {
                 hover:bg-white hover:text-black
                 focus:outline-none focus:ring-4 focus:ring-white/50
                 will-change-transform relative overflow-hidden
+                min-h-[48px] touch-manipulation
               "
               type="button"
               aria-describedby="cta-description"
@@ -263,15 +278,15 @@ const HeroBannerSection = memo(() => {
         </div>
       </motion.div>
 
-      {/* Animated Corner Decorations */}
+      {/* Animated Corner Decorations - Mobile Optimized */}
       <motion.div
-        className="absolute top-4 left-4 w-16 h-16 border-l-2 border-t-2 border-white/30"
+        className="absolute top-2 left-2 sm:top-4 sm:left-4 w-12 h-12 sm:w-16 sm:h-16 border-l-2 border-t-2 border-white/30"
         initial={{ opacity: 0, scale: 0 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ delay: 1, duration: 0.8, ease: "easeOut" }}
       />
       <motion.div
-        className="absolute bottom-4 right-4 w-16 h-16 border-r-2 border-b-2 border-white/30"
+        className="absolute bottom-2 right-2 sm:bottom-4 sm:right-4 w-12 h-12 sm:w-16 sm:h-16 border-r-2 border-b-2 border-white/30"
         initial={{ opacity: 0, scale: 0 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ delay: 1.2, duration: 0.8, ease: "easeOut" }}

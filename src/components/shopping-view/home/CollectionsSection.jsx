@@ -1,3 +1,5 @@
+"use client";
+
 // src/components/shopping-view/home/CollectionsSection.jsx
 import { memo, useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -45,7 +47,7 @@ const CollectionsSection = memo(() => {
     if (intervalRef.current) clearInterval(intervalRef.current);
     intervalRef.current = setInterval(() => {
       setCurrentIndex((prev) => (prev + 1) % collections.length);
-    }, 3000);
+    }, 3000); // Changed back to 3000ms (3 seconds) as requested
   }, []);
 
   const stopAutoPlay = useCallback(() => {
@@ -75,12 +77,12 @@ const CollectionsSection = memo(() => {
     setIsAutoPlaying(true);
   }, []);
 
-  // Get visible slides for coverflow effect
+  // Get visible slides for sliding effect - now shows all visible slides at once
   const getVisibleSlides = useCallback(() => {
     const slides = [];
     const totalSlides = collections.length;
 
-    // Calculate positions: prev2, prev1, current, next1, next2
+    // Show 5 slides: prev2, prev1, current, next1, next2
     for (let i = -2; i <= 2; i++) {
       const index = (currentIndex + i + totalSlides) % totalSlides;
       slides.push({
@@ -93,7 +95,7 @@ const CollectionsSection = memo(() => {
     return slides;
   }, [currentIndex]);
 
-  // Animation variants for coverflow effect
+  // Animation variants for smooth sliding effect
   const slideVariants = {
     center: {
       x: 0,
@@ -102,52 +104,57 @@ const CollectionsSection = memo(() => {
       zIndex: 5,
       rotateY: 0,
       transition: {
-        duration: 0.6,
-        ease: [0.25, 0.1, 0.25, 1],
+        duration: 1.2, // Smooth sliding duration
+        ease: [0.32, 0.72, 0, 1], // iOS-style easing curve
+        type: "tween",
       },
     },
     left1: {
-      x: "-60%",
-      scale: 0.8,
-      opacity: 0.7,
+      x: "-80%",
+      scale: 0.85,
+      opacity: 0.8,
       zIndex: 3,
-      rotateY: 25,
+      rotateY: 15,
       transition: {
-        duration: 0.6,
-        ease: [0.25, 0.1, 0.25, 1],
+        duration: 1.2,
+        ease: [0.32, 0.72, 0, 1],
+        type: "tween",
       },
     },
     right1: {
-      x: "60%",
-      scale: 0.8,
-      opacity: 0.7,
+      x: "80%",
+      scale: 0.85,
+      opacity: 0.8,
       zIndex: 3,
-      rotateY: -25,
+      rotateY: -15,
       transition: {
-        duration: 0.6,
-        ease: [0.25, 0.1, 0.25, 1],
+        duration: 1.2,
+        ease: [0.32, 0.72, 0, 1],
+        type: "tween",
       },
     },
     left2: {
-      x: "-120%",
-      scale: 0.6,
-      opacity: 0.4,
+      x: "-160%",
+      scale: 0.7,
+      opacity: 0.3,
       zIndex: 1,
-      rotateY: 45,
+      rotateY: 25,
       transition: {
-        duration: 0.6,
-        ease: [0.25, 0.1, 0.25, 1],
+        duration: 1.2,
+        ease: [0.32, 0.72, 0, 1],
+        type: "tween",
       },
     },
     right2: {
-      x: "120%",
-      scale: 0.6,
-      opacity: 0.4,
+      x: "160%",
+      scale: 0.7,
+      opacity: 0.3,
       zIndex: 1,
-      rotateY: -45,
+      rotateY: -25,
       transition: {
-        duration: 0.6,
-        ease: [0.25, 0.1, 0.25, 1],
+        duration: 1.2,
+        ease: [0.32, 0.72, 0, 1],
+        type: "tween",
       },
     },
   };
@@ -175,21 +182,26 @@ const CollectionsSection = memo(() => {
     hidden: {
       opacity: 0,
       y: 20,
+      scale: 0.98,
     },
     visible: {
       opacity: 1,
       y: 0,
+      scale: 1,
       transition: {
-        duration: 0.5,
-        ease: "easeOut",
+        duration: 0.8,
+        ease: [0.32, 0.72, 0, 1], // Updated to match slide easing
+        type: "tween",
       },
     },
     exit: {
       opacity: 0,
       y: -20,
+      scale: 0.98,
       transition: {
-        duration: 0.3,
-        ease: "easeIn",
+        duration: 0.5,
+        ease: [0.32, 0.72, 0, 1],
+        type: "tween",
       },
     },
   };
@@ -211,7 +223,11 @@ const CollectionsSection = memo(() => {
             "
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, ease: "easeOut" }}
+            transition={{
+              duration: 1.0,
+              ease: [0.32, 0.72, 0, 1], // Updated to match overall easing
+              type: "tween",
+            }}
           >
             Collections
           </motion.h1>
@@ -260,6 +276,17 @@ const CollectionsSection = memo(() => {
                   transformStyle: "preserve-3d",
                   perspective: "1000px",
                 }}
+                whileHover={
+                  slide.position === 0
+                    ? {
+                        scale: 1.03,
+                        transition: {
+                          duration: 0.4,
+                          ease: [0.32, 0.72, 0, 1],
+                        },
+                      }
+                    : {}
+                }
               >
                 {/* Image Container */}
                 <div
@@ -270,17 +297,29 @@ const CollectionsSection = memo(() => {
                   border border-gray-100
                 "
                 >
-                  <img
+                  <motion.img
                     src={slide.image}
                     alt={`${slide.name} collection`}
                     className="w-full h-full object-cover"
                     loading="lazy"
                     draggable={false}
+                    initial={{ opacity: 0, scale: 1.05 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{
+                      duration: 0.8,
+                      ease: [0.32, 0.72, 0, 1],
+                      type: "tween",
+                    }}
                   />
 
                   {/* Overlay for non-center images */}
                   {slide.position !== 0 && (
-                    <div className="absolute inset-0 bg-black/10" />
+                    <motion.div
+                      className="absolute inset-0 bg-black/10"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ duration: 0.4 }}
+                    />
                   )}
 
                   {/* Collection name overlay (visible only on center image) */}
@@ -291,19 +330,32 @@ const CollectionsSection = memo(() => {
                         bg-gradient-to-t from-black/60 to-transparent
                         p-4 sm:p-6
                       "
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ delay: 0.3, duration: 0.5 }}
+                      initial={{ opacity: 0, y: 15 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{
+                        delay: 0.3,
+                        duration: 0.7,
+                        ease: [0.32, 0.72, 0, 1],
+                        type: "tween",
+                      }}
                     >
-                      <h3
+                      <motion.h3
                         className="
                         text-white font-josefin font-medium
                         text-sm sm:text-base md:text-lg
                         text-center tracking-wide
                       "
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{
+                          delay: 0.5,
+                          duration: 0.6,
+                          ease: [0.32, 0.72, 0, 1],
+                          type: "tween",
+                        }}
                       >
                         {slide.name}
-                      </h3>
+                      </motion.h3>
                     </motion.div>
                   )}
                 </div>
