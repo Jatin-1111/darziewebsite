@@ -461,9 +461,9 @@ function ShoppingHeader() {
           aria-label="Darzie's Couture - Go to homepage"
         >
           <img
-            src="https://res.cloudinary.com/dz9ndmaa8/image/upload/v1755884639/logos/wsm14if05hzitoktrunf.png"
+            src="https://res.cloudinary.com/dpxiwelxk/image/upload/v1754385089/Logo_lzbe32.svg"
             alt="Darzie's Couture Logo"
-            className="h-10 w-10 md:h-12 md:w-12 lg:h-16 lg:w-16 object-contain"
+            className="h-32 w-32 md:h-36 md:w-36 lg:h-44 lg:w-44 object-contain mt-3"
             loading="eager"
           />
         </Link>
@@ -518,7 +518,7 @@ function ShoppingHeader() {
                   aria-label="Darzie's Couture - Go to homepage"
                 >
                   <img
-                    src="https://res.cloudinary.com/dz9ndmaa8/image/upload/v1755884639/logos/wsm14if05hzitoktrunf.png"
+                    src="https://res.cloudinary.com/dpxiwelxk/image/upload/v1754385089/Logo_lzbe32.svg"
                     alt="Darzie's Couture"
                     className="h-14 w-14 object-contain"
                   />

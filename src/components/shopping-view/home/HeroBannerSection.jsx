@@ -1,16 +1,11 @@
-// src/components/shopping-view/home/HeroBannerSection.jsx - MOBILE OPTIMIZED 📱
+// src/components/shopping-view/home/HeroBannerSection.jsx - NO PARALLAX, RESPONSIVE 📱
 import { memo, useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { motion, useScroll, useTransform } from "framer-motion";
+import { motion } from "framer-motion";
 
 const HeroBannerSection = memo(() => {
   const [imageLoaded, setImageLoaded] = useState(false);
   const [criticalImageLoaded, setCriticalImageLoaded] = useState(false);
-  const { scrollY } = useScroll();
-
-  // Parallax effect for background
-  const y = useTransform(scrollY, [0, 500], [0, 150]);
-  const opacity = useTransform(scrollY, [0, 300], [1, 0.3]);
 
   // Preload critical image as soon as component mounts
   useEffect(() => {
@@ -28,7 +23,7 @@ const HeroBannerSection = memo(() => {
       "https://res.cloudinary.com/dpxiwelxk/image/upload/f_auto,q_auto,w_1920,h_1080,c_fill,fl_progressive/v1754393818/bannardestop_ri4m9p.svg";
   }, []);
 
-  // Animation variants
+  // Animation variants (no parallax)
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -112,51 +107,91 @@ const HeroBannerSection = memo(() => {
 
   return (
     <motion.div
-      className="relative w-screen h-screen overflow-hidden font-josefin"
+      className="relative w-full h-screen overflow-hidden font-josefin"
       role="banner"
       aria-label="Darzie's Couture hero section"
       variants={containerVariants}
       initial="hidden"
       animate="visible"
     >
-      {/* Animated Background Gradient */}
-      <motion.div
+      {/* Static Background Gradient (no parallax) */}
+      <div
         className="absolute inset-0 opacity-30"
         style={{
           background: `linear-gradient(135deg, #F4EFD6 0%, #E5D5A3 50%, #C4BA97 100%)`,
-          y,
-          opacity,
         }}
       />
 
-      {/* Enhanced Responsive Banner Image - Mobile Optimized */}
+      {/* Enhanced Responsive Banner Image - Mobile Optimized (no parallax) */}
       <motion.div className="relative w-full h-full" variants={imageVariants}>
         <picture>
-          {/* Mobile - optimized for 390x844 */}
+          {/* Extra Small Mobile - 320px and below */}
+          <source
+            media="(max-width: 320px)"
+            srcSet="https://res.cloudinary.com/dpxiwelxk/image/upload/f_auto,q_auto,w_320,h_568,c_fill,fl_progressive:steep,q_75/v1754392860/bannermobile_ml9vmo.svg"
+          />
+
+          {/* Small Mobile - 360px */}
+          <source
+            media="(max-width: 360px)"
+            srcSet="https://res.cloudinary.com/dpxiwelxk/image/upload/f_auto,q_auto,w_360,h_640,c_fill,fl_progressive:steep,q_78/v1754392860/bannermobile_ml9vmo.svg"
+          />
+
+          {/* Standard Mobile - 390px */}
           <source
             media="(max-width: 390px)"
             srcSet="https://res.cloudinary.com/dpxiwelxk/image/upload/f_auto,q_auto,w_390,h_844,c_fill,fl_progressive:steep,q_80/v1754392860/bannermobile_ml9vmo.svg"
           />
+
+          {/* Large Mobile - 428px (iPhone 12 Pro Max) */}
+          <source
+            media="(max-width: 428px)"
+            srcSet="https://res.cloudinary.com/dpxiwelxk/image/upload/f_auto,q_auto,w_428,h_926,c_fill,fl_progressive:steep,q_80/v1754392860/bannermobile_ml9vmo.svg"
+          />
+
           {/* Small mobile devices up to 480px */}
           <source
             media="(max-width: 480px)"
             srcSet="https://res.cloudinary.com/dpxiwelxk/image/upload/f_auto,q_auto,w_480,h_800,c_fill,fl_progressive:steep,q_80/v1754392860/bannermobile_ml9vmo.svg"
           />
-          {/* Medium mobile devices and small tablets */}
+
+          {/* Medium devices and small tablets - Portrait */}
           <source
-            media="(max-width: 768px)"
+            media="(max-width: 768px) and (orientation: portrait)"
             srcSet="https://res.cloudinary.com/dpxiwelxk/image/upload/f_auto,q_auto,w_768,h_1024,c_fill,fl_progressive:steep,q_82/v1754392860/bannermobile_ml9vmo.svg"
           />
-          {/* Tablets */}
+
+          {/* Medium devices - Landscape */}
           <source
-            media="(max-width: 1024px)"
+            media="(max-width: 768px) and (orientation: landscape)"
+            srcSet="https://res.cloudinary.com/dpxiwelxk/image/upload/f_auto,q_auto,w_768,h_432,c_fill,fl_progressive:steep,q_82/v1754393818/bannardestop_ri4m9p.svg"
+          />
+
+          {/* Large tablets - Portrait */}
+          <source
+            media="(max-width: 1024px) and (orientation: portrait)"
+            srcSet="https://res.cloudinary.com/dpxiwelxk/image/upload/f_auto,q_auto,w_1024,h_1366,c_fill,fl_progressive:steep,q_85/v1754392860/bannermobile_ml9vmo.svg"
+          />
+
+          {/* Tablets and small laptops - Landscape */}
+          <source
+            media="(max-width: 1024px) and (orientation: landscape)"
             srcSet="https://res.cloudinary.com/dpxiwelxk/image/upload/f_auto,q_auto,w_1024,h_768,c_fill,fl_progressive:steep,q_85/v1754393818/bannardestop_ri4m9p.svg"
           />
-          {/* Desktop - unchanged */}
+
+          {/* Small Desktop */}
           <source
-            media="(min-width: 1025px)"
+            media="(max-width: 1366px)"
+            srcSet="https://res.cloudinary.com/dpxiwelxk/image/upload/f_auto,q_auto,w_1366,h_768,c_fill,fl_progressive:steep,q_88/v1754393818/bannardestop_ri4m9p.svg"
+          />
+
+          {/* Large Desktop and above */}
+          <source
+            media="(min-width: 1367px)"
             srcSet="https://res.cloudinary.com/dpxiwelxk/image/upload/f_auto,q_auto,w_1920,h_1080,c_fill,fl_progressive:steep,q_90/v1754393818/bannardestop_ri4m9p.svg"
           />
+
+          {/* Default/Fallback */}
           <motion.img
             src="https://res.cloudinary.com/dpxiwelxk/image/upload/f_auto,q_auto,w_1920,h_1080,c_fill,fl_progressive:steep,q_90/v1754393818/bannardestop_ri4m9p.svg"
             alt="Elegant ethnic wear collection showcasing traditional and contemporary designs"
@@ -170,6 +205,13 @@ const HeroBannerSection = memo(() => {
             width="1920"
             height="1080"
             animate={imageLoaded ? "visible" : "hidden"}
+            style={{
+              // Ensure proper responsive sizing
+              minHeight: "100vh",
+              minWidth: "100vw",
+              maxHeight: "100vh",
+              maxWidth: "100vw",
+            }}
           />
         </picture>
 
@@ -184,18 +226,19 @@ const HeroBannerSection = memo(() => {
         )}
       </motion.div>
 
-      {/* Enhanced Animated Overlay */}
+      {/* Enhanced Animated Overlay (no parallax) */}
       <motion.div
         className="absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-black/30"
         aria-hidden="true"
         variants={overlayVariants}
       />
 
-      {/* Animated Content - Mobile Optimized */}
+      {/* Animated Content - Mobile Optimized (no parallax) */}
       <motion.div
         className="absolute inset-0 flex flex-col justify-end items-center p-4 sm:p-6 md:p-8 pb-6 sm:pb-8"
         variants={containerVariants}
       >
+        {/* Simple floating decoration (no parallax) */}
         <motion.div
           className="absolute top-1/3 right-1/3 w-1 h-1 bg-[#C4BA97]/50 rounded-full"
           animate={{
@@ -278,7 +321,7 @@ const HeroBannerSection = memo(() => {
         </div>
       </motion.div>
 
-      {/* Animated Corner Decorations - Mobile Optimized */}
+      {/* Animated Corner Decorations - Mobile Optimized (no parallax) */}
       <motion.div
         className="absolute top-2 left-2 sm:top-4 sm:left-4 w-12 h-12 sm:w-16 sm:h-16 border-l-2 border-t-2 border-white/30"
         initial={{ opacity: 0, scale: 0 }}
