@@ -69,11 +69,13 @@ function ShoppingFooter() {
           <h4 className="font-semibold text-lg mb-4">Useful Links</h4>
           <ul className="space-y-2 text-sm">
             <li>
-              <Link to="/privacypolicy" className="hover:text-[#CBB47B]">
+              {/* 🆕 UPDATED: Correct privacy policy link */}
+              <Link to="/privacy-policy" className="hover:text-[#CBB47B]">
                 Privacy Policy
               </Link>
             </li>
             <li>
+              {/* 🆕 UPDATED: Correct refund policy link */}
               <Link to="/refund-policy" className="hover:text-[#CBB47B]">
                 Refund, Return & Replacement
               </Link>

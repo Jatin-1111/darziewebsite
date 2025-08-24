@@ -383,11 +383,19 @@ function AuthRegister() {
             />
             <span className="text-xs text-gray-600 leading-relaxed">
               I agree to Darzie&apos;s Couture{" "}
-              <Link to="/terms" className="text-primary hover:underline">
+              <Link
+                to="/privacy-policy"
+                target="_blank"
+                className="text-primary hover:underline"
+              >
                 Terms of Service
               </Link>{" "}
               and{" "}
-              <Link to="/privacy" className="text-primary hover:underline">
+              <Link
+                to="/privacy-policy"
+                target="_blank"
+                className="text-primary hover:underline"
+              >
                 Privacy Policy
               </Link>
             </span>

@@ -1,4 +1,4 @@
-// src/App.jsx - UPDATED WITH PRODUCT DETAIL ROUTE
+// src/App.jsx - UPDATED WITH POLICY ROUTES
 import { Route, Routes, useLocation } from "react-router-dom";
 import { Suspense, lazy, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -26,13 +26,17 @@ const AboutUs = lazy(() => import("./pages/shopping-view/aboutus"));
 const SearchProducts = lazy(() => import("./pages/shopping-view/search"));
 const ProductDetailPage = lazy(() =>
   import("./pages/shopping-view/product-detail")
-); // NEW
+);
 const PaypalReturnPage = lazy(() =>
   import("./pages/shopping-view/paypal-return")
 );
 const PaymentSuccessPage = lazy(() =>
   import("./pages/shopping-view/payment-success")
 );
+
+// 🆕 NEW: Policy pages
+const PrivacyPolicy = lazy(() => import("./pages/shopping-view/privacypolicy"));
+const ReturnPolicy = lazy(() => import("./pages/shopping-view/returnrefund"));
 
 const NotFound = lazy(() => import("./pages/not-found"));
 const CheckAuth = lazy(() => import("./components/common/check-auth"));
@@ -184,6 +188,14 @@ function App() {
               }
             />
           </Route>
+
+          {/* 🆕 NEW: Policy Routes - Standalone (not under /shop) */}
+          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+          <Route path="/refund-policy" element={<ReturnPolicy />} />
+
+          {/* Alternative routes for compatibility */}
+          <Route path="/privacypolicy" element={<PrivacyPolicy />} />
+          <Route path="/refund-return-replacement" element={<ReturnPolicy />} />
 
           <Route path="*" element={<NotFound />} />
         </Routes>
