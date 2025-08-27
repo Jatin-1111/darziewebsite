@@ -1,4 +1,6 @@
-// src/pages/shopping-view/listing.jsx - FIXED VERSION 🔧
+"use client";
+
+// src/pages/shopping-view/listing.jsx - ENHANCED WITH PAGINATION 📄🔧
 import {
   memo,
   useCallback,
@@ -14,7 +16,15 @@ import { addToCart, fetchCartItems } from "@/store/shop/cart-slice";
 import { fetchAllFilteredProducts } from "@/store/shop/products-slice";
 import { useDispatch, useSelector } from "react-redux";
 import { useSearchParams } from "react-router-dom";
-import { ArrowUpDownIcon, X } from "lucide-react";
+import {
+  ArrowUpDownIcon,
+  X,
+  ChevronLeft,
+  ChevronRight,
+  MoreHorizontal,
+  ChevronsLeft,
+  ChevronsRight,
+} from "lucide-react";
 
 // Lazy load components
 const ProductFilter = lazy(() => import("@/components/shopping-view/filter"));
@@ -26,6 +36,11 @@ const ShoppingProductTile = lazy(() =>
 const Button = lazy(() =>
   import("@/components/ui/button").then((module) => ({
     default: module.Button,
+  }))
+);
+const Badge = lazy(() =>
+  import("@/components/ui/badge").then((module) => ({
+    default: module.Badge,
   }))
 );
 const DropdownMenu = lazy(() =>
@@ -54,14 +69,16 @@ const DropdownMenuTrigger = lazy(() =>
   }))
 );
 
-// Mobile-optimized loading skeleton
 const ProductSkeleton = memo(() => (
-  <div className="animate-pulse bg-white rounded-lg shadow-sm border">
-    <div className="bg-gray-200 h-48 sm:h-56 md:h-64 rounded-t-lg mb-4"></div>
+  <div className="animate-pulse bg-white rounded-lg shadow-sm border overflow-hidden">
+    <div className="bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 h-48 sm:h-56 md:h-64 rounded-t-lg mb-4 bg-[length:200%_100%] animate-[shimmer_1.5s_ease-in-out_infinite]"></div>
     <div className="p-4 space-y-3">
-      <div className="bg-gray-200 h-4 rounded w-3/4"></div>
-      <div className="bg-gray-200 h-4 rounded w-1/2"></div>
-      <div className="bg-gray-200 h-8 rounded w-full"></div>
+      <div className="bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 h-4 rounded w-3/4 bg-[length:200%_100%] animate-[shimmer_1.5s_ease-in-out_infinite_0.2s]"></div>
+      <div className="bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 h-4 rounded w-1/2 bg-[length:200%_100%] animate-[shimmer_1.5s_ease-in-out_infinite_0.4s]"></div>
+      <div className="flex justify-between items-center">
+        <div className="bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 h-6 rounded w-20 bg-[length:200%_100%] animate-[shimmer_1.5s_ease-in-out_infinite_0.6s]"></div>
+        <div className="bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 h-8 rounded w-24 bg-[length:200%_100%] animate-[shimmer_1.5s_ease-in-out_infinite_0.8s]"></div>
+      </div>
     </div>
   </div>
 ));
@@ -83,47 +100,281 @@ const NoProducts = memo(() => (
 
 NoProducts.displayName = "NoProducts";
 
-// ✅ FIXED: Enhanced search params helper with proper array handling
-const createSearchParamsHelper = (filterParams) => {
+// 🔥 NEW: Advanced Pagination Component
+const PaginationControls = memo(
+  ({
+    currentPage,
+    totalPages,
+    totalItems,
+    itemsPerPage,
+    onPageChange,
+    isLoading,
+  }) => {
+    // Generate page numbers to show
+    const getPageNumbers = () => {
+      const delta = 2;
+      const range = [];
+      const rangeWithDots = [];
+
+      for (
+        let i = Math.max(2, currentPage - delta);
+        i <= Math.min(totalPages - 1, currentPage + delta);
+        i++
+      ) {
+        range.push(i);
+      }
+
+      if (currentPage - delta > 2) {
+        rangeWithDots.push(1, "...");
+      } else {
+        rangeWithDots.push(1);
+      }
+
+      rangeWithDots.push(...range);
+
+      if (currentPage + delta < totalPages - 1) {
+        rangeWithDots.push("...", totalPages);
+      } else if (totalPages > 1) {
+        rangeWithDots.push(totalPages);
+      }
+
+      return rangeWithDots;
+    };
+
+    const pageNumbers = getPageNumbers();
+    const startItem = (currentPage - 1) * itemsPerPage + 1;
+    const endItem = Math.min(currentPage * itemsPerPage, totalItems);
+
+    if (totalPages <= 1) return null;
+
+    return (
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-8 p-4 bg-white rounded-lg shadow-sm border">
+        {/* Results Info */}
+        <div className="text-sm text-gray-600 order-2 sm:order-1">
+          Showing{" "}
+          <span className="font-semibold text-gray-900">{startItem}</span> to{" "}
+          <span className="font-semibold text-gray-900">{endItem}</span> of{" "}
+          <span className="font-semibold text-gray-900">{totalItems}</span>{" "}
+          products
+        </div>
+
+        {/* Pagination Controls */}
+        <div className="flex items-center gap-2 order-1 sm:order-2">
+          {/* First Page & Previous */}
+          <div className="flex items-center gap-1">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onPageChange(1)}
+              disabled={currentPage === 1 || isLoading}
+              className="hidden sm:flex w-8 h-8 p-0"
+              title="First page"
+            >
+              <ChevronsLeft className="w-4 h-4" />
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onPageChange(currentPage - 1)}
+              disabled={currentPage === 1 || isLoading}
+              className="w-8 h-8 p-0"
+              title="Previous page"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </Button>
+          </div>
+
+          {/* Page Numbers */}
+          <div className="flex items-center gap-1">
+            {pageNumbers.map((pageNum, index) =>
+              pageNum === "..." ? (
+                <div key={`dots-${index}`} className="px-2">
+                  <MoreHorizontal className="w-4 h-4 text-gray-400" />
+                </div>
+              ) : (
+                <Button
+                  key={pageNum}
+                  variant={currentPage === pageNum ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => onPageChange(pageNum)}
+                  disabled={isLoading}
+                  className={`w-8 h-8 p-0 ${
+                    currentPage === pageNum
+                      ? "bg-[#6C3D1D] hover:bg-[#5A321A] text-white"
+                      : "hover:bg-gray-50"
+                  }`}
+                >
+                  {pageNum}
+                </Button>
+              )
+            )}
+          </div>
+
+          {/* Next & Last Page */}
+          <div className="flex items-center gap-1">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onPageChange(currentPage + 1)}
+              disabled={currentPage === totalPages || isLoading}
+              className="w-8 h-8 p-0"
+              title="Next page"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onPageChange(totalPages)}
+              disabled={currentPage === totalPages || isLoading}
+              className="hidden sm:flex w-8 h-8 p-0"
+              title="Last page"
+            >
+              <ChevronsRight className="w-4 h-4" />
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+);
+
+PaginationControls.displayName = "PaginationControls";
+
+// 🔥 NEW: Items per page selector
+const ItemsPerPageSelector = memo(
+  ({ itemsPerPage, onItemsPerPageChange, isLoading }) => {
+    const options = [12, 24, 36, 48];
+
+    return (
+      <div className="flex items-center gap-2 text-sm">
+        <span className="text-gray-600 whitespace-nowrap">Show:</span>
+        <select
+          value={itemsPerPage}
+          onChange={(e) =>
+            onItemsPerPageChange(Number.parseInt(e.target.value))
+          }
+          disabled={isLoading}
+          className="px-3 py-1 border border-gray-300 rounded-md text-sm bg-white hover:border-gray-400 focus:border-[#6C3D1D] focus:ring-1 focus:ring-[#6C3D1D] transition-colors"
+        >
+          {options.map((option) => (
+            <option key={option} value={option}>
+              {option}
+            </option>
+          ))}
+        </select>
+        <span className="text-gray-600 whitespace-nowrap">per page</span>
+      </div>
+    );
+  }
+);
+
+ItemsPerPageSelector.displayName = "ItemsPerPageSelector";
+
+// Enhanced search params helper with pagination support
+const createSearchParamsHelper = (filterParams, page, limit) => {
   const queryParams = [];
+
+  // Add filters
   for (const [key, value] of Object.entries(filterParams)) {
     if (Array.isArray(value) && value.length > 0) {
-      // ✅ FIXED: Properly encode each value and join with commas
       const encodedValues = value.map((v) => encodeURIComponent(v)).join(",");
       queryParams.push(`${key}=${encodedValues}`);
     }
   }
+
+  // Add pagination params
+  if (page > 1) queryParams.push(`page=${page}`);
+  if (limit !== 24) queryParams.push(`limit=${limit}`);
+
   return queryParams.join("&");
 };
 
-// Main mobile-responsive component - FIXED VERSION
+// Main mobile-responsive component with pagination - ENHANCED VERSION
 function ShoppingListing() {
   const dispatch = useDispatch();
-  const { productList, isLoading } = useSelector((state) => state.shopProducts);
+  const { productList, isLoading, pagination } = useSelector(
+    (state) => state.shopProducts
+  );
   const { cartItems } = useSelector((state) => state.shopCart);
   const { user } = useSelector((state) => state.auth);
 
   const [filters, setFilters] = useState({});
   const [sort, setSort] = useState("price-lowtohigh");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(24);
+  const [isPageTransitioning, setIsPageTransitioning] = useState(false);
+  const [loadedProducts, setLoadedProducts] = useState(new Set());
   const [searchParams, setSearchParams] = useSearchParams();
   const { toast } = useToast();
 
   const categorySearchParam = searchParams.get("category");
+  const pageParam = Number.parseInt(searchParams.get("page")) || 1;
+  const limitParam = Number.parseInt(searchParams.get("limit")) || 24;
+
+  // Initialize pagination state from URL
+  useEffect(() => {
+    setCurrentPage(pageParam);
+    setItemsPerPage(limitParam);
+  }, [pageParam, limitParam]);
 
   // Memoize expensive calculations
-  const productCount = useMemo(() => productList?.length || 0, [productList]);
+  const productCount = useMemo(
+    () => pagination?.totalProducts || productList?.length || 0,
+    [pagination, productList]
+  );
+
+  const totalPages = useMemo(
+    () => pagination?.totalPages || Math.ceil(productCount / itemsPerPage),
+    [pagination, productCount, itemsPerPage]
+  );
 
   // Optimized handlers with useCallback
   const handleSort = useCallback((value) => {
     setSort(value);
   }, []);
 
-  // ✅ FIX 2: Enhanced filter handler with consistent key usage and price logic
+  const handlePageChange = useCallback(
+    (newPage) => {
+      if (newPage !== currentPage && newPage >= 1 && newPage <= totalPages) {
+        setIsPageTransitioning(true);
+        setLoadedProducts(new Set()); // Clear loaded products for new page
+        setCurrentPage(newPage);
+
+        // Multiple scroll methods for better browser compatibility
+        window.scrollTo({ top: 0, behavior: "smooth" });
+        setTimeout(() => {
+          if (window.pageYOffset > 0) {
+            window.scrollTo(0, 0);
+          }
+        }, 100);
+        setTimeout(() => {
+          document.documentElement.scrollTop = 0;
+          document.body.scrollTop = 0; // For Safari
+        }, 200);
+      }
+    },
+    [currentPage, totalPages]
+  );
+
+  const handleItemsPerPageChange = useCallback((newLimit) => {
+    setIsPageTransitioning(true);
+    setLoadedProducts(new Set());
+    setItemsPerPage(newLimit);
+    setCurrentPage(1);
+
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    setTimeout(() => {
+      if (window.pageYOffset > 0) {
+        window.scrollTo(0, 0);
+      }
+    }, 100);
+  }, []);
+
   const handleFilter = useCallback(
     (getSectionId, getCurrentOption) => {
       let cpyFilters = { ...filters };
 
-      // ✅ FIX 3: Handle price filters differently (single selection)
       if (getSectionId === "price") {
         const isCurrentlySelected =
           cpyFilters[getSectionId] &&
@@ -138,7 +389,6 @@ function ShoppingListing() {
           };
         }
       } else {
-        // ✅ FIX 4: Handle category filters (multiple selection)
         const currentOptions = cpyFilters[getSectionId] || [];
         const indexOfCurrentOption = currentOptions.indexOf(getCurrentOption);
 
@@ -150,13 +400,23 @@ function ShoppingListing() {
           );
         }
 
-        // Remove empty arrays
         if (cpyFilters[getSectionId].length === 0) {
           delete cpyFilters[getSectionId];
         }
       }
 
+      setIsPageTransitioning(true);
+      setLoadedProducts(new Set());
       setFilters(cpyFilters);
+      setCurrentPage(1);
+
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      setTimeout(() => {
+        if (window.pageYOffset > 0) {
+          window.scrollTo(0, 0);
+        }
+      }, 100);
+
       sessionStorage.setItem("filters", JSON.stringify(cpyFilters));
     },
     [filters]
@@ -164,7 +424,7 @@ function ShoppingListing() {
 
   const handleAddtoCart = useCallback(
     (getCurrentProductId, getTotalStock) => {
-      let getCartItems = cartItems.items || [];
+      const getCartItems = cartItems.items || [];
 
       if (getCartItems.length) {
         const indexOfCurrentItem = getCartItems.findIndex(
@@ -200,23 +460,19 @@ function ShoppingListing() {
     [cartItems.items, dispatch, toast, user?.id]
   );
 
-  // ✅ FIXED: Improved filter initialization with proper URL parsing
+  // Filter initialization with URL parsing
   useEffect(() => {
-
     try {
       const savedFilters = JSON.parse(
         sessionStorage.getItem("filters") || "{}"
       );
 
-      // ✅ FIX: Handle URL category parameter with comma-separated values
       if (categorySearchParam) {
-        // Parse comma-separated categories from URL
         const categoryArray = categorySearchParam
           .split(",")
           .map((cat) => decodeURIComponent(cat.trim()))
-          .filter((cat) => cat); // Remove empty strings
+          .filter((cat) => cat);
 
-        // Merge with existing filters (preserve other filter types)
         const mergedFilters = { ...savedFilters };
         mergedFilters.category = categoryArray;
 
@@ -231,38 +487,54 @@ function ShoppingListing() {
     }
   }, [categorySearchParam]);
 
-  // ✅ FIX 7: Debounced URL update with proper cleanup
+  // Enhanced URL update with pagination
   useEffect(() => {
     const timeout = setTimeout(() => {
-      if (filters && Object.keys(filters).length > 0) {
-        const createQueryString = createSearchParamsHelper(filters);
-        setSearchParams(new URLSearchParams(createQueryString));
-      } else {
-        setSearchParams(new URLSearchParams(""));
-      }
+      const createQueryString = createSearchParamsHelper(
+        filters,
+        currentPage,
+        itemsPerPage
+      );
+      setSearchParams(new URLSearchParams(createQueryString));
     }, 300);
 
     return () => clearTimeout(timeout);
-  }, [filters, setSearchParams]);
+  }, [filters, currentPage, itemsPerPage, setSearchParams]);
 
-  // ✅ FIX 8: Debounced product fetching with error handling
   useEffect(() => {
     if (filters !== null && sort !== null) {
       const timeout = setTimeout(() => {
         dispatch(
-          fetchAllFilteredProducts({ filterParams: filters, sortParams: sort })
+          fetchAllFilteredProducts({
+            filterParams: filters,
+            sortParams: sort,
+            page: currentPage,
+            limit: itemsPerPage,
+          })
         );
       }, 300);
 
       return () => clearTimeout(timeout);
     }
-  }, [dispatch, sort, filters]);
+  }, [dispatch, sort, filters, currentPage, itemsPerPage]);
 
-  // Memoized product grid with mobile-responsive layout
+  useEffect(() => {
+    if (!isLoading && productList && productList.length > 0) {
+      const timer = setTimeout(() => {
+        setIsPageTransitioning(false);
+      }, 500); // Small delay to ensure smooth transition
+
+      return () => clearTimeout(timer);
+    }
+  }, [isLoading, productList]);
+
   const productGrid = useMemo(() => {
-    if (isLoading) {
-      return Array.from({ length: 8 }, (_, index) => (
-        <ProductSkeleton key={`skeleton-${index}`} />
+    const shouldShowSkeletons = isLoading || isPageTransitioning;
+
+    if (shouldShowSkeletons) {
+      const skeletonCount = Math.min(itemsPerPage, 24); // Cap at 24 for performance
+      return Array.from({ length: skeletonCount }, (_, index) => (
+        <ProductSkeleton key={`skeleton-${currentPage}-${index}`} />
       ));
     }
 
@@ -270,18 +542,30 @@ function ShoppingListing() {
       return <NoProducts />;
     }
 
-    return productList.map((productItem) => (
+    return productList.map((productItem, index) => (
       <Suspense
-        key={productItem._id || productItem.id}
+        key={`${productItem._id || productItem.id}-${currentPage}`}
         fallback={<ProductSkeleton />}
       >
         <ShoppingProductTile
           product={productItem}
           handleAddtoCart={handleAddtoCart}
+          onLoad={() => {
+            setLoadedProducts(
+              (prev) => new Set([...prev, productItem._id || productItem.id])
+            );
+          }}
         />
       </Suspense>
     ));
-  }, [productList, isLoading, handleAddtoCart]);
+  }, [
+    productList,
+    isLoading,
+    isPageTransitioning,
+    handleAddtoCart,
+    itemsPerPage,
+    currentPage,
+  ]);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -313,99 +597,155 @@ function ShoppingListing() {
 
           {/* Products Section */}
           <div className="bg-white rounded-lg shadow-sm border">
-            {/* Mobile-Responsive Header */}
+            {/* Enhanced Header with Pagination Info */}
             <div className="p-4 sm:p-6 border-b">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                {/* Title and Count */}
-                <div>
-                  <h1 className="text-xl sm:text-2xl font-bold text-gray-900 mb-1">
-                    All Products
-                  </h1>
-                  <p className="text-sm text-gray-600">
-                    {productCount} {productCount === 1 ? "Product" : "Products"}{" "}
-                    Found
-                  </p>
-
-                  {/* ✅ FIXED: Show active filters as separate removable tags */}
-                  {Object.keys(filters).length > 0 && (
-                    <div className="mt-2 flex flex-wrap gap-2">
-                      {Object.entries(filters).map(([key, values]) =>
-                        Array.isArray(values)
-                          ? values.map((value) => (
-                              <span
-                                key={`${key}-${value}`}
-                                className="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-800 text-xs rounded-full border border-blue-200"
-                              >
-                                <span className="font-medium">
-                                  {key === "category"
-                                    ? categoryOptionsMap[value] || value
-                                    : value}
-                                </span>
-                                <button
-                                  onClick={() => handleFilter(key, value)}
-                                  className="hover:bg-blue-200 rounded-full p-1 transition-colors duration-200 ml-1"
-                                  aria-label={`Remove ${value} filter`}
-                                >
-                                  <X className="w-3 h-3" />
-                                </button>
-                              </span>
-                            ))
-                          : null
+              <div className="flex flex-col gap-4">
+                {/* Top Row: Title and Sort */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  {/* Title and Count */}
+                  <div>
+                    <h1 className="text-xl sm:text-2xl font-bold text-gray-900 mb-1">
+                      All Products
+                    </h1>
+                    <p className="text-sm text-gray-600">
+                      {productCount}{" "}
+                      {productCount === 1 ? "Product" : "Products"} Found
+                      {totalPages > 1 && (
+                        <span className="ml-2">
+                          • Page {currentPage} of {totalPages}
+                        </span>
                       )}
-                    </div>
-                  )}
+                    </p>
+                  </div>
+
+                  {/* Sort Dropdown */}
+                  <div className="flex items-center gap-3">
+                    <Suspense
+                      fallback={
+                        <div className="w-32 h-10 bg-gray-200 rounded animate-pulse"></div>
+                      }
+                    >
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="flex items-center gap-2 min-w-[140px] justify-start bg-transparent"
+                          >
+                            <ArrowUpDownIcon className="h-4 w-4" />
+                            <span className="hidden sm:inline">Sort by</span>
+                            <span className="sm:hidden">Sort</span>
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-[200px]">
+                          <DropdownMenuRadioGroup
+                            value={sort}
+                            onValueChange={handleSort}
+                          >
+                            {sortOptions.map((sortItem) => (
+                              <DropdownMenuRadioItem
+                                value={sortItem.id}
+                                key={sortItem.id}
+                                className="cursor-pointer"
+                              >
+                                {sortItem.label}
+                              </DropdownMenuRadioItem>
+                            ))}
+                          </DropdownMenuRadioGroup>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </Suspense>
+                  </div>
                 </div>
 
-                {/* Sort Dropdown */}
-                <div className="flex items-center gap-3">
-                  <Suspense
-                    fallback={
-                      <div className="w-32 h-10 bg-gray-200 rounded animate-pulse"></div>
-                    }
-                  >
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="flex items-center gap-2 min-w-[140px] justify-start"
-                        >
-                          <ArrowUpDownIcon className="h-4 w-4" />
-                          <span className="hidden sm:inline">Sort by</span>
-                          <span className="sm:hidden">Sort</span>
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-[200px]">
-                        <DropdownMenuRadioGroup
-                          value={sort}
-                          onValueChange={handleSort}
-                        >
-                          {sortOptions.map((sortItem) => (
-                            <DropdownMenuRadioItem
-                              value={sortItem.id}
-                              key={sortItem.id}
-                              className="cursor-pointer"
-                            >
-                              {sortItem.label}
-                            </DropdownMenuRadioItem>
-                          ))}
-                        </DropdownMenuRadioGroup>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </Suspense>
+                {/* Second Row: Active Filters & Items Per Page */}
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                  {/* Active Filters */}
+                  <div className="flex-1">
+                    {Object.keys(filters).length > 0 && (
+                      <div className="flex flex-wrap gap-2">
+                        {Object.entries(filters).map(([key, values]) =>
+                          Array.isArray(values)
+                            ? values.map((value) => (
+                                <Suspense
+                                  key={`${key}-${value}`}
+                                  fallback={
+                                    <div className="w-16 h-6 bg-gray-200 rounded-full animate-pulse"></div>
+                                  }
+                                >
+                                  <Badge
+                                    variant="secondary"
+                                    className="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-800 text-xs rounded-full border border-blue-200 hover:bg-blue-200 transition-colors"
+                                  >
+                                    <span className="font-medium">
+                                      {key === "category"
+                                        ? categoryOptionsMap[value] || value
+                                        : value}
+                                    </span>
+                                    <button
+                                      onClick={() => handleFilter(key, value)}
+                                      className="hover:bg-blue-300 rounded-full p-1 transition-colors duration-200 ml-1"
+                                      aria-label={`Remove ${value} filter`}
+                                    >
+                                      <X className="w-3 h-3" />
+                                    </button>
+                                  </Badge>
+                                </Suspense>
+                              ))
+                            : null
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Items Per Page Selector */}
+                  <ItemsPerPageSelector
+                    itemsPerPage={itemsPerPage}
+                    onItemsPerPageChange={handleItemsPerPageChange}
+                    isLoading={isLoading}
+                  />
                 </div>
               </div>
             </div>
 
-            {/* Mobile-Responsive Product Grid */}
+            {/* Enhanced Product Grid */}
             <div className="p-4 sm:p-6">
-              <div className="grid gap-6 sm:gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3">
-                {productGrid}
-              </div>
+              {productList && productList.length > 0 ? (
+                <>
+                  <div className="grid gap-6 sm:gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3">
+                    {productGrid}
+                  </div>
+
+                  {/* 🔥 NEW: Pagination Controls */}
+                  <PaginationControls
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    totalItems={productCount}
+                    itemsPerPage={itemsPerPage}
+                    onPageChange={handlePageChange}
+                    isLoading={isLoading}
+                  />
+                </>
+              ) : (
+                <div className="grid gap-6 sm:gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3">
+                  {productGrid}
+                </div>
+              )}
             </div>
           </div>
         </div>
       </div>
+
+      {(isLoading || isPageTransitioning) && (
+        <div className="fixed inset-0 bg-black/10 backdrop-blur-sm z-50 flex items-center justify-center">
+          <div className="bg-white rounded-lg p-6 shadow-lg flex items-center gap-3">
+            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#6C3D1D]"></div>
+            <span className="text-gray-700 font-medium">
+              {isPageTransitioning ? "Loading page..." : "Loading products..."}
+            </span>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
