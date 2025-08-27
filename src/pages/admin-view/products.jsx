@@ -271,29 +271,49 @@ function AdminProducts() {
   };
 
   const handleEdit = (product) => {
+
     setCurrentEditedId(product._id);
+
+    // ✅ CRITICAL FIX: Handle image arrays properly
+    let existingImages = [];
+
+    if (Array.isArray(product.image)) {
+      existingImages = product.image.filter(
+        (img) => img && typeof img === "string" && img.trim() !== ""
+      );
+    } else if (product.image && typeof product.image === "string") {
+      existingImages = [product.image];
+    }
+
+    // Set form data with existing values
     setFormData({
-      image: Array.isArray(product.image)
-        ? product.image
-        : [product.image].filter(Boolean),
-      title: product.title,
-      description: product.description,
-      category: product.category,
-      price: product.price,
-      salePrice: product.salePrice,
-      totalStock: product.totalStock,
-      averageReview: product.averageReview,
+      image: existingImages, // ✅ Pass as array to form
+      title: product.title || "",
+      description: product.description || "",
+      category: product.category || "",
+      price: product.price || "",
+      salePrice: product.salePrice || "",
+      totalStock: product.totalStock || "",
+      averageReview: product.averageReview || 0,
     });
 
-    if (product.image) {
-      const existingImages = Array.isArray(product.image)
-        ? product.image
-        : [product.image];
-      const validImages = existingImages.filter((img) => img);
-      setUploadedImageUrls([
-        ...validImages,
-        ...new Array(5 - validImages.length).fill(""),
-      ]);
+    // ✅ CRITICAL: Initialize image upload component with existing images
+    if (existingImages.length > 0) {
+      // Create array with existing images + empty slots
+      const initialUrls = [...existingImages];
+      while (initialUrls.length < 5) {
+        initialUrls.push("");
+      }
+
+      setUploadedImageUrls(initialUrls);
+      setImageFiles(new Array(5).fill(null));
+      setImageLoadingStates(new Array(5).fill(false));
+
+    } else {
+      // No existing images - reset to empty state
+      setUploadedImageUrls(new Array(5).fill(""));
+      setImageFiles(new Array(5).fill(null));
+      setImageLoadingStates(new Array(5).fill(false));
     }
 
     setOpenCreateProductsDialog(true);
@@ -488,7 +508,8 @@ function AdminProducts() {
                 setUploadedImageUrls={setUploadedImageUrls}
                 imageLoadingStates={imageLoadingStates}
                 setImageLoadingStates={setImageLoadingStates}
-                isEditMode={false}
+                isEditMode={currentEditedId !== null} // ✅ Pass edit mode flag
+                existingImages={currentEditedId ? formData.image : []} // ✅ Pass existing images
                 setFormData={setFormData}
               />
             </div>
