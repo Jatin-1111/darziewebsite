@@ -1,19 +1,26 @@
-// src/components/admin-view/image-upload.jsx - ULTRA ENHANCED MULTI-IMAGE SYSTEM 🔥
+// src/components/admin-view/image-upload.jsx - FIXED VERSION WITH ERROR HANDLING 🔧
+
 import {
   UploadCloudIcon,
   XIcon,
   ImageIcon,
   PlusIcon,
   MoveIcon,
+  AlertCircle,
+  Wifi,
+  RefreshCw,
 } from "lucide-react";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { useEffect, useRef, useState, useCallback } from "react";
 import { Button } from "../ui/button";
-import axios from "axios";
 import { Skeleton } from "../ui/skeleton";
-import { API_ENDPOINTS } from "../../config/api";
 import { Badge } from "../ui/badge";
+import { useToast } from "../ui/use-toast";
+
+// ✅ FIXED: Import the correct API function
+import { API_ENDPOINTS } from "../../config/api";
+import apiClient from "../../utils/apiClient";
 
 function ProductImageUpload({
   imageFiles = [],
@@ -28,7 +35,11 @@ function ProductImageUpload({
   const inputRef = useRef(null);
   const [dragOverIndex, setDragOverIndex] = useState(null);
   const [globalLoading, setGlobalLoading] = useState(false);
+  const [uploadErrors, setUploadErrors] = useState({});
+  const [retryCount, setRetryCount] = useState({});
+  const { toast } = useToast();
   const MAX_IMAGES = 5;
+  const MAX_RETRIES = 3;
 
   // Initialize loading states array
   useEffect(() => {
@@ -46,27 +57,37 @@ function ProductImageUpload({
     const validTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
     const maxSize = 10 * 1024 * 1024; // 10MB
 
+    if (!file) {
+      throw new Error("No file provided");
+    }
+
     if (!validTypes.includes(file.type)) {
       throw new Error(
-        `Invalid file type. Please upload JPEG, PNG, or WebP images.`
+        `Invalid file type "${file.type}". Please upload JPEG, PNG, or WebP images.`
       );
     }
 
     if (file.size > maxSize) {
       throw new Error(
-        `File too large. Please upload images smaller than 10MB.`
+        `File "${file.name}" is too large (${(
+          file.size /
+          (1024 * 1024)
+        ).toFixed(1)}MB). Please upload images smaller than 10MB.`
       );
     }
 
     return true;
   }, []);
 
-  // Handle multiple file selection
+  // Handle multiple file selection with better error handling
   const handleImageFilesChange = useCallback(
     (event) => {
       const selectedFiles = Array.from(event.target.files || []);
 
       if (selectedFiles.length === 0) return;
+
+      // Clear previous errors
+      setUploadErrors({});
 
       // Check total count
       const currentCount =
@@ -75,17 +96,37 @@ function ProductImageUpload({
       const availableSlots = MAX_IMAGES - currentCount;
 
       if (selectedFiles.length > availableSlots) {
-        alert(
-          `You can only upload ${availableSlots} more image(s). Maximum ${MAX_IMAGES} images allowed.`
-        );
+        toast({
+          title: "Too many files",
+          description: `You can only upload ${availableSlots} more image(s). Maximum ${MAX_IMAGES} images allowed.`,
+          variant: "destructive",
+        });
         return;
       }
 
       // Validate each file
-      try {
-        selectedFiles.forEach((file) => validateFile(file));
-      } catch (error) {
-        alert(error.message);
+      const validFiles = [];
+      const invalidFiles = [];
+
+      selectedFiles.forEach((file) => {
+        try {
+          validateFile(file);
+          validFiles.push(file);
+        } catch (error) {
+          invalidFiles.push({ file: file.name, error: error.message });
+        }
+      });
+
+      if (invalidFiles.length > 0) {
+        toast({
+          title: "Invalid files detected",
+          description: `${invalidFiles.length} file(s) were skipped due to validation errors.`,
+          variant: "destructive",
+        });
+        console.error("Invalid files:", invalidFiles);
+      }
+
+      if (validFiles.length === 0) {
         return;
       }
 
@@ -94,9 +135,9 @@ function ProductImageUpload({
       const newLoadingStates = [...imageLoadingStates];
       let fileIndex = 0;
 
-      for (let i = 0; i < MAX_IMAGES && fileIndex < selectedFiles.length; i++) {
+      for (let i = 0; i < MAX_IMAGES && fileIndex < validFiles.length; i++) {
         if (!newImageFiles[i] && !uploadedImageUrls[i]) {
-          newImageFiles[i] = selectedFiles[fileIndex];
+          newImageFiles[i] = validFiles[fileIndex];
           newLoadingStates[i] = false;
           fileIndex++;
         }
@@ -109,6 +150,11 @@ function ProductImageUpload({
       if (inputRef.current) {
         inputRef.current.value = "";
       }
+
+      toast({
+        title: "Files selected",
+        description: `${validFiles.length} file(s) ready for upload.`,
+      });
     },
     [
       imageFiles,
@@ -117,6 +163,7 @@ function ProductImageUpload({
       setImageFiles,
       setImageLoadingStates,
       validateFile,
+      toast,
     ]
   );
 
@@ -156,7 +203,11 @@ function ProductImageUpload({
           setImageFiles(newImageFiles);
           setImageLoadingStates(newLoadingStates);
         } catch (error) {
-          alert(error.message);
+          toast({
+            title: "Invalid file",
+            description: error.message,
+            variant: "destructive",
+          });
         }
       } else {
         // Multiple files - use the general handler
@@ -172,6 +223,7 @@ function ProductImageUpload({
       setImageLoadingStates,
       validateFile,
       handleImageFilesChange,
+      toast,
     ]
   );
 
@@ -190,6 +242,13 @@ function ProductImageUpload({
       setUploadedImageUrls(newUploadedUrls);
       setImageLoadingStates(newLoadingStates);
 
+      // Clear any errors for this index
+      setUploadErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors[index];
+        return newErrors;
+      });
+
       // Update form data
       if (setFormData) {
         setFormData((prev) => ({
@@ -197,6 +256,11 @@ function ProductImageUpload({
           image: newUploadedUrls.filter((url) => url),
         }));
       }
+
+      toast({
+        title: "Image removed",
+        description: "Image has been removed from upload queue.",
+      });
     },
     [
       imageFiles,
@@ -206,29 +270,43 @@ function ProductImageUpload({
       setUploadedImageUrls,
       setImageLoadingStates,
       setFormData,
+      toast,
     ]
   );
 
-  // Upload single image to Cloudinary
+  // ✅ FIXED: Enhanced upload function with better error handling and retry logic
   const uploadImageToCloudinary = useCallback(
-    async (file, index) => {
+    async (file, index, isRetry = false) => {
       if (!file) return;
+
+      const currentRetry = retryCount[index] || 0;
+
+      // Clear any previous errors for this index
+      setUploadErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors[index];
+        return newErrors;
+      });
 
       const newLoadingStates = [...imageLoadingStates];
       newLoadingStates[index] = true;
       setImageLoadingStates(newLoadingStates);
 
+      // ✅ FIXED: Use FormData correctly
       const formData = new FormData();
-      formData.append("image", file);
+      formData.append("image", file); // ✅ Changed from "images" to "image"
 
       try {
-        const response = await axios.post(
+
+        // ✅ FIXED: Use apiClient with correct endpoint
+        const response = await apiClient.post(
           API_ENDPOINTS.ADMIN_UPLOAD_IMAGE,
           formData,
           {
             headers: {
               "Content-Type": "multipart/form-data",
             },
+            timeout: 30000, // 30 second timeout
           }
         );
 
@@ -237,6 +315,18 @@ function ProductImageUpload({
           newUploadedUrls[index] = response.data.imageUrl;
           setUploadedImageUrls(newUploadedUrls);
 
+          // Clear the file from imageFiles since it's now uploaded
+          const newImageFiles = [...imageFiles];
+          newImageFiles[index] = null;
+          setImageFiles(newImageFiles);
+
+          // Reset retry count for this index
+          setRetryCount((prev) => {
+            const newCount = { ...prev };
+            delete newCount[index];
+            return newCount;
+          });
+
           // Update form data
           if (setFormData) {
             setFormData((prev) => ({
@@ -244,12 +334,73 @@ function ProductImageUpload({
               image: newUploadedUrls.filter((url) => url),
             }));
           }
+
+          toast({
+            title: "Upload successful! ✅",
+            description: `Image ${index + 1} uploaded successfully.`,
+          });
         } else {
-          throw new Error("Upload failed");
+          throw new Error(
+            response?.data?.message || "Upload failed - no image URL returned"
+          );
         }
       } catch (error) {
-        console.error("Upload error:", error);
-        alert(`Failed to upload image ${index + 1}. Please try again.`);
+        console.error(`❌ Upload error for image ${index + 1}:`, error);
+
+        let errorMessage = "Upload failed";
+        let canRetry = false;
+
+        // ✅ BETTER ERROR HANDLING
+        if (error.response) {
+          // Server responded with error
+          const status = error.response.status;
+          const data = error.response.data;
+
+          if (status === 413) {
+            errorMessage = "File too large. Please choose a smaller image.";
+          } else if (status === 400) {
+            errorMessage = data?.message || "Invalid file format";
+          } else if (status === 401) {
+            errorMessage = "Authentication required. Please login again.";
+          } else if (status >= 500) {
+            errorMessage = "Server error. Please try again.";
+            canRetry = true;
+          } else {
+            errorMessage = data?.message || `Server error (${status})`;
+            canRetry = status !== 400; // Don't retry client errors
+          }
+        } else if (error.request) {
+          // Network error
+          errorMessage = "Network error. Please check your connection.";
+          canRetry = true;
+        } else {
+          // Other error
+          errorMessage = error.message || "Unknown error occurred";
+          canRetry = true;
+        }
+
+        // Store error for this index
+        setUploadErrors((prev) => ({
+          ...prev,
+          [index]: { message: errorMessage, canRetry },
+        }));
+
+        // Show retry option for network/server errors
+        if (canRetry && currentRetry < MAX_RETRIES) {
+          toast({
+            title: `Upload failed (Attempt ${currentRetry + 1}/${
+              MAX_RETRIES + 1
+            })`,
+            description: errorMessage,
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "Upload failed",
+            description: errorMessage,
+            variant: "destructive",
+          });
+        }
       } finally {
         const finalLoadingStates = [...imageLoadingStates];
         finalLoadingStates[index] = false;
@@ -259,16 +410,53 @@ function ProductImageUpload({
     [
       imageLoadingStates,
       uploadedImageUrls,
+      imageFiles,
+      retryCount,
       setImageLoadingStates,
       setUploadedImageUrls,
+      setImageFiles,
       setFormData,
+      toast,
     ]
+  );
+
+  // Retry upload function
+  const retryUpload = useCallback(
+    (index) => {
+      const file = imageFiles[index];
+      if (!file) return;
+
+      const currentRetry = retryCount[index] || 0;
+      if (currentRetry >= MAX_RETRIES) {
+        toast({
+          title: "Max retries reached",
+          description: `Cannot retry upload for image ${
+            index + 1
+          }. Please try a different file.`,
+          variant: "destructive",
+        });
+        return;
+      }
+
+      setRetryCount((prev) => ({
+        ...prev,
+        [index]: currentRetry + 1,
+      }));
+
+      uploadImageToCloudinary(file, index, true);
+    },
+    [imageFiles, retryCount, uploadImageToCloudinary, toast]
   );
 
   // Auto-upload when files are added
   useEffect(() => {
     imageFiles.forEach((file, index) => {
-      if (file && !uploadedImageUrls[index] && !imageLoadingStates[index]) {
+      if (
+        file &&
+        !uploadedImageUrls[index] &&
+        !imageLoadingStates[index] &&
+        !uploadErrors[index]
+      ) {
         uploadImageToCloudinary(file, index);
       }
     });
@@ -279,7 +467,7 @@ function ProductImageUpload({
     setGlobalLoading(true);
 
     const uploadPromises = imageFiles.map((file, index) => {
-      if (file && !uploadedImageUrls[index]) {
+      if (file && !uploadedImageUrls[index] && !imageLoadingStates[index]) {
         return uploadImageToCloudinary(file, index);
       }
       return Promise.resolve();
@@ -287,61 +475,31 @@ function ProductImageUpload({
 
     try {
       await Promise.all(uploadPromises);
+      toast({
+        title: "Batch upload completed",
+        description: "All images have been processed.",
+      });
     } catch (error) {
       console.error("Batch upload error:", error);
+      toast({
+        title: "Batch upload failed",
+        description: "Some images may not have uploaded correctly.",
+        variant: "destructive",
+      });
     } finally {
       setGlobalLoading(false);
     }
-  }, [imageFiles, uploadedImageUrls, uploadImageToCloudinary]);
-
-  // Reorder images (drag to reorder)
-  const handleReorder = useCallback(
-    (fromIndex, toIndex) => {
-      if (fromIndex === toIndex) return;
-
-      const newImageFiles = [...imageFiles];
-      const newUploadedUrls = [...uploadedImageUrls];
-      const newLoadingStates = [...imageLoadingStates];
-
-      // Swap files
-      [newImageFiles[fromIndex], newImageFiles[toIndex]] = [
-        newImageFiles[toIndex],
-        newImageFiles[fromIndex],
-      ];
-      [newUploadedUrls[fromIndex], newUploadedUrls[toIndex]] = [
-        newUploadedUrls[toIndex],
-        newUploadedUrls[fromIndex],
-      ];
-      [newLoadingStates[fromIndex], newLoadingStates[toIndex]] = [
-        newLoadingStates[toIndex],
-        newLoadingStates[fromIndex],
-      ];
-
-      setImageFiles(newImageFiles);
-      setUploadedImageUrls(newUploadedUrls);
-      setImageLoadingStates(newLoadingStates);
-
-      // Update form data
-      if (setFormData) {
-        setFormData((prev) => ({
-          ...prev,
-          image: newUploadedUrls.filter((url) => url),
-        }));
-      }
-    },
-    [
-      imageFiles,
-      uploadedImageUrls,
-      imageLoadingStates,
-      setImageFiles,
-      setUploadedImageUrls,
-      setImageLoadingStates,
-      setFormData,
-    ]
-  );
+  }, [
+    imageFiles,
+    uploadedImageUrls,
+    imageLoadingStates,
+    uploadImageToCloudinary,
+    toast,
+  ]);
 
   const uploadedCount = uploadedImageUrls.filter((url) => url).length;
   const pendingCount = imageFiles.filter((file) => file).length;
+  const errorCount = Object.keys(uploadErrors).length;
   const totalCount = uploadedCount + pendingCount;
 
   return (
@@ -355,9 +513,16 @@ function ProductImageUpload({
             the main product image.
           </p>
         </div>
-        <Badge variant="outline" className="text-sm">
-          {totalCount}/{MAX_IMAGES}
-        </Badge>
+        <div className="flex items-center gap-2">
+          <Badge variant="outline" className="text-sm">
+            {totalCount}/{MAX_IMAGES}
+          </Badge>
+          {errorCount > 0 && (
+            <Badge variant="destructive" className="text-sm">
+              {errorCount} errors
+            </Badge>
+          )}
+        </div>
       </div>
 
       {/* File Input (Hidden) */}
@@ -378,6 +543,7 @@ function ProductImageUpload({
           const hasImage = uploadedImageUrls[index] || imageFiles[index];
           const isLoading = imageLoadingStates[index];
           const isDragOver = dragOverIndex === index;
+          const error = uploadErrors[index];
 
           return (
             <div
@@ -387,6 +553,7 @@ function ProductImageUpload({
                 transition-all duration-200 ease-in-out
                 ${isDragOver ? "border-blue-500 bg-blue-50" : "border-gray-300"}
                 ${hasImage ? "border-solid border-gray-200" : ""}
+                ${error ? "border-red-300 bg-red-50" : ""}
                 ${
                   !hasImage && !isEditMode
                     ? "hover:border-gray-400 hover:bg-gray-50"
@@ -400,8 +567,27 @@ function ProductImageUpload({
               {isLoading ? (
                 <div className="absolute inset-0 flex items-center justify-center bg-gray-100 rounded-xl">
                   <div className="text-center">
-                    <Skeleton className="h-8 w-8 rounded-full mx-auto mb-2" />
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
                     <p className="text-xs text-gray-600">Uploading...</p>
+                  </div>
+                </div>
+              ) : error ? (
+                /* Error State */
+                <div className="absolute inset-0 flex items-center justify-center bg-red-50 rounded-xl p-2">
+                  <div className="text-center">
+                    <AlertCircle className="h-6 w-6 text-red-500 mx-auto mb-2" />
+                    <p className="text-xs text-red-600 mb-2">{error.message}</p>
+                    {error.canRetry && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => retryUpload(index)}
+                        className="text-xs"
+                      >
+                        <RefreshCw className="w-3 h-3 mr-1" />
+                        Retry
+                      </Button>
+                    )}
                   </div>
                 </div>
               ) : uploadedImageUrls[index] ? (
@@ -416,16 +602,6 @@ function ProductImageUpload({
                   {/* Image Controls */}
                   <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 rounded-xl flex items-center justify-center">
                     <div className="flex gap-2">
-                      {/* Reorder Handle */}
-                      <Button
-                        variant="secondary"
-                        size="sm"
-                        className="bg-white/90 text-gray-700 hover:bg-white"
-                        title="Drag to reorder"
-                      >
-                        <MoveIcon className="w-4 h-4" />
-                      </Button>
-
                       {/* Remove Button */}
                       <Button
                         variant="destructive"
@@ -456,8 +632,10 @@ function ProductImageUpload({
                   />
                   <div className="absolute inset-0 flex items-center justify-center">
                     <div className="text-center">
-                      <Skeleton className="h-6 w-6 rounded-full mx-auto mb-1" />
-                      <p className="text-xs text-gray-600">Processing...</p>
+                      <div className="animate-pulse bg-blue-500 h-6 w-6 rounded-full mx-auto mb-1"></div>
+                      <p className="text-xs text-gray-600">
+                        Ready to upload...
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -521,7 +699,7 @@ function ProductImageUpload({
           >
             {globalLoading ? (
               <>
-                <Skeleton className="w-4 h-4 mr-2" />
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
                 Uploading All...
               </>
             ) : (
@@ -532,18 +710,59 @@ function ProductImageUpload({
             )}
           </Button>
         )}
+
+        {errorCount > 0 && (
+          <Button
+            type="button"
+            variant="destructive"
+            onClick={() => {
+              Object.keys(uploadErrors).forEach((index) => {
+                if (uploadErrors[index].canRetry) {
+                  retryUpload(parseInt(index));
+                }
+              });
+            }}
+            className="flex-1"
+          >
+            <RefreshCw className="w-4 h-4 mr-2" />
+            Retry Errors ({errorCount})
+          </Button>
+        )}
       </div>
 
-      {/* Guidelines */}
+      {/* Enhanced Guidelines */}
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-        <h4 className="font-medium text-blue-900 mb-2">Image Guidelines</h4>
+        <h4 className="font-medium text-blue-900 mb-2">
+          Upload Guidelines & Troubleshooting
+        </h4>
         <ul className="text-sm text-blue-800 space-y-1">
           <li>• Upload 3-5 high-quality images for best results</li>
           <li>• First image will be the main product image</li>
           <li>• Supported formats: JPEG, PNG, WebP (max 10MB each)</li>
           <li>• Recommended resolution: 1200x1200px or higher</li>
-          <li>• Show different angles and details of your product</li>
+          <li>
+            • <strong>Network Issues?</strong> Check your internet connection
+            and try again
+          </li>
+          <li>
+            • <strong>Upload Failing?</strong> Try refreshing the page or
+            contact support
+          </li>
         </ul>
+
+        {errorCount > 0 && (
+          <div className="mt-3 p-2 bg-red-100 rounded border border-red-200">
+            <p className="text-red-800 text-sm font-medium">
+              <Wifi className="w-4 h-4 inline mr-1" />
+              Having upload issues? This is usually due to:
+            </p>
+            <ul className="text-red-700 text-sm mt-1 ml-5">
+              <li>• Slow or unstable internet connection</li>
+              <li>• Server maintenance (try again in a few minutes)</li>
+              <li>• File size too large (reduce to under 10MB)</li>
+            </ul>
+          </div>
+        )}
       </div>
     </div>
   );
