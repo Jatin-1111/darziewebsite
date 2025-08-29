@@ -1,4 +1,4 @@
-// src/store/shop/products-slice/index.js - ENHANCED WITH PAGINATION 📄🔧
+// src/store/shop/products-slice/index.js - FIXED WITH 20 ITEMS PER PAGE 📄🔧
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import apiClient from "../../../utils/apiClient";
 import { API_ENDPOINTS } from "../../../config/api";
@@ -7,25 +7,25 @@ const initialState = {
   isLoading: false,
   productList: [],
   productDetails: null,
-  // 🔥 NEW: Pagination state
+  // 🔥 UPDATED: Fixed pagination state with 20 items per page
   pagination: {
     currentPage: 1,
     totalPages: 1,
     totalProducts: 0,
     hasNext: false,
     hasPrev: false,
-    resultsPerPage: 24
+    resultsPerPage: 20 // Fixed to 20 items per page
   }
 };
 
 export const fetchAllFilteredProducts = createAsyncThunk(
   "/products/fetchAllProducts",
-  async ({ filterParams, sortParams, page = 1, limit = 24 }) => {
+  async ({ filterParams, sortParams, page = 1, limit = 20 }) => { // Default to 20
     const query = new URLSearchParams({
       ...filterParams,
       sortBy: sortParams,
       page: page.toString(),
-      limit: limit.toString()
+      limit: limit.toString() // Always 20
     });
 
     const response = await apiClient.get(
@@ -50,11 +50,18 @@ const shoppingProductSlice = createSlice({
     setProductDetails: (state) => {
       state.productDetails = null;
     },
-    // 🔥 NEW: Reset pagination
+    // 🔥 UPDATED: Reset pagination with fixed values
     resetPagination: (state) => {
-      state.pagination = initialState.pagination;
+      state.pagination = {
+        currentPage: 1,
+        totalPages: 1,
+        totalProducts: 0,
+        hasNext: false,
+        hasPrev: false,
+        resultsPerPage: 20 // Always 20
+      };
     },
-    // 🔥 NEW: Set current page
+    // 🔥 Set current page
     setCurrentPage: (state, action) => {
       state.pagination.currentPage = action.payload;
     }
@@ -68,7 +75,7 @@ const shoppingProductSlice = createSlice({
         state.isLoading = false;
         state.productList = action.payload.data || [];
 
-        // 🔥 NEW: Handle pagination data from backend
+        // 🔥 UPDATED: Handle pagination data from backend with fixed results per page
         if (action.payload.pagination) {
           state.pagination = {
             currentPage: action.payload.pagination.currentPage || 1,
@@ -76,24 +83,34 @@ const shoppingProductSlice = createSlice({
             totalProducts: action.payload.pagination.totalProducts || 0,
             hasNext: action.payload.pagination.hasNext || false,
             hasPrev: action.payload.pagination.hasPrev || false,
-            resultsPerPage: action.payload.pagination.resultsPerPage || 24
+            resultsPerPage: 20 // Always fixed to 20
           };
         } else {
-          // Fallback if backend doesn't send pagination
+          // Fallback if backend doesn't send pagination - calculate with 20 items per page
+          const totalProducts = state.productList.length;
+          const totalPages = Math.ceil(totalProducts / 20);
+
           state.pagination = {
             currentPage: 1,
-            totalPages: 1,
-            totalProducts: state.productList.length,
-            hasNext: false,
+            totalPages: Math.max(1, totalPages),
+            totalProducts: totalProducts,
+            hasNext: totalPages > 1,
             hasPrev: false,
-            resultsPerPage: state.productList.length
+            resultsPerPage: 20 // Always fixed to 20
           };
         }
       })
       .addCase(fetchAllFilteredProducts.rejected, (state) => {
         state.isLoading = false;
         state.productList = [];
-        state.pagination = initialState.pagination;
+        state.pagination = {
+          currentPage: 1,
+          totalPages: 1,
+          totalProducts: 0,
+          hasNext: false,
+          hasPrev: false,
+          resultsPerPage: 20 // Always fixed to 20
+        };
       })
       .addCase(fetchProductDetails.pending, (state) => {
         state.isLoading = true;

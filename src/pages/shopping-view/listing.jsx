@@ -98,16 +98,11 @@ const NoProducts = memo(() => (
 
 NoProducts.displayName = "NoProducts";
 
-// 🔥 NEW: Advanced Pagination Component
+// 🔥 UPDATED: Fixed Pagination Component - Removed items per page selector
 const PaginationControls = memo(
-  ({
-    currentPage,
-    totalPages,
-    totalItems,
-    itemsPerPage,
-    onPageChange,
-    isLoading,
-  }) => {
+  ({ currentPage, totalPages, totalItems, onPageChange, isLoading }) => {
+    const ITEMS_PER_PAGE = 20; // Fixed to 20 items per page
+
     // Generate page numbers to show
     const getPageNumbers = () => {
       const delta = 2;
@@ -140,8 +135,8 @@ const PaginationControls = memo(
     };
 
     const pageNumbers = getPageNumbers();
-    const startItem = (currentPage - 1) * itemsPerPage + 1;
-    const endItem = Math.min(currentPage * itemsPerPage, totalItems);
+    const startItem = (currentPage - 1) * ITEMS_PER_PAGE + 1;
+    const endItem = Math.min(currentPage * ITEMS_PER_PAGE, totalItems);
 
     if (totalPages <= 1) return null;
 
@@ -239,8 +234,8 @@ const PaginationControls = memo(
 
 PaginationControls.displayName = "PaginationControls";
 
-// Enhanced search params helper with pagination support
-const createSearchParamsHelper = (filterParams, page, limit) => {
+// 🔥 UPDATED: Search params helper with fixed items per page
+const createSearchParamsHelper = (filterParams, page) => {
   const queryParams = [];
 
   // Add filters
@@ -253,12 +248,11 @@ const createSearchParamsHelper = (filterParams, page, limit) => {
 
   // Add pagination params
   if (page > 1) queryParams.push(`page=${page}`);
-  if (limit !== 24) queryParams.push(`limit=${limit}`);
 
   return queryParams.join("&");
 };
 
-// Main mobile-responsive component with pagination - ENHANCED VERSION
+// 🔥 UPDATED: Main component with fixed pagination logic
 function ShoppingListing() {
   const dispatch = useDispatch();
   const { productList, isLoading, pagination } = useSelector(
@@ -270,21 +264,21 @@ function ShoppingListing() {
   const [filters, setFilters] = useState({});
   const [sort, setSort] = useState("price-lowtohigh");
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(24);
   const [isPageTransitioning, setIsPageTransitioning] = useState(false);
   const [loadedProducts, setLoadedProducts] = useState(new Set());
   const [searchParams, setSearchParams] = useSearchParams();
   const { toast } = useToast();
 
+  // 🔥 FIXED: Constants for pagination
+  const ITEMS_PER_PAGE = 20; // Fixed to 20 items per page
+
   const categorySearchParam = searchParams.get("category");
   const pageParam = Number.parseInt(searchParams.get("page")) || 1;
-  const limitParam = Number.parseInt(searchParams.get("limit")) || 24;
 
   // Initialize pagination state from URL
   useEffect(() => {
     setCurrentPage(pageParam);
-    setItemsPerPage(limitParam);
-  }, [pageParam, limitParam]);
+  }, [pageParam]);
 
   // Memoize expensive calculations
   const productCount = useMemo(
@@ -293,13 +287,14 @@ function ShoppingListing() {
   );
 
   const totalPages = useMemo(
-    () => pagination?.totalPages || Math.ceil(productCount / itemsPerPage),
-    [pagination, productCount, itemsPerPage]
+    () => pagination?.totalPages || Math.ceil(productCount / ITEMS_PER_PAGE),
+    [pagination, productCount]
   );
 
   // Optimized handlers with useCallback
   const handleSort = useCallback((value) => {
     setSort(value);
+    setCurrentPage(1); // Reset to first page when sorting
   }, []);
 
   const handlePageChange = useCallback(
@@ -324,20 +319,6 @@ function ShoppingListing() {
     },
     [currentPage, totalPages]
   );
-
-  const handleItemsPerPageChange = useCallback((newLimit) => {
-    setIsPageTransitioning(true);
-    setLoadedProducts(new Set());
-    setItemsPerPage(newLimit);
-    setCurrentPage(1);
-
-    window.scrollTo({ top: 0, behavior: "smooth" });
-    setTimeout(() => {
-      if (window.pageYOffset > 0) {
-        window.scrollTo(0, 0);
-      }
-    }, 100);
-  }, []);
 
   const handleFilter = useCallback(
     (getSectionId, getCurrentOption) => {
@@ -376,7 +357,7 @@ function ShoppingListing() {
       setIsPageTransitioning(true);
       setLoadedProducts(new Set());
       setFilters(cpyFilters);
-      setCurrentPage(1);
+      setCurrentPage(1); // Reset to first page when filtering
 
       window.scrollTo({ top: 0, behavior: "smooth" });
       setTimeout(() => {
@@ -455,20 +436,17 @@ function ShoppingListing() {
     }
   }, [categorySearchParam]);
 
-  // Enhanced URL update with pagination
+  // 🔥 UPDATED: URL update with fixed pagination
   useEffect(() => {
     const timeout = setTimeout(() => {
-      const createQueryString = createSearchParamsHelper(
-        filters,
-        currentPage,
-        itemsPerPage
-      );
+      const createQueryString = createSearchParamsHelper(filters, currentPage);
       setSearchParams(new URLSearchParams(createQueryString));
     }, 300);
 
     return () => clearTimeout(timeout);
-  }, [filters, currentPage, itemsPerPage, setSearchParams]);
+  }, [filters, currentPage, setSearchParams]);
 
+  // 🔥 UPDATED: API call with fixed items per page
   useEffect(() => {
     if (filters !== null && sort !== null) {
       const timeout = setTimeout(() => {
@@ -477,20 +455,20 @@ function ShoppingListing() {
             filterParams: filters,
             sortParams: sort,
             page: currentPage,
-            limit: itemsPerPage,
+            limit: ITEMS_PER_PAGE, // Fixed to 20
           })
         );
       }, 300);
 
       return () => clearTimeout(timeout);
     }
-  }, [dispatch, sort, filters, currentPage, itemsPerPage]);
+  }, [dispatch, sort, filters, currentPage]);
 
   useEffect(() => {
     if (!isLoading && productList && productList.length > 0) {
       const timer = setTimeout(() => {
         setIsPageTransitioning(false);
-      }, 500); // Small delay to ensure smooth transition
+      }, 500);
 
       return () => clearTimeout(timer);
     }
@@ -500,8 +478,7 @@ function ShoppingListing() {
     const shouldShowSkeletons = isLoading || isPageTransitioning;
 
     if (shouldShowSkeletons) {
-      const skeletonCount = Math.min(itemsPerPage, 24); // Cap at 24 for performance
-      return Array.from({ length: skeletonCount }, (_, index) => (
+      return Array.from({ length: ITEMS_PER_PAGE }, (_, index) => (
         <ProductSkeleton key={`skeleton-${currentPage}-${index}`} />
       ));
     }
@@ -531,7 +508,6 @@ function ShoppingListing() {
     isLoading,
     isPageTransitioning,
     handleAddtoCart,
-    itemsPerPage,
     currentPage,
   ]);
 
@@ -565,7 +541,7 @@ function ShoppingListing() {
 
           {/* Products Section */}
           <div className="bg-white rounded-lg shadow-sm border">
-            {/* Enhanced Header with Pagination Info */}
+            {/* Enhanced Header */}
             <div className="p-4 sm:p-6 border-b">
               <div className="flex flex-col gap-4">
                 {/* Top Row: Title and Sort */}
@@ -626,69 +602,66 @@ function ShoppingListing() {
                   </div>
                 </div>
 
-                {/* Second Row: Active Filters & Items Per Page */}
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                  {/* Active Filters */}
-                  <div className="flex-1">
-                    {Object.keys(filters).length > 0 && (
-                      <div className="flex flex-wrap gap-2">
-                        {Object.entries(filters).map(([key, values]) =>
-                          Array.isArray(values)
-                            ? values.map((value) => (
-                                <Suspense
-                                  key={`${key}-${value}`}
-                                  fallback={
-                                    <div className="w-16 h-6 bg-gray-200 rounded-full animate-pulse"></div>
-                                  }
+                {/* Active Filters */}
+                <div className="flex-1">
+                  {Object.keys(filters).length > 0 && (
+                    <div className="flex flex-wrap gap-2">
+                      {Object.entries(filters).map(([key, values]) =>
+                        Array.isArray(values)
+                          ? values.map((value) => (
+                              <Suspense
+                                key={`${key}-${value}`}
+                                fallback={
+                                  <div className="w-16 h-6 bg-gray-200 rounded-full animate-pulse"></div>
+                                }
+                              >
+                                <Badge
+                                  variant="secondary"
+                                  className="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-800 text-xs rounded-full border border-blue-200 hover:bg-blue-200 transition-colors"
                                 >
-                                  <Badge
-                                    variant="secondary"
-                                    className="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-800 text-xs rounded-full border border-blue-200 hover:bg-blue-200 transition-colors"
+                                  <span className="font-medium">
+                                    {key === "category"
+                                      ? categoryOptionsMap[value] || value
+                                      : value}
+                                  </span>
+                                  <button
+                                    onClick={() => handleFilter(key, value)}
+                                    className="hover:bg-blue-300 rounded-full p-1 transition-colors duration-200 ml-1"
+                                    aria-label={`Remove ${value} filter`}
                                   >
-                                    <span className="font-medium">
-                                      {key === "category"
-                                        ? categoryOptionsMap[value] || value
-                                        : value}
-                                    </span>
-                                    <button
-                                      onClick={() => handleFilter(key, value)}
-                                      className="hover:bg-blue-300 rounded-full p-1 transition-colors duration-200 ml-1"
-                                      aria-label={`Remove ${value} filter`}
-                                    >
-                                      <X className="w-3 h-3" />
-                                    </button>
-                                  </Badge>
-                                </Suspense>
-                              ))
-                            : null
-                        )}
-                      </div>
-                    )}
-                  </div>
+                                    <X className="w-3 h-3" />
+                                  </button>
+                                </Badge>
+                              </Suspense>
+                            ))
+                          : null
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
 
-            {/* Enhanced Product Grid */}
+            {/* 🔥 UPDATED: Fixed Product Grid - 5x4 layout (20 products) */}
             <div className="p-4 sm:p-6">
               {productList && productList.length > 0 ? (
                 <>
-                  <div className="grid gap-4 sm:gap-6 grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-5 xl:grid-cols-5 2xl:grid-cols-5">
+                  {/* Fixed 5-column grid for exactly 20 products (5x4) */}
+                  <div className="grid gap-4 sm:gap-6 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-5">
                     {productGrid}
                   </div>
 
-                  {/* 🔥 NEW: Pagination Controls */}
+                  {/* 🔥 UPDATED: Pagination Controls without items per page selector */}
                   <PaginationControls
                     currentPage={currentPage}
                     totalPages={totalPages}
                     totalItems={productCount}
-                    itemsPerPage={itemsPerPage}
                     onPageChange={handlePageChange}
                     isLoading={isLoading}
                   />
                 </>
               ) : (
-                <div className="grid gap-4 sm:gap-6 grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-5 xl:grid-cols-5 2xl:grid-cols-5">
+                <div className="grid gap-4 sm:gap-6 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-5">
                   {productGrid}
                 </div>
               )}
@@ -697,6 +670,7 @@ function ShoppingListing() {
         </div>
       </div>
 
+      {/* Loading overlay */}
       {(isLoading || isPageTransitioning) && (
         <div className="fixed inset-0 bg-black/10 backdrop-blur-sm z-50 flex items-center justify-center">
           <div className="bg-white rounded-lg p-6 shadow-lg flex items-center gap-3">
