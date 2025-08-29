@@ -1,3 +1,5 @@
+"use client";
+
 // src/components/shopping-view/product-tile.jsx - UPDATED FOR NAVIGATION
 import store from "@/store/store";
 import { openLoginModal } from "@/store/auth-slice/modal-slice";
@@ -30,12 +32,12 @@ const OptimizedImage = memo(({ src, alt, className, onLoad, onError }) => {
   }, [src]);
 
   return (
-    <div className="relative overflow-hidden rounded-t-lg">
+    <div className="relative w-full aspect-square overflow-hidden rounded-t-lg">
       {!imageLoaded && !imageError && (
         <div className="absolute inset-0 bg-gray-200 animate-pulse"></div>
       )}
       {imageError ? (
-        <div className="w-full h-48 sm:h-56 md:h-64 lg:h-72 bg-gray-100 flex items-center justify-center text-gray-400">
+        <div className="absolute inset-0 bg-gray-100 flex items-center justify-center text-gray-400">
           <div className="text-center">
             <div className="text-2xl mb-2">📷</div>
             <span className="text-sm">Image not available</span>
@@ -43,13 +45,12 @@ const OptimizedImage = memo(({ src, alt, className, onLoad, onError }) => {
         </div>
       ) : (
         <picture>
-          {/* WebP format for better compression */}
           {webpSrc && <source srcSet={webpSrc} type="image/webp" />}
           <img
             src={src || "/placeholder-image.jpg"}
             alt={alt || "Product image"}
             className={`
-              w-full h-48 sm:h-56 md:h-64 lg:h-72 object-cover
+              absolute inset-0 h-full w-full object-cover
               transition-all duration-300 ease-in-out
               ${!imageLoaded ? "opacity-0" : "opacity-100"}
               ${className}
@@ -178,7 +179,7 @@ const ShoppingProductTile = memo(({ product, handleAddtoCart }) => {
   return (
     <Card
       className="
-        w-full max-w-sm mx-auto 
+        w-full max-w-none
         min-h-[400px] sm:min-h-[450px] md:min-h-[480px]
         hover:shadow-lg transition-all duration-300 ease-in-out
         transform hover:-translate-y-1
@@ -258,15 +259,11 @@ const ShoppingProductTile = memo(({ product, handleAddtoCart }) => {
       <CardFooter className="p-3 sm:p-4 pt-0">
         <Button
           onClick={handleCartClick}
-          className={`
-              w-full h-10 sm:h-11 text-sm sm:text-base
-              transition-all duration-200 ease-in-out
-              ${
-                isOutOfStock
-                  ? "opacity-60 cursor-not-allowed bg-gray-400"
-                  : "bg-[#6C3D1D] hover:bg-[#5A321A] active:scale-95 hover:shadow-md"
-              }
-            `}
+          className={`w-full h-10 sm:h-11 text-sm sm:text-base transition-all duration-200 ease-in-out ${
+            isOutOfStock
+              ? "opacity-60 cursor-not-allowed bg-gray-400"
+              : "bg-[#6C3D1D] hover:bg-[#5A321A] active:scale-95 hover:shadow-md"
+          }`}
           disabled={isOutOfStock}
           aria-label={
             isOutOfStock

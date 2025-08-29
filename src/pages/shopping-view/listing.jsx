@@ -1,6 +1,4 @@
 "use client";
-
-// src/pages/shopping-view/listing.jsx - ENHANCED WITH PAGINATION 📄🔧
 import {
   memo,
   useCallback,
@@ -71,7 +69,7 @@ const DropdownMenuTrigger = lazy(() =>
 
 const ProductSkeleton = memo(() => (
   <div className="animate-pulse bg-white rounded-lg shadow-sm border overflow-hidden">
-    <div className="bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 h-48 sm:h-56 md:h-64 rounded-t-lg mb-4 bg-[length:200%_100%] animate-[shimmer_1.5s_ease-in-out_infinite]"></div>
+    <div className="relative w-full aspect-square bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 bg-[length:200%_100%] animate-[shimmer_1.5s_ease-in-out_infinite]"></div>
     <div className="p-4 space-y-3">
       <div className="bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 h-4 rounded w-3/4 bg-[length:200%_100%] animate-[shimmer_1.5s_ease-in-out_infinite_0.2s]"></div>
       <div className="bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 h-4 rounded w-1/2 bg-[length:200%_100%] animate-[shimmer_1.5s_ease-in-out_infinite_0.4s]"></div>
@@ -240,36 +238,6 @@ const PaginationControls = memo(
 );
 
 PaginationControls.displayName = "PaginationControls";
-
-// 🔥 NEW: Items per page selector
-const ItemsPerPageSelector = memo(
-  ({ itemsPerPage, onItemsPerPageChange, isLoading }) => {
-    const options = [12, 24, 36, 48];
-
-    return (
-      <div className="flex items-center gap-2 text-sm">
-        <span className="text-gray-600 whitespace-nowrap">Show:</span>
-        <select
-          value={itemsPerPage}
-          onChange={(e) =>
-            onItemsPerPageChange(Number.parseInt(e.target.value))
-          }
-          disabled={isLoading}
-          className="px-3 py-1 border border-gray-300 rounded-md text-sm bg-white hover:border-gray-400 focus:border-[#6C3D1D] focus:ring-1 focus:ring-[#6C3D1D] transition-colors"
-        >
-          {options.map((option) => (
-            <option key={option} value={option}>
-              {option}
-            </option>
-          ))}
-        </select>
-        <span className="text-gray-600 whitespace-nowrap">per page</span>
-      </div>
-    );
-  }
-);
-
-ItemsPerPageSelector.displayName = "ItemsPerPageSelector";
 
 // Enhanced search params helper with pagination support
 const createSearchParamsHelper = (filterParams, page, limit) => {
@@ -568,9 +536,9 @@ function ShoppingListing() {
   ]);
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 py-5">
       {/* Mobile-First Layout Container */}
-      <div className="max-w-7xl mx-auto p-4 sm:p-6 md:p-8">
+      <div className="w-full max-w-none px-4 sm:px-6 md:px-8">
         {/* Mobile Filter Section */}
         <div className="md:hidden mb-6">
           <Suspense
@@ -583,7 +551,7 @@ function ShoppingListing() {
         </div>
 
         {/* Main Content Grid */}
-        <div className="md:grid md:grid-cols-[280px_1fr] md:gap-8">
+        <div className="md:grid md:grid-cols-[260px_minmax(0,1fr)] md:gap-6 lg:grid-cols-[280px_minmax(0,1fr)] lg:gap-8">
           {/* Desktop Filter Sidebar */}
           <div className="hidden md:block">
             <Suspense
@@ -697,13 +665,6 @@ function ShoppingListing() {
                       </div>
                     )}
                   </div>
-
-                  {/* Items Per Page Selector */}
-                  <ItemsPerPageSelector
-                    itemsPerPage={itemsPerPage}
-                    onItemsPerPageChange={handleItemsPerPageChange}
-                    isLoading={isLoading}
-                  />
                 </div>
               </div>
             </div>
@@ -712,7 +673,7 @@ function ShoppingListing() {
             <div className="p-4 sm:p-6">
               {productList && productList.length > 0 ? (
                 <>
-                  <div className="grid gap-6 sm:gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3">
+                  <div className="grid gap-4 sm:gap-6 grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-5 xl:grid-cols-5 2xl:grid-cols-5">
                     {productGrid}
                   </div>
 
@@ -727,7 +688,7 @@ function ShoppingListing() {
                   />
                 </>
               ) : (
-                <div className="grid gap-6 sm:gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3">
+                <div className="grid gap-4 sm:gap-6 grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-5 xl:grid-cols-5 2xl:grid-cols-5">
                   {productGrid}
                 </div>
               )}
