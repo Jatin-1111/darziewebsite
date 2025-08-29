@@ -33,7 +33,7 @@ import {
   Trash2,
 } from "lucide-react";
 
-// Simple Product Tile Component (avoiding external dependency issues)
+// Updated SimpleAdminProductTile component with 1:1 aspect ratio
 function SimpleAdminProductTile({ product, onEdit, onDelete }) {
   const productImages = Array.isArray(product?.image)
     ? product.image.filter((img) => img)
@@ -57,12 +57,13 @@ function SimpleAdminProductTile({ product, onEdit, onDelete }) {
   return (
     <Card className="w-full max-w-sm mx-auto hover:shadow-xl transition-all duration-300">
       <div className="relative">
-        <div className="relative h-64 overflow-hidden rounded-t-lg">
+        {/* 🔥 UPDATED: Square image container with 1:1 aspect ratio */}
+        <div className="relative aspect-square overflow-hidden rounded-t-lg bg-gray-100">
           {productImages.length > 0 ? (
             <img
               src={productImages[0]}
               alt={product?.title}
-              className="w-full h-full object-cover"
+              className="w-full h-full object-cover object-center"
             />
           ) : (
             <div className="w-full h-full bg-gray-100 flex items-center justify-center">
@@ -70,6 +71,7 @@ function SimpleAdminProductTile({ product, onEdit, onDelete }) {
             </div>
           )}
 
+          {/* Badges positioned on the square image */}
           <div className="absolute top-2 left-2 flex flex-col gap-1">
             {hasDiscount && (
               <Badge className="bg-red-500 text-white text-xs">
@@ -90,6 +92,7 @@ function SimpleAdminProductTile({ product, onEdit, onDelete }) {
           </div>
         </div>
 
+        {/* Product info section - remains the same */}
         <div className="p-4">
           <h2 className="text-lg font-bold mb-1 line-clamp-2 min-h-[2.5rem]">
             {product?.title}
@@ -271,7 +274,6 @@ function AdminProducts() {
   };
 
   const handleEdit = (product) => {
-
     setCurrentEditedId(product._id);
 
     // ✅ CRITICAL FIX: Handle image arrays properly
@@ -308,7 +310,6 @@ function AdminProducts() {
       setUploadedImageUrls(initialUrls);
       setImageFiles(new Array(5).fill(null));
       setImageLoadingStates(new Array(5).fill(false));
-
     } else {
       // No existing images - reset to empty state
       setUploadedImageUrls(new Array(5).fill(""));
