@@ -1,4 +1,4 @@
-// src/components/admin-view/image-upload.jsx - FIXED WITH MANUAL UPLOAD BUTTON 🔧
+// src/components/admin-view/image-upload.jsx - FIXED BATCH UPLOAD 🔥💥
 
 import { useEffect, useRef, useState, useCallback } from "react";
 import { Button } from "../ui/button";
@@ -249,7 +249,7 @@ function ProductImageUpload({
     ]
   );
 
-  // 🔥 NEW: Batch upload all selected images
+  // 🔥 FIXED: Batch upload ALL selected images at once
   const handleUploadAllImages = useCallback(async () => {
     const filesToUpload = imageFiles.filter((file) => file !== null);
 
@@ -274,16 +274,14 @@ function ProductImageUpload({
     });
     setImageLoadingStates(newLoadingStates);
 
-    let successCount = 0;
-    let errorCount = 0;
-
-    // Upload files sequentially to avoid overwhelming the server
-    for (let i = 0; i < imageFiles.length; i++) {
-      const file = imageFiles[i];
-      if (!file || uploadedImageUrls[i]) continue; // Skip if no file or already uploaded
+    // 🔥 MAGIC: Upload ALL files simultaneously using Promise.allSettled
+    const uploadPromises = imageFiles.map(async (file, index) => {
+      if (!file || uploadedImageUrls[index]) {
+        return { index, success: true, url: uploadedImageUrls[index] }; // Skip already uploaded
+      }
 
       try {
-        setUploadProgress((prev) => ({ ...prev, [i]: 0 }));
+        setUploadProgress((prev) => ({ ...prev, [index]: 0 }));
 
         const formData = new FormData();
         formData.append("image", file);
@@ -300,29 +298,22 @@ function ProductImageUpload({
               const percentCompleted = Math.round(
                 (progressEvent.loaded * 100) / progressEvent.total
               );
-              setUploadProgress((prev) => ({ ...prev, [i]: percentCompleted }));
+              setUploadProgress((prev) => ({
+                ...prev,
+                [index]: percentCompleted,
+              }));
             },
           }
         );
 
         if (response?.data?.success && response.data?.imageUrl) {
-          // Success - update uploaded URLs
-          const newUploadedUrls = [...uploadedImageUrls];
-          newUploadedUrls[i] = response.data.imageUrl;
-          setUploadedImageUrls(newUploadedUrls);
-
-          // Clear the file since it's now uploaded
-          const newImageFiles = [...imageFiles];
-          newImageFiles[i] = null;
-          setImageFiles(newImageFiles);
-
-          successCount++;
-          setUploadProgress((prev) => ({ ...prev, [i]: 100 }));
+          setUploadProgress((prev) => ({ ...prev, [index]: 100 }));
+          return { index, success: true, url: response.data.imageUrl };
         } else {
           throw new Error(response?.data?.message || "Upload failed");
         }
       } catch (error) {
-        console.error(`Upload error for image ${i + 1}:`, error);
+        console.error(`Upload error for image ${index + 1}:`, error);
 
         let errorMessage = "Upload failed";
         if (error.response?.status === 413) {
@@ -335,46 +326,83 @@ function ProductImageUpload({
           errorMessage = error.message || "Upload failed";
         }
 
-        setUploadErrors((prev) => ({
-          ...prev,
-          [i]: { message: errorMessage },
-        }));
-        errorCount++;
-      } finally {
-        // Clear loading state
-        const finalLoadingStates = [...imageLoadingStates];
-        finalLoadingStates[i] = false;
-        setImageLoadingStates(finalLoadingStates);
+        return { index, success: false, error: errorMessage };
       }
-    }
+    });
 
-    setIsUploading(false);
+    try {
+      // 💥 EXECUTE ALL UPLOADS AT ONCE
+      const results = await Promise.allSettled(uploadPromises);
 
-    // Update form data with all valid URLs
-    if (setFormData) {
-      const validUrls = uploadedImageUrls.filter(
-        (url) => url && url.trim() !== ""
-      );
-      setFormData((prev) => ({
-        ...prev,
-        image: validUrls,
-      }));
-    }
+      let successCount = 0;
+      let errorCount = 0;
+      const newUploadedUrls = [...uploadedImageUrls];
+      const newImageFiles = [...imageFiles];
+      const newErrors = {};
 
-    // Show final result
-    if (successCount > 0) {
-      toast({
-        title: `Upload Complete! ✅`,
-        description: `${successCount} image(s) uploaded successfully${
-          errorCount > 0 ? `, ${errorCount} failed` : ""
-        }.`,
+      // Process all results
+      results.forEach((result, index) => {
+        if (result.status === "fulfilled" && result.value) {
+          const { success, url, error } = result.value;
+
+          if (success && url) {
+            newUploadedUrls[index] = url;
+            newImageFiles[index] = null; // Clear the file since it's uploaded
+            successCount++;
+          } else if (error) {
+            newErrors[index] = { message: error };
+            errorCount++;
+          }
+        } else {
+          newErrors[index] = { message: "Upload failed" };
+          errorCount++;
+        }
       });
-    } else if (errorCount > 0) {
+
+      // Update states
+      setUploadedImageUrls(newUploadedUrls);
+      setImageFiles(newImageFiles);
+      setUploadErrors(newErrors);
+
+      // Clear all loading states
+      setImageLoadingStates(new Array(MAX_IMAGES).fill(false));
+
+      // Update form data with all valid URLs
+      if (setFormData) {
+        const validUrls = newUploadedUrls.filter(
+          (url) => url && url.trim() !== ""
+        );
+        setFormData((prev) => ({
+          ...prev,
+          image: validUrls,
+        }));
+      }
+
+      // Show final result
+      if (successCount > 0) {
+        toast({
+          title: `🚀 Batch Upload Complete!`,
+          description: `${successCount} image(s) uploaded successfully${
+            errorCount > 0 ? `, ${errorCount} failed` : ""
+          }.`,
+        });
+      } else if (errorCount > 0) {
+        toast({
+          title: "Upload Failed",
+          description: `All ${errorCount} upload(s) failed. Please try again.`,
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("❌ Batch upload error:", error);
       toast({
-        title: "Upload Failed",
-        description: `All ${errorCount} upload(s) failed. Please try again.`,
+        title: "Upload Error",
+        description: "Something went wrong during batch upload.",
         variant: "destructive",
       });
+    } finally {
+      setIsUploading(false);
+      setUploadProgress({});
     }
   }, [
     imageFiles,
@@ -594,7 +622,7 @@ function ProductImageUpload({
             : `Add More Images (${MAX_IMAGES - totalUsedSlots} slots left)`}
         </Button>
 
-        {/* Upload All Button - only show when files are staged */}
+        {/* 🔥 FIXED: Single button that uploads ALL images at once */}
         {stagedCount > 0 && (
           <Button
             type="button"
@@ -605,12 +633,13 @@ function ProductImageUpload({
             {isUploading ? (
               <>
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Uploading...
+                Uploading {stagedCount} images...
               </>
             ) : (
               <>
                 <Upload className="w-4 h-4 mr-2" />
-                Upload {stagedCount} Image{stagedCount > 1 ? "s" : ""}
+                🚀 Upload All {stagedCount} Image{stagedCount > 1 ? "s" : ""} at
+                Once!
               </>
             )}
           </Button>
@@ -639,11 +668,11 @@ function ProductImageUpload({
             <Upload className="w-5 h-5 text-yellow-500 mt-0.5 mr-3 flex-shrink-0" />
             <div>
               <p className="text-yellow-800 font-medium">
-                Images Ready for Upload
+                🚀 Batch Upload Ready!
               </p>
               <p className="text-yellow-700 text-sm mt-1">
-                {stagedCount} image(s) selected. Click &quot;Upload Images&quot;
-                to proceed.
+                {stagedCount} image(s) selected. Click &quot;Upload All&quot; to
+                upload them simultaneously!
               </p>
             </div>
           </div>
