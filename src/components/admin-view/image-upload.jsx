@@ -1,4 +1,4 @@
-// src/components/admin-view/image-upload.jsx - FIXED EDIT MODE 🔧
+// src/components/admin-view/image-upload.jsx - FIXED WITH MANUAL UPLOAD BUTTON 🔧
 
 import { useEffect, useRef, useState, useCallback } from "react";
 import { Button } from "../ui/button";
@@ -10,8 +10,11 @@ import {
   XIcon,
   ImageIcon,
   AlertCircle,
-  RefreshCw,
   CheckCircle,
+  Upload,
+  Loader2,
+  Plus,
+  Trash2,
 } from "lucide-react";
 
 function ProductImageUpload({
@@ -23,16 +26,16 @@ function ProductImageUpload({
   setImageLoadingStates,
   isEditMode = false,
   setFormData,
-  existingImages = [], // ✅ NEW: Pass existing images from edit mode
+  existingImages = [],
 }) {
   const inputRef = useRef(null);
   const [uploadErrors, setUploadErrors] = useState({});
-  const [retryCount, setRetryCount] = useState({});
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState({});
   const { toast } = useToast();
   const MAX_IMAGES = 5;
-  const MAX_RETRIES = 3;
 
-  // ✅ CRITICAL FIX: Initialize with existing images in edit mode
+  // Initialize with existing images in edit mode
   useEffect(() => {
     if (
       isEditMode &&
@@ -40,8 +43,6 @@ function ProductImageUpload({
       existingImages.length > 0 &&
       uploadedImageUrls.length === 0
     ) {
-
-      // Ensure we have valid image URLs
       const validExistingImages = existingImages.filter(
         (img) =>
           img &&
@@ -51,7 +52,6 @@ function ProductImageUpload({
       );
 
       if (validExistingImages.length > 0) {
-        // Fill uploadedImageUrls with existing images + empty slots
         const initialUrls = [...validExistingImages];
         while (initialUrls.length < MAX_IMAGES) {
           initialUrls.push("");
@@ -59,7 +59,6 @@ function ProductImageUpload({
 
         setUploadedImageUrls(initialUrls);
 
-        // Initialize loading states
         if (setImageLoadingStates) {
           setImageLoadingStates(new Array(MAX_IMAGES).fill(false));
         }
@@ -73,7 +72,7 @@ function ProductImageUpload({
     uploadedImageUrls.length,
   ]);
 
-  // ✅ FIXED: Enhanced file validation with better error messages
+  // Enhanced file validation
   const validateFile = useCallback((file) => {
     const validTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
     const maxSize = 10 * 1024 * 1024; // 10MB
@@ -100,7 +99,7 @@ function ProductImageUpload({
     return true;
   }, []);
 
-  // ✅ FIXED: Handle file selection with existing images consideration
+  // Handle file selection (NO auto-upload)
   const handleImageFilesChange = useCallback(
     (event) => {
       const selectedFiles = Array.from(event.target.files || []);
@@ -110,16 +109,17 @@ function ProductImageUpload({
       // Clear previous errors
       setUploadErrors({});
 
-      // Count current valid images
+      // Count current slots used
       const currentValidImages = uploadedImageUrls.filter(
         (url) => url && url.trim() !== ""
       ).length;
-      const availableSlots = MAX_IMAGES - currentValidImages;
+      const currentFiles = imageFiles.filter((file) => file !== null).length;
+      const availableSlots = MAX_IMAGES - currentValidImages - currentFiles;
 
       if (selectedFiles.length > availableSlots) {
         toast({
           title: "Too many files",
-          description: `You can only upload ${availableSlots} more image(s). Maximum ${MAX_IMAGES} images allowed.`,
+          description: `You can only add ${availableSlots} more image(s). Maximum ${MAX_IMAGES} images allowed.`,
           variant: "destructive",
         });
         return;
@@ -151,13 +151,12 @@ function ProductImageUpload({
         return;
       }
 
-      // ✅ FIXED: Find empty slots and add files (respect existing images)
+      // Add files to empty slots (no upload yet)
       const newImageFiles = [...imageFiles];
       const newLoadingStates = [...imageLoadingStates];
       let fileIndex = 0;
 
       for (let i = 0; i < MAX_IMAGES && fileIndex < validFiles.length; i++) {
-        // Only add to slots that don't have uploaded images
         if (
           !newImageFiles[i] &&
           (!uploadedImageUrls[i] || uploadedImageUrls[i].trim() === "")
@@ -178,7 +177,7 @@ function ProductImageUpload({
 
       toast({
         title: "Files selected",
-        description: `${validFiles.length} file(s) ready for upload.`,
+        description: `${validFiles.length} file(s) ready for upload. Click "Upload Images" to proceed.`,
       });
     },
     [
@@ -192,7 +191,7 @@ function ProductImageUpload({
     ]
   );
 
-  // ✅ FIXED: Remove image function that handles both new uploads and existing images
+  // Remove image function
   const handleRemoveImage = useCallback(
     (index) => {
       const newImageFiles = [...imageFiles];
@@ -215,7 +214,14 @@ function ProductImageUpload({
         return newErrors;
       });
 
-      // ✅ CRITICAL: Update form data with valid URLs only
+      // Clear progress for this index
+      setUploadProgress((prev) => {
+        const newProgress = { ...prev };
+        delete newProgress[index];
+        return newProgress;
+      });
+
+      // Update form data with valid URLs only
       if (setFormData) {
         const validUrls = newUploadedUrls.filter(
           (url) => url && url.trim() !== ""
@@ -243,28 +249,45 @@ function ProductImageUpload({
     ]
   );
 
-  // ✅ FIXED: Upload function with better error handling
-  const uploadImageToCloudinary = useCallback(
-    async (file, index, isRetry = false) => {
-      if (!file) return;
+  // 🔥 NEW: Batch upload all selected images
+  const handleUploadAllImages = useCallback(async () => {
+    const filesToUpload = imageFiles.filter((file) => file !== null);
 
-      const currentRetry = retryCount[index] || 0;
-
-      // Clear any previous errors for this index
-      setUploadErrors((prev) => {
-        const newErrors = { ...prev };
-        delete newErrors[index];
-        return newErrors;
+    if (filesToUpload.length === 0) {
+      toast({
+        title: "No files to upload",
+        description: "Please select images first.",
+        variant: "destructive",
       });
+      return;
+    }
 
-      const newLoadingStates = [...imageLoadingStates];
-      newLoadingStates[index] = true;
-      setImageLoadingStates(newLoadingStates);
+    setIsUploading(true);
+    setUploadErrors({});
 
-      const formData = new FormData();
-      formData.append("image", file);
+    // Set loading states for files being uploaded
+    const newLoadingStates = [...imageLoadingStates];
+    imageFiles.forEach((file, index) => {
+      if (file) {
+        newLoadingStates[index] = true;
+      }
+    });
+    setImageLoadingStates(newLoadingStates);
+
+    let successCount = 0;
+    let errorCount = 0;
+
+    // Upload files sequentially to avoid overwhelming the server
+    for (let i = 0; i < imageFiles.length; i++) {
+      const file = imageFiles[i];
+      if (!file || uploadedImageUrls[i]) continue; // Skip if no file or already uploaded
 
       try {
+        setUploadProgress((prev) => ({ ...prev, [i]: 0 }));
+
+        const formData = new FormData();
+        formData.append("image", file);
+
         const response = await apiClient.post(
           API_ENDPOINTS.ADMIN_UPLOAD_IMAGE,
           formData,
@@ -272,154 +295,109 @@ function ProductImageUpload({
             headers: {
               "Content-Type": "multipart/form-data",
             },
-            timeout: 30000, // 30 second timeout
+            timeout: 30000,
+            onUploadProgress: (progressEvent) => {
+              const percentCompleted = Math.round(
+                (progressEvent.loaded * 100) / progressEvent.total
+              );
+              setUploadProgress((prev) => ({ ...prev, [i]: percentCompleted }));
+            },
           }
         );
 
         if (response?.data?.success && response.data?.imageUrl) {
+          // Success - update uploaded URLs
           const newUploadedUrls = [...uploadedImageUrls];
-          newUploadedUrls[index] = response.data.imageUrl;
+          newUploadedUrls[i] = response.data.imageUrl;
           setUploadedImageUrls(newUploadedUrls);
 
-          // Clear the file from imageFiles since it's now uploaded
+          // Clear the file since it's now uploaded
           const newImageFiles = [...imageFiles];
-          newImageFiles[index] = null;
+          newImageFiles[i] = null;
           setImageFiles(newImageFiles);
 
-          // Reset retry count for this index
-          setRetryCount((prev) => {
-            const newCount = { ...prev };
-            delete newCount[index];
-            return newCount;
-          });
-
-          // ✅ CRITICAL: Update form data with all valid URLs
-          if (setFormData) {
-            const validUrls = newUploadedUrls.filter(
-              (url) => url && url.trim() !== ""
-            );
-            setFormData((prev) => ({
-              ...prev,
-              image: validUrls,
-            }));
-          }
-
-          toast({
-            title: "Upload successful! ✅",
-            description: `Image ${index + 1} uploaded successfully.`,
-          });
+          successCount++;
+          setUploadProgress((prev) => ({ ...prev, [i]: 100 }));
         } else {
-          throw new Error(
-            response?.data?.message || "Upload failed - no image URL returned"
-          );
+          throw new Error(response?.data?.message || "Upload failed");
         }
       } catch (error) {
-        console.error(`❌ Upload error for image ${index + 1}:`, error);
+        console.error(`Upload error for image ${i + 1}:`, error);
 
         let errorMessage = "Upload failed";
-        let canRetry = false;
-
-        if (error.response) {
-          const status = error.response.status;
-          const data = error.response.data;
-
-          switch (status) {
-            case 413:
-              errorMessage = "File too large. Please choose a smaller image.";
-              break;
-            case 400:
-              errorMessage = data?.message || "Invalid file format";
-              break;
-            case 401:
-              errorMessage = "Authentication required. Please login again.";
-              break;
-            default:
-              if (status >= 500) {
-                errorMessage = "Server error. Please try again.";
-                canRetry = true;
-              } else {
-                errorMessage = data?.message || `Server error (${status})`;
-                canRetry = status !== 400;
-              }
-          }
-        } else if (error.request) {
-          errorMessage = "Network error. Please check your connection.";
-          canRetry = true;
+        if (error.response?.status === 413) {
+          errorMessage = "File too large";
+        } else if (error.response?.status === 400) {
+          errorMessage = "Invalid file format";
+        } else if (error.code === "ECONNABORTED") {
+          errorMessage = "Upload timeout";
         } else {
-          errorMessage = error.message || "Unknown error occurred";
-          canRetry = true;
+          errorMessage = error.message || "Upload failed";
         }
 
-        // Store error for this index
         setUploadErrors((prev) => ({
           ...prev,
-          [index]: { message: errorMessage, canRetry },
+          [i]: { message: errorMessage },
         }));
-
-        // Show retry option for network/server errors
-        if (canRetry && currentRetry < MAX_RETRIES) {
-          toast({
-            title: `Upload failed (Attempt ${currentRetry + 1}/${
-              MAX_RETRIES + 1
-            })`,
-            description: errorMessage,
-            variant: "destructive",
-          });
-        } else {
-          toast({
-            title: "Upload failed",
-            description: errorMessage,
-            variant: "destructive",
-          });
-        }
+        errorCount++;
       } finally {
+        // Clear loading state
         const finalLoadingStates = [...imageLoadingStates];
-        finalLoadingStates[index] = false;
+        finalLoadingStates[i] = false;
         setImageLoadingStates(finalLoadingStates);
       }
-    },
-    [
-      imageLoadingStates,
-      uploadedImageUrls,
-      imageFiles,
-      retryCount,
-      setImageLoadingStates,
-      setUploadedImageUrls,
-      setImageFiles,
-      setFormData,
-      toast,
-    ]
-  );
+    }
 
-  // Auto-upload when files are added (but not in edit mode for existing images)
-  useEffect(() => {
-    imageFiles.forEach((file, index) => {
-      if (
-        file &&
-        !uploadedImageUrls[index] &&
-        !imageLoadingStates[index] &&
-        !uploadErrors[index]
-      ) {
-        uploadImageToCloudinary(file, index);
-      }
-    });
+    setIsUploading(false);
+
+    // Update form data with all valid URLs
+    if (setFormData) {
+      const validUrls = uploadedImageUrls.filter(
+        (url) => url && url.trim() !== ""
+      );
+      setFormData((prev) => ({
+        ...prev,
+        image: validUrls,
+      }));
+    }
+
+    // Show final result
+    if (successCount > 0) {
+      toast({
+        title: `Upload Complete! ✅`,
+        description: `${successCount} image(s) uploaded successfully${
+          errorCount > 0 ? `, ${errorCount} failed` : ""
+        }.`,
+      });
+    } else if (errorCount > 0) {
+      toast({
+        title: "Upload Failed",
+        description: `All ${errorCount} upload(s) failed. Please try again.`,
+        variant: "destructive",
+      });
+    }
   }, [
     imageFiles,
-    uploadImageToCloudinary,
     uploadedImageUrls,
     imageLoadingStates,
-    uploadErrors,
+    setImageFiles,
+    setUploadedImageUrls,
+    setImageLoadingStates,
+    setFormData,
+    toast,
   ]);
 
+  // Calculate counts properly
   const uploadedCount = uploadedImageUrls.filter(
     (url) => url && url.trim() !== ""
   ).length;
-  const pendingCount = imageFiles.filter((file) => file).length;
+  const stagedCount = imageFiles.filter((file) => file !== null).length; // Files ready to upload
   const errorCount = Object.keys(uploadErrors).length;
+  const totalUsedSlots = uploadedCount + stagedCount;
 
   return (
     <div className="w-full mt-4 space-y-6">
-      {/* Header with better status display */}
+      {/* Header with status */}
       <div className="flex items-center justify-between">
         <div>
           <h3 className="text-lg font-semibold">Product Images</h3>
@@ -431,9 +409,13 @@ function ProductImageUpload({
         </div>
         <div className="flex items-center gap-2">
           <div className="text-sm text-gray-600">
-            {uploadedCount}/{MAX_IMAGES} uploaded
-            {pendingCount > 0 && `, ${pendingCount} pending`}
+            {uploadedCount} uploaded
+            {stagedCount > 0 && `, ${stagedCount} ready`}
             {errorCount > 0 && `, ${errorCount} errors`}
+            <span className="text-gray-400">
+              {" "}
+              • {uploadedCount + stagedCount}/{MAX_IMAGES} slots used
+            </span>
           </div>
         </div>
       </div>
@@ -447,7 +429,7 @@ function ProductImageUpload({
         onChange={handleImageFilesChange}
         multiple
         accept="image/jpeg,image/jpg,image/png,image/webp"
-        disabled={uploadedCount >= MAX_IMAGES}
+        disabled={totalUsedSlots >= MAX_IMAGES}
       />
 
       {/* Image Grid */}
@@ -458,6 +440,7 @@ function ProductImageUpload({
           const hasFile = imageFiles[index];
           const isLoading = imageLoadingStates[index];
           const error = uploadErrors[index];
+          const progress = uploadProgress[index];
 
           return (
             <div
@@ -481,8 +464,18 @@ function ProductImageUpload({
               {isLoading ? (
                 <div className="absolute inset-0 flex items-center justify-center bg-gray-100 rounded-xl">
                   <div className="text-center">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
-                    <p className="text-xs text-gray-600">Uploading...</p>
+                    <Loader2 className="h-8 w-8 animate-spin text-blue-600 mx-auto mb-2" />
+                    <p className="text-xs text-gray-600">
+                      {progress ? `${progress}%` : "Uploading..."}
+                    </p>
+                    {progress && (
+                      <div className="w-full bg-gray-200 rounded-full h-1.5 mt-2">
+                        <div
+                          className="bg-blue-600 h-1.5 rounded-full transition-all duration-300"
+                          style={{ width: `${progress}%` }}
+                        ></div>
+                      </div>
+                    )}
                   </div>
                 </div>
               ) : error ? (
@@ -490,17 +483,15 @@ function ProductImageUpload({
                   <div className="text-center">
                     <AlertCircle className="h-6 w-6 text-red-500 mx-auto mb-2" />
                     <p className="text-xs text-red-600 mb-2">{error.message}</p>
-                    {error.canRetry && (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => retryUpload(index)}
-                        className="text-xs"
-                      >
-                        <RefreshCw className="w-3 h-3 mr-1" />
-                        Retry
-                      </Button>
-                    )}
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleRemoveImage(index)}
+                      className="text-xs"
+                    >
+                      <Trash2 className="w-3 h-3 mr-1" />
+                      Remove
+                    </Button>
                   </div>
                 </div>
               ) : hasImage ? (
@@ -528,29 +519,42 @@ function ProductImageUpload({
                       Main
                     </div>
                   )}
+
+                  <div className="absolute top-2 right-2 bg-green-500 text-white rounded-full p-1">
+                    <CheckCircle className="w-3 h-3" />
+                  </div>
                 </div>
               ) : hasFile ? (
                 <div className="relative w-full h-full">
                   <img
                     src={URL.createObjectURL(imageFiles[index])}
                     alt={`Preview ${index + 1}`}
-                    className="w-full h-full object-cover rounded-xl opacity-60"
+                    className="w-full h-full object-cover rounded-xl"
                   />
-                  <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="absolute inset-0 bg-blue-500/20 rounded-xl flex items-center justify-center">
                     <div className="text-center">
-                      <div className="animate-pulse bg-blue-500 h-6 w-6 rounded-full mx-auto mb-1"></div>
-                      <p className="text-xs text-gray-600">
-                        Ready to upload...
+                      <Upload className="h-6 w-6 text-blue-600 mx-auto mb-1" />
+                      <p className="text-xs text-blue-600 font-medium">
+                        Ready to upload
                       </p>
                     </div>
                   </div>
+
+                  {/* Remove file button */}
+                  <button
+                    onClick={() => handleRemoveImage(index)}
+                    className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors"
+                    title="Remove file"
+                  >
+                    <XIcon className="w-3 h-3" />
+                  </button>
                 </div>
               ) : (
                 <label
                   htmlFor="image-upload"
                   className="flex flex-col items-center justify-center h-full cursor-pointer hover:bg-gray-50 rounded-xl"
                 >
-                  {index === 0 && uploadedCount === 0 ? (
+                  {index === 0 && uploadedCount === 0 && stagedCount === 0 ? (
                     <>
                       <UploadCloudIcon className="w-8 h-8 text-gray-400 mb-2" />
                       <span className="text-sm text-gray-600 text-center">
@@ -562,7 +566,7 @@ function ProductImageUpload({
                     </>
                   ) : (
                     <>
-                      <ImageIcon className="w-6 h-6 text-gray-400 mb-1" />
+                      <Plus className="w-6 h-6 text-gray-400 mb-1" />
                       <span className="text-xs text-gray-500 text-center">
                         Add Image
                       </span>
@@ -575,20 +579,42 @@ function ProductImageUpload({
         })}
       </div>
 
-      {/* Action Button */}
+      {/* Action Buttons */}
       <div className="flex gap-3 pt-4 border-t">
         <Button
           type="button"
           variant="outline"
           onClick={() => inputRef.current?.click()}
-          disabled={uploadedCount >= MAX_IMAGES}
+          disabled={totalUsedSlots >= MAX_IMAGES || isUploading}
           className="flex-1"
         >
           <ImageIcon className="w-4 h-4 mr-2" />
-          {uploadedCount === 0
+          {totalUsedSlots === 0
             ? "Choose Images"
-            : `Add More Images (${MAX_IMAGES - uploadedCount} slots left)`}
+            : `Add More Images (${MAX_IMAGES - totalUsedSlots} slots left)`}
         </Button>
+
+        {/* Upload All Button - only show when files are staged */}
+        {stagedCount > 0 && (
+          <Button
+            type="button"
+            onClick={handleUploadAllImages}
+            disabled={isUploading}
+            className="flex-1 bg-green-600 hover:bg-green-700"
+          >
+            {isUploading ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Uploading...
+              </>
+            ) : (
+              <>
+                <Upload className="w-4 h-4 mr-2" />
+                Upload {stagedCount} Image{stagedCount > 1 ? "s" : ""}
+              </>
+            )}
+          </Button>
+        )}
       </div>
 
       {/* Status Messages */}
@@ -601,6 +627,23 @@ function ProductImageUpload({
               <p className="text-blue-700 text-sm mt-1">
                 {uploadedCount} image(s) loaded. You can add more images or
                 remove existing ones.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {stagedCount > 0 && (
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+          <div className="flex items-start">
+            <Upload className="w-5 h-5 text-yellow-500 mt-0.5 mr-3 flex-shrink-0" />
+            <div>
+              <p className="text-yellow-800 font-medium">
+                Images Ready for Upload
+              </p>
+              <p className="text-yellow-700 text-sm mt-1">
+                {stagedCount} image(s) selected. Click &quot;Upload Images&quot;
+                to proceed.
               </p>
             </div>
           </div>
