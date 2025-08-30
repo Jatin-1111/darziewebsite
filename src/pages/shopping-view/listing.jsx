@@ -574,7 +574,7 @@ function ShoppingListing() {
                           <Button
                             variant="outline"
                             size="sm"
-                            className="flex items-center gap-2 min-w-[140px] justify-start bg-transparent"
+                            className="flex items-center gap-2 min-w-[90px] md:min-w-[100px] justify-start bg-transparent"
                           >
                             <ArrowUpDownIcon className="h-4 w-4" />
                             <span className="hidden sm:inline">Sort by</span>

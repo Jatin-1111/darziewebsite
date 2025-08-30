@@ -1,16 +1,16 @@
 "use client";
 
-// src/components/shopping-view/product-tile.jsx - UPDATED FOR NAVIGATION
+// src/components/shopping-view/product-tile.jsx - ENHANCED UI WITH MODERN DESIGN 🎨✨
 import store from "@/store/store";
 import { openLoginModal } from "@/store/auth-slice/modal-slice";
 import { memo, useState, useCallback, useMemo } from "react";
-import { useNavigate } from "react-router-dom"; // NEW
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardFooter } from "../ui/card";
 import { Button } from "../ui/button";
-import { categoryOptionsMap } from "@/config";
 import { Badge } from "../ui/badge";
+import { ShoppingCart, Heart } from "lucide-react";
 
-// Optimized image component with mobile-first responsive design
+// Optimized image component with enhanced visual effects
 const OptimizedImage = memo(({ src, alt, className, onLoad, onError }) => {
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);
@@ -32,15 +32,20 @@ const OptimizedImage = memo(({ src, alt, className, onLoad, onError }) => {
   }, [src]);
 
   return (
-    <div className="relative w-full aspect-square overflow-hidden rounded-t-lg">
+    <div
+      className="relative w-full overflow-hidden rounded-t-xl group"
+      style={{ aspectRatio: "3/4" }}
+    >
       {!imageLoaded && !imageError && (
-        <div className="absolute inset-0 bg-gray-200 animate-pulse"></div>
+        <div className="absolute inset-0">
+          <div className="w-full h-full bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 bg-[length:200%_100%] animate-[shimmer_1.5s_ease-in-out_infinite]"></div>
+        </div>
       )}
       {imageError ? (
-        <div className="absolute inset-0 bg-gray-100 flex items-center justify-center text-gray-400">
+        <div className="absolute inset-0 bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center text-gray-400">
           <div className="text-center">
-            <div className="text-2xl mb-2">📷</div>
-            <span className="text-sm">Image not available</span>
+            <div className="text-3xl mb-3">🖼️</div>
+            <span className="text-sm font-medium">Image unavailable</span>
           </div>
         </div>
       ) : (
@@ -51,7 +56,8 @@ const OptimizedImage = memo(({ src, alt, className, onLoad, onError }) => {
             alt={alt || "Product image"}
             className={`
               absolute inset-0 h-full w-full object-cover
-              transition-all duration-300 ease-in-out
+              transition-all duration-500 ease-out
+              group-hover:scale-105
               ${!imageLoaded ? "opacity-0" : "opacity-100"}
               ${className}
             `}
@@ -59,36 +65,28 @@ const OptimizedImage = memo(({ src, alt, className, onLoad, onError }) => {
             decoding="async"
             onLoad={handleLoad}
             onError={handleError}
-            width="300"
-            height="300"
           />
         </picture>
       )}
+
+      {/* Enhanced overlay on hover */}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
     </div>
   );
 });
 
 OptimizedImage.displayName = "OptimizedImage";
 
-// Fixed badge component with correct price logic
+// Enhanced badge component with responsive styling
 const ProductBadge = memo(({ product }) => {
   if (product?.totalStock === 0) {
     return (
-      <Badge className="absolute top-2 left-2 bg-red-500 hover:bg-red-600 text-xs px-2 py-1">
+      <Badge className="absolute top-2 sm:top-3 left-2 sm:left-3 bg-gradient-to-r from-red-500 to-red-600 text-white text-xs px-2 sm:px-3 py-1 sm:py-1.5 shadow-lg backdrop-blur-sm font-semibold">
         Out Of Stock
       </Badge>
     );
   }
 
-  if (product?.totalStock < 10) {
-    return (
-      <Badge className="absolute top-2 left-2 bg-orange-500 hover:bg-orange-600 text-xs px-2 py-1">
-        Only {product.totalStock} left
-      </Badge>
-    );
-  }
-
-  // Fixed: Sale badge shows when salePrice is LESS than price
   const price = Number(product?.price) || 0;
   const salePrice = Number(product?.salePrice) || 0;
   const isOnSale = salePrice > 0 && salePrice < price;
@@ -96,7 +94,7 @@ const ProductBadge = memo(({ product }) => {
   if (isOnSale) {
     const discountPercent = Math.round(((price - salePrice) / price) * 100);
     return (
-      <Badge className="absolute top-2 left-2 bg-red-500 hover:bg-red-600 text-xs px-2 py-1">
+      <Badge className="absolute top-2 sm:top-3 left-2 sm:left-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white text-xs px-2 sm:px-3 py-1 sm:py-1.5 shadow-lg backdrop-blur-sm font-bold animate-pulse">
         {discountPercent}% OFF
       </Badge>
     );
@@ -107,20 +105,21 @@ const ProductBadge = memo(({ product }) => {
 
 ProductBadge.displayName = "ProductBadge";
 
-// Main mobile-optimized product tile component - UPDATED FOR NAVIGATION
+// Main enhanced product tile component with premium UI
 const ShoppingProductTile = memo(({ product, handleAddtoCart }) => {
-  // REMOVED handleGetProductDetails
-  const navigate = useNavigate(); // NEW
+  const navigate = useNavigate();
   const [isImageLoading, setIsImageLoading] = useState(true);
+  const [isHovered, setIsHovered] = useState(false);
+  const [isFavorite, setIsFavorite] = useState(false);
 
   const handleImageLoad = useCallback(() => {
     setIsImageLoading(false);
   }, []);
 
-  // UPDATED: Navigate to dedicated product page instead of opening modal
+  // Navigate to dedicated product page
   const handleProductClick = useCallback(() => {
     if (product?._id) {
-      navigate(`/shop/product/${product._id}`); // NEW - Navigate to dedicated page
+      navigate(`/shop/product/${product._id}`);
     }
   }, [navigate, product?._id]);
 
@@ -142,12 +141,19 @@ const ShoppingProductTile = memo(({ product, handleAddtoCart }) => {
     [handleAddtoCart, product?._id, product?.totalStock]
   );
 
-  // FIXED: Corrected price display logic based on your data structure
+  const handleFavoriteClick = useCallback(
+    (e) => {
+      e.stopPropagation();
+      setIsFavorite(!isFavorite);
+    },
+    [isFavorite]
+  );
+
+  // Enhanced price display logic
   const priceDisplay = useMemo(() => {
     const originalPrice = Number(product?.price) || 0;
     const salePrice = Number(product?.salePrice) || 0;
 
-    // Sale exists when salePrice > 0 AND salePrice < originalPrice
     const isOnSale = salePrice > 0 && salePrice < originalPrice;
     const currentPrice = isOnSale ? salePrice : originalPrice;
     const savings = isOnSale ? originalPrice - salePrice : 0;
@@ -179,91 +185,117 @@ const ShoppingProductTile = memo(({ product, handleAddtoCart }) => {
   return (
     <Card
       className="
-        w-full max-w-none
-        min-h-[400px] sm:min-h-[450px] md:min-h-[480px]
-        hover:shadow-lg transition-all duration-300 ease-in-out
-        transform hover:-translate-y-1
-        border border-gray-200 hover:border-gray-300
+        w-full max-w-none group
+        transition-all duration-500 ease-out
+        transform hover:-translate-y-2
+        border-0 shadow-md hover:shadow-xl
+        bg-white
         flex flex-col cursor-pointer
+        rounded-xl overflow-hidden
+        relative
       "
-      onClick={handleProductClick} // UPDATED: Click entire card to navigate
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      onClick={handleProductClick}
     >
-      <div className="flex-1 flex flex-col">
-        <div className="relative">
+      <div className="flex-1 flex flex-col relative">
+        {/* Enhanced image with hover effects */}
+        <div className="relative overflow-hidden">
           <OptimizedImage
             src={product?.image}
             alt={product?.title || "Product image"}
             onLoad={handleImageLoad}
           />
           <ProductBadge product={product} />
+
+          {/* Favorite button with smooth animation */}
+          <button
+            onClick={handleFavoriteClick}
+            className={`
+              absolute top-3 right-3 p-2 rounded-full backdrop-blur-sm
+              transition-all duration-300 transform
+              ${isHovered ? "scale-100 opacity-100" : "scale-90 opacity-80"}
+              ${
+                isFavorite
+                  ? "bg-red-500 text-white"
+                  : "bg-white/80 text-gray-600 hover:bg-white"
+              }
+              shadow-lg hover:shadow-xl hover:scale-110
+            `}
+          >
+            <Heart
+              className={`w-4 h-4 transition-transform duration-200 ${
+                isFavorite ? "fill-current scale-110" : ""
+              }`}
+            />
+          </button>
+
           {isImageLoading && (
-            <div className="absolute inset-0 bg-gray-200 animate-pulse rounded-t-lg"></div>
+            <div className="absolute inset-0 bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 bg-[length:200%_100%] animate-[shimmer_1.5s_ease-in-out_infinite] rounded-t-xl"></div>
           )}
         </div>
 
-        <CardContent className="p-3 sm:p-4 flex-1 flex flex-col justify-between">
-          {/* Product Title - Mobile optimized with proper line clamping */}
+        {/* Enhanced content section with responsive spacing */}
+        <CardContent className="p-2 sm:p-3 md:p-4 flex-1 flex flex-col justify-between bg-gradient-to-b from-white to-gray-50/50">
+          {/* Product Title with responsive typography */}
           <h2
             className="
-                text-base sm:text-lg font-bold mb-2 
-                leading-tight line-clamp-2
-                hover:text-[#6C3D1D] transition-colors
-                min-h-[2.5rem] sm:min-h-[3rem]
-              "
+              text-xs sm:text-sm md:text-base font-bold mb-2 sm:mb-3 text-gray-900
+              leading-tight line-clamp-2
+              hover:text-[#6C3D1D] transition-colors duration-200
+              min-h-[2rem] sm:min-h-[2.5rem] flex items-center
+              group-hover:text-[#5A321A]
+            "
             title={product?.title}
           >
             {product?.title || "Untitled Product"}
           </h2>
 
-          {/* Category - Mobile friendly */}
-          <div className="mb-3">
-            <span className="text-sm text-gray-600 bg-gray-100 px-2 py-1 rounded-full">
-              {categoryOptionsMap[product?.category] ||
-                product?.category ||
-                "Uncategorized"}
-            </span>
-          </div>
-
-          {/* FIXED: Price Section with correct logic */}
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:gap-2">
-              {priceDisplay.isOnSale ? (
-                <>
-                  {/* Show discounted price prominently */}
-                  <span className="text-lg font-bold text-[#6C3D1D]">
+          {/* Enhanced price section with responsive sizing */}
+          <div className="flex items-center justify-center">
+            {priceDisplay.isOnSale ? (
+              <div className="text-center space-y-1">
+                <div className="flex items-center justify-center gap-1 sm:gap-2 flex-wrap">
+                  <span className="text-sm sm:text-lg md:text-xl font-bold text-green-600">
                     {priceDisplay.formattedCurrentPrice}
                   </span>
-                  {/* Show original price crossed out */}
-                  <span className="line-through text-gray-500 text-sm">
+                  <span className="line-through text-gray-400 text-xs sm:text-sm">
                     {priceDisplay.formattedOriginalPrice}
                   </span>
-                </>
-              ) : (
-                /* No sale - show regular price */
-                <span className="text-lg font-semibold text-[#6C3D1D]">
-                  {priceDisplay.formattedCurrentPrice}
-                </span>
-              )}
-            </div>
-
-            {/* Savings indicator for mobile */}
-            {priceDisplay.isOnSale && (
-              <div className="text-xs text-green-600 font-medium">
-                Save {priceDisplay.formattedSavings}
+                </div>
+                <div className="text-xs sm:text-sm text-green-600 font-medium">
+                  You save {priceDisplay.formattedSavings}
+                </div>
               </div>
+            ) : (
+              <span className="text-sm sm:text-lg md:text-xl font-bold text-gray-900 group-hover:text-[#6C3D1D] transition-colors duration-200">
+                {priceDisplay.formattedCurrentPrice}
+              </span>
             )}
           </div>
         </CardContent>
       </div>
 
-      <CardFooter className="p-3 sm:p-4 pt-0">
+      {/* Enhanced footer with premium button design */}
+      <CardFooter className="p-3 bg-gray-50/80 backdrop-blur-sm">
         <Button
           onClick={handleCartClick}
-          className={`w-full h-10 sm:h-11 text-sm sm:text-base transition-all duration-200 ease-in-out ${
-            isOutOfStock
-              ? "opacity-60 cursor-not-allowed bg-gray-400"
-              : "bg-[#6C3D1D] hover:bg-[#5A321A] active:scale-95 hover:shadow-md"
-          }`}
+          className={`
+            w-full h-11 text-sm font-semibold
+            transition-all duration-300 ease-out
+            transform hover:scale-[1.02] active:scale-[0.98]
+            shadow-lg hover:shadow-xl
+            ${
+              isOutOfStock
+                ? "opacity-60 cursor-not-allowed bg-gray-400 hover:bg-gray-400"
+                : `
+                bg-gradient-to-r from-[#6C3D1D] to-[#5A321A] 
+                hover:from-[#5A321A] hover:to-[#4A2817]
+                text-white border-0
+                hover:shadow-2xl hover:shadow-[#6C3D1D]/25
+              `
+            }
+          `}
           disabled={isOutOfStock}
           aria-label={
             isOutOfStock
@@ -271,9 +303,19 @@ const ShoppingProductTile = memo(({ product, handleAddtoCart }) => {
               : `Add ${product?.title || "product"} to cart`
           }
         >
-          {isOutOfStock ? "Out Of Stock" : "Add to Cart"}
+          {isOutOfStock ? (
+            "Out Of Stock"
+          ) : (
+            <div className="flex items-center justify-center gap-2">
+              <ShoppingCart className="w-4 h-4" />
+              <span>Add to Cart</span>
+            </div>
+          )}
         </Button>
       </CardFooter>
+
+      {/* Subtle shine effect on hover */}
+      {/* <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -skew-x-12 opacity-0 group-hover:opacity-100 group-hover:animate-[shine_0.8s_ease-out] pointer-events-none" /> */}
     </Card>
   );
 });
